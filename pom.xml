@@ -44,6 +44,11 @@
 
    <properties>
       <feign.extension.version>9.3.1</feign.extension.version>
+      
+      <!-- Sonar - START -->
+      <sonar.github.repository>eclipse/hawkbit-examples</sonar.github.repository>
+      <sonar.links.ci>https://circleci.com/gh/eclipse/hawkbit-examples</sonar.links.ci>
+      <!-- Sonar - END -->
    </properties>
 
    <dependencyManagement>
