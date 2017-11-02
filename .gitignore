@@ -59,3 +59,4 @@ maven.properties
 /*/maven.properties
 
 hawkbit-repository/hawkbit-repository-jpa/.springBeans
+.vscode/settings.json
