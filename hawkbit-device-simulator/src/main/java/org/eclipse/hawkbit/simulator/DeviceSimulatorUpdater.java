@@ -35,7 +35,7 @@ import org.eclipse.hawkbit.dmf.json.model.DmfArtifact;
 import org.eclipse.hawkbit.dmf.json.model.DmfSoftwareModule;
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
 import org.eclipse.hawkbit.simulator.UpdateStatus.ResponseStatus;
-import org.eclipse.hawkbit.simulator.amqp.SpSenderService;
+import org.eclipse.hawkbit.simulator.amqp.DmfSenderService;
 import org.eclipse.hawkbit.simulator.event.InitUpdate;
 import org.eclipse.hawkbit.simulator.event.ProgressUpdate;
 import org.slf4j.Logger;
@@ -63,7 +63,7 @@ public class DeviceSimulatorUpdater {
     private ScheduledExecutorService threadPool;
 
     @Autowired
-    private SpSenderService spSenderService;
+    private DmfSenderService spSenderService;
 
     @Autowired
     private SimulatedDeviceFactory deviceFactory;
@@ -130,14 +130,14 @@ public class DeviceSimulatorUpdater {
         private static final Random rndSleep = new SecureRandom();
 
         private final AbstractSimulatedDevice device;
-        private final SpSenderService spSenderService;
+        private final DmfSenderService spSenderService;
         private final long actionId;
         private final EventBus eventbus;
         private final ScheduledExecutorService threadPool;
         private final UpdaterCallback callback;
         private final List<DmfSoftwareModule> modules;
 
-        private DeviceSimulatorUpdateThread(final AbstractSimulatedDevice device, final SpSenderService spSenderService,
+        private DeviceSimulatorUpdateThread(final AbstractSimulatedDevice device, final DmfSenderService spSenderService,
                 final long actionId, final EventBus eventbus, final ScheduledExecutorService threadPool,
                 final UpdaterCallback callback, final List<DmfSoftwareModule> modules) {
             this.device = device;

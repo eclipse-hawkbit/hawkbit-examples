@@ -8,8 +8,10 @@
  */
 package org.eclipse.hawkbit.simulator.amqp;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.eclipse.hawkbit.dmf.amqp.api.AmqpSettings;
@@ -25,16 +27,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.amqp.rabbit.support.CorrelationData;
+import org.springframework.amqp.support.converter.AbstractJavaTypeMapper;
 
 /**
  * Sender service to send messages to update server.
  */
-@Service
-public class SpSenderService extends SenderService {
+public class DmfSenderService extends MessageService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SpSenderService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DmfSenderService.class);
 
     private final String spExchange;
 
@@ -49,8 +50,7 @@ public class SpSenderService extends SenderService {
      * @param simulationProperties
      *            for attributes update class
      */
-    @Autowired
-    public SpSenderService(final RabbitTemplate rabbitTemplate, final AmqpProperties amqpProperties,
+    DmfSenderService(final RabbitTemplate rabbitTemplate, final AmqpProperties amqpProperties,
             final SimulationProperties simulationProperties) {
         super(rabbitTemplate, amqpProperties);
         spExchange = AmqpSettings.DMF_EXCHANGE;
@@ -94,6 +94,53 @@ public class SpSenderService extends SenderService {
         sendErrorgMessage(update, updateResultMessages);
         LOGGER.debug("Update process finished with error \"{}\" reported by thing {}", updateResultMessages,
                 update.getThingId());
+    }
+
+    /**
+     * Send a message if the message is not null.
+     *
+     * @param address
+     *            the exchange name
+     * @param message
+     *            the amqp message which will be send if its not null
+     */
+    public void sendMessage(final String address, final Message message) {
+        if (message == null) {
+            return;
+        }
+        message.getMessageProperties().getHeaders().remove(AbstractJavaTypeMapper.DEFAULT_CLASSID_FIELD_NAME);
+
+        final String correlationId = UUID.randomUUID().toString();
+
+        if (isCorrelationIdEmpty(message)) {
+            message.getMessageProperties().setCorrelationId(correlationId.getBytes(StandardCharsets.UTF_8));
+        }
+
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Sending message {} to exchange {} with correlationId {}", message, address, correlationId);
+        } else {
+            LOGGER.debug("Sending message to exchange {} with correlationId {}", address, correlationId);
+        }
+
+        rabbitTemplate.send(address, null, message, new CorrelationData(correlationId));
+    }
+
+    private static boolean isCorrelationIdEmpty(final Message message) {
+        return message.getMessageProperties().getCorrelationId() == null
+                || message.getMessageProperties().getCorrelationId().length <= 0;
+    }
+
+    /**
+     * Convert object and message properties to message.
+     *
+     * @param object
+     *            to get converted
+     * @param messageProperties
+     *            to get converted
+     * @return converted message
+     */
+    public Message convertMessage(final Object object, final MessageProperties messageProperties) {
+        return rabbitTemplate.getMessageConverter().toMessage(object, messageProperties);
     }
 
     /**

@@ -23,26 +23,22 @@ import org.eclipse.hawkbit.simulator.DeviceSimulatorUpdater;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
 /**
  * Handle all incoming Messages from hawkBit update server.
  *
  */
-@Component
-@ConditionalOnProperty(prefix = AmqpProperties.CONFIGURATION_PREFIX, name = "enabled")
-public class SpReceiverService extends ReceiverService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReceiverService.class);
+public class DmfReceiverService extends MessageService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DmfReceiverService.class);
 
-    private final SpSenderService spSenderService;
+    private final DmfSenderService spSenderService;
 
     private final DeviceSimulatorUpdater deviceUpdater;
 
@@ -64,14 +60,35 @@ public class SpReceiverService extends ReceiverService {
      * @param repository
      *            to manage simulated devices
      */
-    @Autowired
-    public SpReceiverService(final RabbitTemplate rabbitTemplate, final AmqpProperties amqpProperties,
-            final SpSenderService spSenderService, final DeviceSimulatorUpdater deviceUpdater,
+    DmfReceiverService(final RabbitTemplate rabbitTemplate, final AmqpProperties amqpProperties,
+            final DmfSenderService spSenderService, final DeviceSimulatorUpdater deviceUpdater,
             final DeviceSimulatorRepository repository) {
         super(rabbitTemplate, amqpProperties);
         this.spSenderService = spSenderService;
         this.deviceUpdater = deviceUpdater;
         this.repository = repository;
+    }
+
+    /**
+     * Method to validate if content type is set in the message properties.
+     *
+     * @param message
+     *            the message to get validated
+     */
+    private void checkContentTypeJson(final Message message) {
+        if (message.getBody().length == 0) {
+            return;
+        }
+        final MessageProperties messageProperties = message.getMessageProperties();
+        final String headerContentType = (String) messageProperties.getHeaders().get("content-type");
+        if (null != headerContentType) {
+            messageProperties.setContentType(headerContentType);
+        }
+        final String contentType = messageProperties.getContentType();
+        if (contentType != null && contentType.contains("json")) {
+            return;
+        }
+        throw new AmqpRejectAndDontRequeueException("Content-Type is not JSON compatible");
     }
 
     /**
@@ -87,7 +104,7 @@ public class SpReceiverService extends ReceiverService {
      * @param tenant
      *            the device belongs to
      */
-    @RabbitListener(queues = "${hawkbit.device.simulator.amqp.receiverConnectorQueueFromSp}", containerFactory = "listenerContainerFactory")
+    @RabbitListener(queues = "${hawkbit.device.simulator.amqp.receiverConnectorQueueFromSp}")
     public void recieveMessageSp(final Message message, @Header(MessageHeaderKey.TYPE) final String type,
             @Header(name = MessageHeaderKey.THING_ID, required = false) final String thingId,
             @Header(MessageHeaderKey.TENANT) final String tenant) {

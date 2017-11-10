@@ -17,6 +17,7 @@ import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Status;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorRepository;
 import org.eclipse.hawkbit.simulator.SimulatedDeviceFactory;
+import org.eclipse.hawkbit.simulator.SimulationProperties;
 import org.eclipse.hawkbit.simulator.UpdateStatus.ResponseStatus;
 import org.eclipse.hawkbit.simulator.amqp.AmqpProperties;
 import org.eclipse.hawkbit.simulator.event.InitUpdate;
@@ -88,6 +89,9 @@ public class SimulatorView extends VerticalLayout implements View {
 
     @Autowired
     private transient AmqpProperties amqpProperties;
+
+    @Autowired
+    private SimulationProperties simulationProperties;
 
     private final Label caption = new Label("DMF/DDI Simulated Devices");
     private final HorizontalLayout toolbar = new HorizontalLayout();
@@ -267,7 +271,7 @@ public class SimulatorView extends VerticalLayout implements View {
                                 .addBean(repository.add(deviceFactory.createSimulatedDeviceWithImmediatePoll(deviceId,
                                         tenant.toLowerCase(), protocol, pollDelay, basePollUrl, gatewayToken)));
                     }
-                }, amqpProperties.isEnabled()));
+                }, amqpProperties.isEnabled(), simulationProperties.getDefaultTenant()));
     }
 
     private ProtocolConverter createProtocolConverter() {

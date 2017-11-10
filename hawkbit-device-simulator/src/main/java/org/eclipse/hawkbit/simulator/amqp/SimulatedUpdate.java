@@ -19,28 +19,12 @@ public class SimulatedUpdate implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    protected final String tenant;
-    protected final String thingId;
+    private final String tenant;
+    private final String thingId;
+    private final Long actionId;
+    private transient LocalDateTime startCacheTime;
 
-    protected final Long actionId;
-
-    protected transient LocalDateTime startCacheTime;
-
-    /**
-     * Constructor of the class.
-     *
-     * @param tenant
-     *            the tenant name.
-     * @param thingId
-     *            the thing id.
-     * @param actionId
-     *            the action id
-     * @param softwareModuleId
-     *            software modul id
-     * @param urls
-     *            the artifact download urls.
-     */
-    public SimulatedUpdate(final String tenant, final String thingId, final Long actionId) {
+    SimulatedUpdate(final String tenant, final String thingId, final Long actionId) {
         this.tenant = tenant;
         this.thingId = thingId;
         this.actionId = actionId;

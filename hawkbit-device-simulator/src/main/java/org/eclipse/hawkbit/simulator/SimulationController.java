@@ -10,6 +10,7 @@ package org.eclipse.hawkbit.simulator;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Optional;
 
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
 import org.eclipse.hawkbit.simulator.amqp.AmqpProperties;
@@ -33,6 +34,9 @@ public class SimulationController {
 
     @Autowired
     private AmqpProperties amqpProperties;
+
+    @Autowired
+    private SimulationProperties simulationProperties;
 
     /**
      * The start resource to start a device creation.
@@ -60,7 +64,7 @@ public class SimulationController {
     @RequestMapping("/start")
     ResponseEntity<String> start(@RequestParam(value = "name", defaultValue = "simulated") final String name,
             @RequestParam(value = "amount", defaultValue = "20") final int amount,
-            @RequestParam(value = "tenant", defaultValue = "DEFAULT") final String tenant,
+            @RequestParam(value = "tenant") final Optional<String> tenant,
             @RequestParam(value = "api", defaultValue = "dmf") final String api,
             @RequestParam(value = "endpoint", defaultValue = "http://localhost:8080") final String endpoint,
             @RequestParam(value = "polldelay", defaultValue = "1800") final int pollDelay,
@@ -87,7 +91,8 @@ public class SimulationController {
 
         for (int i = 0; i < amount; i++) {
             final String deviceId = name + i;
-            repository.add(deviceFactory.createSimulatedDeviceWithImmediatePoll(deviceId, tenant, protocol, pollDelay,
+            repository.add(deviceFactory.createSimulatedDeviceWithImmediatePoll(deviceId,
+                    tenant.orElseGet(() -> simulationProperties.getDefaultTenant()), protocol, pollDelay,
                     new URL(endpoint), gatewayToken));
         }
 

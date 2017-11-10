@@ -64,8 +64,10 @@ public class GenerateDialog extends Window {
      * @param dmfEnabled
      *            indicates if the AMQP/DMF interface is enabled by
      *            configuration and if the option DMF should be enabled or not
+     * @param defaultTenant
+     *            for the service
      */
-    public GenerateDialog(final GenerateDialogCallback callback, final boolean dmfEnabled) {
+    public GenerateDialog(final GenerateDialogCallback callback, final boolean dmfEnabled, final String defaultTenant) {
         this.dmfEnabled = dmfEnabled;
         formLayout.setSpacing(true);
         formLayout.setMargin(true);
@@ -73,14 +75,14 @@ public class GenerateDialog extends Window {
         namePrefixTextField = createRequiredTextfield("name prefix", "dmfSimulated", FontAwesome.INFO,
                 new NullValidator("Must be given", false));
 
-        amountTextField = createRequiredTextfield("amount", new ObjectProperty<Integer>(10), FontAwesome.GEAR,
-                new RangeValidator<Integer>("Must be between 1 and 30000", Integer.class, 1, 30000));
+        amountTextField = createRequiredTextfield("amount", new ObjectProperty<>(10), FontAwesome.GEAR,
+                new RangeValidator<>("Must be between 1 and 30000", Integer.class, 1, 30000));
 
-        tenantTextField = createRequiredTextfield("tenant", "default", FontAwesome.USER,
+        tenantTextField = createRequiredTextfield("tenant", defaultTenant, FontAwesome.USER,
                 new NullValidator("Must be given", false));
 
-        pollDelayTextField = createRequiredTextfield("poll delay (sec)", new ObjectProperty<Integer>(10),
-                FontAwesome.CLOCK_O, new RangeValidator<Integer>("Must be between 1 and 60", Integer.class, 1, 60));
+        pollDelayTextField = createRequiredTextfield("poll delay (sec)", new ObjectProperty<>(10), FontAwesome.CLOCK_O,
+                new RangeValidator<>("Must be between 1 and 60", Integer.class, 1, 60));
 
         pollUrlTextField = createRequiredTextfield("base poll URL endpoint", "http://localhost:8080",
                 FontAwesome.FLAG_O, new RegexpValidator(

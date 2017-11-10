@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.AbstractJavaTypeMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Abstract class for sender and receiver service.
@@ -25,9 +24,9 @@ public class MessageService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageService.class);
 
-    protected RabbitTemplate rabbitTemplate;
+    protected final RabbitTemplate rabbitTemplate;
 
-    protected AmqpProperties amqpProperties;
+    protected final AmqpProperties amqpProperties;
 
     /**
      * Constructor.
@@ -39,18 +38,9 @@ public class MessageService {
      * @param messageConverter
      *            the message converter
      */
-    @Autowired
     public MessageService(final RabbitTemplate rabbitTemplate, final AmqpProperties amqpProperties) {
         this.rabbitTemplate = rabbitTemplate;
         this.amqpProperties = amqpProperties;
-    }
-
-    public void setAmqpProperties(final AmqpProperties amqpProperties) {
-        this.amqpProperties = amqpProperties;
-    }
-
-    public void setRabbitTemplate(final RabbitTemplate rabbitTemplate) {
-        this.rabbitTemplate = rabbitTemplate;
     }
 
     /**
