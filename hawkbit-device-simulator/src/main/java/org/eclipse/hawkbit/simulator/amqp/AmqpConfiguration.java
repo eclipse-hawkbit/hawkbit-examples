@@ -11,6 +11,9 @@ package org.eclipse.hawkbit.simulator.amqp;
 import java.time.Duration;
 import java.util.Map;
 
+import org.eclipse.hawkbit.simulator.DeviceSimulatorRepository;
+import org.eclipse.hawkbit.simulator.DeviceSimulatorUpdater;
+import org.eclipse.hawkbit.simulator.SimulationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Binding;
@@ -18,14 +21,10 @@ import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.FanoutExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
-import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
-import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -47,17 +46,10 @@ public class AmqpConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(AmqpConfiguration.class);
 
     @Autowired
-    protected AmqpProperties amqpProperties;
+    private AmqpProperties amqpProperties;
 
-    @Autowired
-    private ConnectionFactory connectionFactory;
-
-    /**
-     * @return {@link RabbitTemplate} with automatic retry, published confirms
-     *         and {@link Jackson2JsonMessageConverter}.
-     */
     @Bean
-    public RabbitTemplate rabbitTemplate() {
+    RabbitTemplate rabbitTemplate(final ConnectionFactory connectionFactory) {
         final RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
         rabbitTemplate.setMessageConverter(new Jackson2JsonMessageConverter());
 
@@ -78,40 +70,17 @@ public class AmqpConfiguration {
         return rabbitTemplate;
     }
 
-    @Configuration
-    protected static class RabbitConnectionFactoryCreator {
+    @Bean
+    DmfReceiverService dmfReceiverService(final RabbitTemplate rabbitTemplate, final AmqpProperties amqpProperties,
+            final DmfSenderService spSenderService, final DeviceSimulatorUpdater deviceUpdater,
+            final DeviceSimulatorRepository repository) {
+        return new DmfReceiverService(rabbitTemplate, amqpProperties, spSenderService, deviceUpdater, repository);
+    }
 
-        /**
-         * {@link ConnectionFactory} with enabled publisher confirms and
-         * heartbeat.
-         * 
-         * @param config
-         *            with standard {@link RabbitProperties}
-         * @return {@link ConnectionFactory}
-         */
-        @Bean
-        public ConnectionFactory rabbitConnectionFactory(final RabbitProperties config) {
-            final CachingConnectionFactory factory = new CachingConnectionFactory();
-            factory.setRequestedHeartBeat(60);
-            factory.setPublisherConfirms(true);
-
-            final String addresses = config.getAddresses();
-            factory.setAddresses(addresses);
-            if (config.getHost() != null) {
-                factory.setHost(config.getHost());
-                factory.setPort(config.getPort());
-            }
-            if (config.getUsername() != null) {
-                factory.setUsername(config.getUsername());
-            }
-            if (config.getPassword() != null) {
-                factory.setPassword(config.getPassword());
-            }
-            if (config.getVirtualHost() != null) {
-                factory.setVirtualHost(config.getVirtualHost());
-            }
-            return factory;
-        }
+    @Bean
+    DmfSenderService dmfSenderService(final RabbitTemplate rabbitTemplate, final AmqpProperties amqpProperties,
+            final SimulationProperties simulationProperties) {
+        return new DmfSenderService(rabbitTemplate, amqpProperties, simulationProperties);
     }
 
     /**
@@ -121,7 +90,7 @@ public class AmqpConfiguration {
      * @return the queue
      */
     @Bean
-    public Queue receiverConnectorQueueFromHawkBit() {
+    Queue receiverConnectorQueueFromHawkBit() {
         final Map<String, Object> arguments = getTTLMaxArgs();
 
         return QueueBuilder.nonDurable(amqpProperties.getReceiverConnectorQueueFromSp()).autoDelete()
@@ -134,7 +103,7 @@ public class AmqpConfiguration {
      * @return the exchange
      */
     @Bean
-    public FanoutExchange exchangeQueueToConnector() {
+    FanoutExchange exchangeQueueToConnector() {
         return new FanoutExchange(amqpProperties.getSenderForSpExchange(), false, true);
     }
 
@@ -146,25 +115,8 @@ public class AmqpConfiguration {
      * @return the binding and create the queue and exchange
      */
     @Bean
-    public Binding bindReceiverQueueToSpExchange() {
+    Binding bindReceiverQueueToSpExchange() {
         return BindingBuilder.bind(receiverConnectorQueueFromHawkBit()).to(exchangeQueueToConnector());
-    }
-
-    /**
-     * Returns the Listener factory.
-     *
-     * @return the {@link SimpleMessageListenerContainer} that gets used receive
-     *         AMQP messages
-     */
-    @Bean(name = { "listenerContainerFactory" })
-    public SimpleRabbitListenerContainerFactory listenerContainerFactory() {
-        final SimpleRabbitListenerContainerFactory containerFactory = new SimpleRabbitListenerContainerFactory();
-        containerFactory.setDefaultRequeueRejected(true);
-        containerFactory.setConnectionFactory(connectionFactory);
-        containerFactory.setConcurrentConsumers(3);
-        containerFactory.setMaxConcurrentConsumers(10);
-        containerFactory.setPrefetchCount(20);
-        return containerFactory;
     }
 
     private static Map<String, Object> getTTLMaxArgs() {

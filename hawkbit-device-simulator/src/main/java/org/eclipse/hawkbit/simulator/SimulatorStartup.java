@@ -43,7 +43,10 @@ public class SimulatorStartup implements ApplicationListener<ApplicationReadyEve
 
     @Override
     public void onApplicationEvent(final ApplicationReadyEvent event) {
+        LOGGER.debug("{} autostarts will be executed", simulationProperties.getAutostarts().size());
+
         simulationProperties.getAutostarts().forEach(autostart -> {
+            LOGGER.debug("Autostart runs for tenant {} and API {}", autostart.getTenant(), autostart.getApi());
             for (int i = 0; i < autostart.getAmount(); i++) {
                 final String deviceId = autostart.getName() + i;
                 try {

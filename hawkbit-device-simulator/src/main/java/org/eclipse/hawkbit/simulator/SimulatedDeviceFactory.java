@@ -13,7 +13,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
-import org.eclipse.hawkbit.simulator.amqp.SpSenderService;
+import org.eclipse.hawkbit.simulator.amqp.DmfSenderService;
 import org.eclipse.hawkbit.simulator.http.ControllerResource;
 import org.eclipse.hawkbit.simulator.http.GatewayTokenInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +32,7 @@ public class SimulatedDeviceFactory {
     private DeviceSimulatorUpdater deviceUpdater;
 
     @Autowired
-    private SpSenderService spSenderService;
+    private DmfSenderService spSenderService;
 
     @Autowired
     private ScheduledExecutorService threadPool;

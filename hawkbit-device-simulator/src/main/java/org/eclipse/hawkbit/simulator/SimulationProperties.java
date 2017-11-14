@@ -33,6 +33,8 @@ public class SimulationProperties {
     private static final Splitter SPLITTER = Splitter.on(',').omitEmptyStrings().trimResults();
     private static final Random RANDOM = new Random();
 
+    private String defaultTenant = "DEFAULT";
+
     /**
      * List of tenants where the simulator should auto start simulations after
      * startup.
@@ -40,6 +42,14 @@ public class SimulationProperties {
     private final List<Autostart> autostarts = new ArrayList<>();
 
     private final List<Attribute> attributes = new ArrayList<>();
+
+    public String getDefaultTenant() {
+        return defaultTenant;
+    }
+
+    public void setDefaultTenant(final String defaultTenant) {
+        this.defaultTenant = defaultTenant;
+    }
 
     public List<Attribute> getAttributes() {
         return attributes;
