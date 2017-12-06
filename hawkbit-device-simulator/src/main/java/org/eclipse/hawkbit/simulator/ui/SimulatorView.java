@@ -91,7 +91,7 @@ public class SimulatorView extends VerticalLayout implements View {
     private transient AmqpProperties amqpProperties;
 
     @Autowired
-    private SimulationProperties simulationProperties;
+    private transient SimulationProperties simulationProperties;
 
     private final Label caption = new Label("DMF/DDI Simulated Devices");
     private final HorizontalLayout toolbar = new HorizontalLayout();
