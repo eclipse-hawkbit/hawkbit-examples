@@ -58,49 +58,10 @@
    </build>
 
    <dependencies>
-      <!-- Hawkbit -->
       <dependency>
          <groupId>org.eclipse.hawkbit</groupId>
-         <artifactId>hawkbit-autoconfigure</artifactId>
-         <version>${project.version}</version>
-      </dependency>
-      <dependency>
-         <groupId>org.eclipse.hawkbit</groupId>
-         <artifactId>hawkbit-ui</artifactId>
-         <version>${project.version}</version>
-      </dependency>
-      <dependency>
-         <groupId>org.eclipse.hawkbit</groupId>
-         <artifactId>hawkbit-security-integration</artifactId>
-         <version>${project.version}</version>
-      </dependency>
-      <dependency>
-         <groupId>org.eclipse.hawkbit</groupId>
-         <artifactId>hawkbit-http-security</artifactId>
-         <version>${project.version}</version>
-      </dependency>
-       <dependency>
-         <groupId>org.eclipse.hawkbit</groupId>
-         <artifactId>hawkbit-repository-jpa</artifactId>
-         <version>${project.version}</version>
-      </dependency>
-
-      <!-- Spring -->
-      <dependency>
-         <groupId>org.springframework.boot</groupId>
-         <artifactId>spring-boot-starter-web</artifactId>
-      </dependency>
-       <dependency>
-         <groupId>org.springframework.boot</groupId>
-         <artifactId>spring-boot-starter-jetty</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>org.springframework.boot</groupId>
-         <artifactId>spring-boot-starter</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>org.springframework.security</groupId>
-         <artifactId>spring-security-aspects</artifactId>
+         <artifactId>hawkbit-boot-starter</artifactId>
+         <version>${hawkbit-core.version}</version>
       </dependency>
       <dependency>
          <groupId>com.h2database</groupId>

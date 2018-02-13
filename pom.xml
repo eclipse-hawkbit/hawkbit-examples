@@ -36,6 +36,7 @@
    </distributionManagement>
 
    <modules>
+      <module>hawkbit-custom-theme-example</module>
       <module>hawkbit-device-simulator</module>
       <module>hawkbit-example-core-feign-client</module>
       <module>hawkbit-example-ddi-feign-client</module>
@@ -45,6 +46,7 @@
 
    <properties>
       <feign.extension.version>9.3.1</feign.extension.version>
+      <hawkbit-core.version>0.2.0M4</hawkbit-core.version>
       
       <!-- Sonar - START -->
       <sonar.github.repository>eclipse/hawkbit-examples</sonar.github.repository>
