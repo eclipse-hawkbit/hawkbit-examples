@@ -18,6 +18,7 @@ import org.eclipse.hawkbit.dmf.amqp.api.EventTopic;
 import org.eclipse.hawkbit.dmf.amqp.api.MessageHeaderKey;
 import org.eclipse.hawkbit.dmf.amqp.api.MessageType;
 import org.eclipse.hawkbit.dmf.json.model.DmfDownloadAndUpdateRequest;
+import org.eclipse.hawkbit.simulator.ActionType;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorRepository;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorUpdater;
 import org.eclipse.jetty.util.ConcurrentHashSet;
@@ -170,7 +171,10 @@ public class DmfReceiverService extends MessageService {
         final EventTopic eventTopic = EventTopic.valueOf(eventHeader.toString());
         switch (eventTopic) {
         case DOWNLOAD_AND_INSTALL:
-            handleUpdateProcess(message, thingId);
+            handleUpdateProcess(message, thingId, ActionType.DOWNLOAD_AND_INSTALL);
+            break;
+        case DOWNLOAD_AND_SKIP:
+            handleUpdateProcess(message, thingId, ActionType.DOWNLOAD_AND_SKIP);
             break;
         case CANCEL_DOWNLOAD:
             handleCancelDownloadAction(message, thingId);
@@ -188,10 +192,10 @@ public class DmfReceiverService extends MessageService {
         final Long actionId = convertMessage(message, Long.class);
 
         final SimulatedUpdate update = new SimulatedUpdate(tenant, thingId, actionId);
-        spSenderService.finishUpdateProcess(update, Arrays.asList("Simulation canceled"));
+        spSenderService.finishUpdateProcess(update, Arrays.asList("Simulation canceled"), null);
     }
 
-    private void handleUpdateProcess(final Message message, final String thingId) {
+    private void handleUpdateProcess(final Message message, final String thingId, final ActionType actionType) {
         final MessageProperties messageProperties = message.getMessageProperties();
         final Map<String, Object> headers = messageProperties.getHeaders();
         final String tenant = (String) headers.get(MessageHeaderKey.TENANT);
@@ -207,7 +211,7 @@ public class DmfReceiverService extends MessageService {
                     case SUCCESSFUL:
                         spSenderService.finishUpdateProcess(
                                 new SimulatedUpdate(device.getTenant(), device.getId(), actionId1),
-                                device.getUpdateStatus().getStatusMessages());
+                                device.getUpdateStatus().getStatusMessages(), actionType);
                         break;
                     case ERROR:
                         spSenderService.finishUpdateProcessWithError(
@@ -217,6 +221,6 @@ public class DmfReceiverService extends MessageService {
                     default:
                         break;
                     }
-                });
+                }, actionType);
     }
 }
