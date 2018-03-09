@@ -8,6 +8,7 @@
  */
 package org.eclipse.hawkbit.simulator;
 
+import org.eclipse.hawkbit.dmf.amqp.api.EventTopic;
 import org.eclipse.hawkbit.simulator.http.ControllerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,6 +96,6 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
                         + device.getUpdateStatus().getResponseStatus());
             }
             currentActionId = null;
-        }, updateType.equals("skip") ? ActionType.DOWNLOAD_AND_SKIP : ActionType.DOWNLOAD_AND_INSTALL);
+        }, updateType.equals("skip") ? EventTopic.DOWNLOAD : EventTopic.DOWNLOAD_AND_INSTALL);
     }
 }

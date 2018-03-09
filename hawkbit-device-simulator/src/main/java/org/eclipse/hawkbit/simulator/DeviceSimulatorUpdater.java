@@ -31,6 +31,7 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContextBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.eclipse.hawkbit.dmf.amqp.api.EventTopic;
 import org.eclipse.hawkbit.dmf.json.model.DmfArtifact;
 import org.eclipse.hawkbit.dmf.json.model.DmfSoftwareModule;
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
@@ -99,7 +100,7 @@ public class DeviceSimulatorUpdater {
      */
     public void startUpdate(final String tenant, final String id, final long actionId, final String swVersion,
             final List<DmfSoftwareModule> modules, final String targetSecurityToken, final UpdaterCallback callback,
-            ActionType actionType) {
+            final EventTopic actionType) {
         AbstractSimulatedDevice device = repository.get(tenant, id);
 
         // plug and play - non existing device will be auto created
@@ -131,7 +132,7 @@ public class DeviceSimulatorUpdater {
 
         private static final Random rndSleep = new SecureRandom();
 
-        private final ActionType actionType;
+        private final EventTopic actionType;
 
         private final AbstractSimulatedDevice device;
         private final DmfSenderService spSenderService;
@@ -141,9 +142,10 @@ public class DeviceSimulatorUpdater {
         private final UpdaterCallback callback;
         private final List<DmfSoftwareModule> modules;
 
-        private DeviceSimulatorUpdateThread(final AbstractSimulatedDevice device, final DmfSenderService spSenderService,
-                final long actionId, final EventBus eventbus, final ScheduledExecutorService threadPool,
-                final UpdaterCallback callback, final List<DmfSoftwareModule> modules, final ActionType actionType) {
+        private DeviceSimulatorUpdateThread(final AbstractSimulatedDevice device,
+                final DmfSenderService spSenderService, final long actionId, final EventBus eventbus,
+                final ScheduledExecutorService threadPool, final UpdaterCallback callback,
+                final List<DmfSoftwareModule> modules, final EventTopic actionType) {
             this.device = device;
             this.spSenderService = spSenderService;
             this.actionId = actionId;
@@ -170,7 +172,7 @@ public class DeviceSimulatorUpdater {
                 device.setProgress(0.8);
             }
 
-            if (actionType == ActionType.DOWNLOAD_AND_INSTALL) {
+            if (actionType == EventTopic.DOWNLOAD_AND_INSTALL) {
                 final double newProgress = device.getProgress() + 0.2;
                 device.setProgress(newProgress);
                 if (newProgress < 1.0) {
