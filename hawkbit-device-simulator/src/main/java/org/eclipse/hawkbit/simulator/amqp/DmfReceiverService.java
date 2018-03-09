@@ -18,7 +18,6 @@ import org.eclipse.hawkbit.dmf.amqp.api.EventTopic;
 import org.eclipse.hawkbit.dmf.amqp.api.MessageHeaderKey;
 import org.eclipse.hawkbit.dmf.amqp.api.MessageType;
 import org.eclipse.hawkbit.dmf.json.model.DmfDownloadAndUpdateRequest;
-import org.eclipse.hawkbit.simulator.ActionType;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorRepository;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorUpdater;
 import org.eclipse.jetty.util.ConcurrentHashSet;
@@ -171,10 +170,8 @@ public class DmfReceiverService extends MessageService {
         final EventTopic eventTopic = EventTopic.valueOf(eventHeader.toString());
         switch (eventTopic) {
         case DOWNLOAD_AND_INSTALL:
-            handleUpdateProcess(message, thingId, ActionType.DOWNLOAD_AND_INSTALL);
-            break;
-        case DOWNLOAD_AND_SKIP:
-            handleUpdateProcess(message, thingId, ActionType.DOWNLOAD_AND_SKIP);
+        case DOWNLOAD:
+            handleUpdateProcess(message, thingId, eventTopic);
             break;
         case CANCEL_DOWNLOAD:
             handleCancelDownloadAction(message, thingId);
@@ -195,7 +192,7 @@ public class DmfReceiverService extends MessageService {
         spSenderService.finishUpdateProcess(update, Arrays.asList("Simulation canceled"), null);
     }
 
-    private void handleUpdateProcess(final Message message, final String thingId, final ActionType actionType) {
+    private void handleUpdateProcess(final Message message, final String thingId, final EventTopic actionType) {
         final MessageProperties messageProperties = message.getMessageProperties();
         final Map<String, Object> headers = messageProperties.getHeaders();
         final String tenant = (String) headers.get(MessageHeaderKey.TENANT);
