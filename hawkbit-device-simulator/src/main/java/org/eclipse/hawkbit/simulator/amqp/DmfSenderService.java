@@ -21,6 +21,7 @@ import org.eclipse.hawkbit.dmf.amqp.api.MessageType;
 import org.eclipse.hawkbit.dmf.json.model.DmfActionStatus;
 import org.eclipse.hawkbit.dmf.json.model.DmfActionUpdateStatus;
 import org.eclipse.hawkbit.dmf.json.model.DmfAttributeUpdate;
+import org.eclipse.hawkbit.simulator.ActionType;
 import org.eclipse.hawkbit.simulator.SimulationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,9 +76,14 @@ public class DmfSenderService extends MessageService {
      *            the simulated update object
      * @param updateResultMessages
      *            a description according the update process
+     * @param actionType
+     *            indicating whether to download and install or skip
+     *            installation due to maintenance window.
      */
-    public void finishUpdateProcess(final SimulatedUpdate update, final List<String> updateResultMessages) {
-        final Message updateResultMessage = createUpdateResultMessage(update, DmfActionStatus.FINISHED,
+    public void finishUpdateProcess(final SimulatedUpdate update, final List<String> updateResultMessages,
+            final ActionType actionType) {
+        final Message updateResultMessage = createUpdateResultMessage(update,
+                actionType == ActionType.DOWNLOAD_AND_SKIP ? DmfActionStatus.DOWNLOADED : DmfActionStatus.FINISHED,
                 updateResultMessages);
         sendMessage(spExchange, updateResultMessage);
     }

@@ -93,9 +93,13 @@ public class DeviceSimulatorUpdater {
      * @param callback
      *            the callback which gets called when the simulated update
      *            process has been finished
+     * @param actionType
+     *            indicating whether to download and install or skip
+     *            installation due to maintenance window.
      */
     public void startUpdate(final String tenant, final String id, final long actionId, final String swVersion,
-            final List<DmfSoftwareModule> modules, final String targetSecurityToken, final UpdaterCallback callback) {
+            final List<DmfSoftwareModule> modules, final String targetSecurityToken, final UpdaterCallback callback,
+            ActionType actionType) {
         AbstractSimulatedDevice device = repository.get(tenant, id);
 
         // plug and play - non existing device will be auto created
@@ -103,8 +107,6 @@ public class DeviceSimulatorUpdater {
             device = repository
                     .add(deviceFactory.createSimulatedDevice(id, tenant, Protocol.DMF_AMQP, 1800, null, null));
         }
-
-        device.setProgress(0.0);
 
         if (CollectionUtils.isEmpty(modules)) {
             device.setSwversion(swVersion);
@@ -116,7 +118,7 @@ public class DeviceSimulatorUpdater {
         eventbus.post(new InitUpdate(device));
 
         threadPool.schedule(new DeviceSimulatorUpdateThread(device, spSenderService, actionId, eventbus, threadPool,
-                callback, modules), 2_000, TimeUnit.MILLISECONDS);
+                callback, modules, actionType), 2_000, TimeUnit.MILLISECONDS);
     }
 
     private static final class DeviceSimulatorUpdateThread implements Runnable {
@@ -129,6 +131,8 @@ public class DeviceSimulatorUpdater {
 
         private static final Random rndSleep = new SecureRandom();
 
+        private final ActionType actionType;
+
         private final AbstractSimulatedDevice device;
         private final DmfSenderService spSenderService;
         private final long actionId;
@@ -139,7 +143,7 @@ public class DeviceSimulatorUpdater {
 
         private DeviceSimulatorUpdateThread(final AbstractSimulatedDevice device, final DmfSenderService spSenderService,
                 final long actionId, final EventBus eventbus, final ScheduledExecutorService threadPool,
-                final UpdaterCallback callback, final List<DmfSoftwareModule> modules) {
+                final UpdaterCallback callback, final List<DmfSoftwareModule> modules, final ActionType actionType) {
             this.device = device;
             this.spSenderService = spSenderService;
             this.actionId = actionId;
@@ -147,29 +151,34 @@ public class DeviceSimulatorUpdater {
             this.callback = callback;
             this.modules = modules;
             this.threadPool = threadPool;
+            this.actionType = actionType;
         }
 
         @Override
         public void run() {
-            if (device.getProgress() <= 0 && modules != null) {
-                device.setUpdateStatus(simulateDownloads(device.getTargetSecurityToken()));
-                if (isErrorResponse(device.getUpdateStatus())) {
-                    device.setProgress(1.0);
-                    callback.updateFinished(device, actionId);
-                    eventbus.post(new ProgressUpdate(device));
-                    return;
+            if (device.getProgress() <= 0) {
+                if (modules != null) {
+                    device.setUpdateStatus(simulateDownloads(device.getTargetSecurityToken()));
+                    if (isErrorResponse(device.getUpdateStatus())) {
+                        device.setProgress(1.0);
+                        callback.updateFinished(device, actionId);
+                        eventbus.post(new ProgressUpdate(device));
+                        return;
+                    }
                 }
                 // download is 80% of the game after all
                 device.setProgress(0.8);
             }
 
-            final double newProgress = device.getProgress() + 0.2;
-            device.setProgress(newProgress);
-            if (newProgress < 1.0) {
-                threadPool.schedule(new DeviceSimulatorUpdateThread(device, spSenderService, actionId, eventbus,
-                        threadPool, callback, modules), rndSleep.nextInt(5_000), TimeUnit.MILLISECONDS);
-            } else {
-                callback.updateFinished(device, actionId);
+            if (actionType == ActionType.DOWNLOAD_AND_INSTALL) {
+                final double newProgress = device.getProgress() + 0.2;
+                device.setProgress(newProgress);
+                if (newProgress < 1.0) {
+                    threadPool.schedule(new DeviceSimulatorUpdateThread(device, spSenderService, actionId, eventbus,
+                            threadPool, callback, modules, actionType), rndSleep.nextInt(5_000), TimeUnit.MILLISECONDS);
+                } else {
+                    callback.updateFinished(device, actionId);
+                }
             }
             eventbus.post(new ProgressUpdate(device));
         }

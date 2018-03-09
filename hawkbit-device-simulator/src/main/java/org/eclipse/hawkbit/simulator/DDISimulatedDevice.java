@@ -65,11 +65,12 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
             try {
                 final String href = JsonPath.parse(basePollJson).read("_links.deploymentBase.href");
                 final long actionId = Long.parseLong(href.substring(href.lastIndexOf('/') + 1, href.indexOf('?')));
-                if (currentActionId == null) {
+                if (currentActionId == null || currentActionId == actionId) {
                     final String deploymentJson = controllerResource.getDeployment(getTenant(), getId(), actionId);
                     final String swVersion = JsonPath.parse(deploymentJson).read("deployment.chunks[0].version");
+                    final String updateType = JsonPath.parse(deploymentJson).read("deployment.update");
                     currentActionId = actionId;
-                    startDdiUpdate(actionId, swVersion);
+                    startDdiUpdate(actionId, swVersion, updateType);
                 }
             } catch (final PathNotFoundException e) {
                 // href might not be in the json response, so ignore
@@ -80,7 +81,7 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
         }
     }
 
-    private void startDdiUpdate(final long actionId, final String swVersion) {
+    private void startDdiUpdate(final long actionId, final String swVersion, final String updateType) {
         deviceUpdater.startUpdate(getTenant(), getId(), actionId, swVersion, null, null, (device, actionId1) -> {
             switch (device.getUpdateStatus().getResponseStatus()) {
             case SUCCESSFUL:
@@ -94,6 +95,6 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
                         + device.getUpdateStatus().getResponseStatus());
             }
             currentActionId = null;
-        });
+        }, updateType.equals("skip") ? ActionType.DOWNLOAD_AND_SKIP : ActionType.DOWNLOAD_AND_INSTALL);
     }
 }
