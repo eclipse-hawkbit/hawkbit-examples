@@ -17,6 +17,7 @@ import java.util.UUID;
 import org.eclipse.hawkbit.dmf.amqp.api.EventTopic;
 import org.eclipse.hawkbit.dmf.amqp.api.MessageHeaderKey;
 import org.eclipse.hawkbit.dmf.amqp.api.MessageType;
+import org.eclipse.hawkbit.dmf.json.model.DmfActionStatus;
 import org.eclipse.hawkbit.dmf.json.model.DmfDownloadAndUpdateRequest;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorRepository;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorUpdater;
@@ -189,7 +190,7 @@ public class DmfReceiverService extends MessageService {
         final Long actionId = convertMessage(message, Long.class);
 
         final SimulatedUpdate update = new SimulatedUpdate(tenant, thingId, actionId);
-        spSenderService.finishUpdateProcess(update, Arrays.asList("Simulation canceled"), null);
+        spSenderService.finishUpdateProcess(update, Arrays.asList("Simulation canceled"));
     }
 
     private void handleUpdateProcess(final Message message, final String thingId, final EventTopic actionType) {
@@ -203,17 +204,29 @@ public class DmfReceiverService extends MessageService {
         final String targetSecurityToken = downloadAndUpdateRequest.getTargetSecurityToken();
 
         deviceUpdater.startUpdate(tenant, thingId, actionId, null, downloadAndUpdateRequest.getSoftwareModules(),
-                targetSecurityToken, (device, actionId1) -> {
+                targetSecurityToken, null, (device, actionId1) -> {
                     switch (device.getUpdateStatus().getResponseStatus()) {
                     case SUCCESSFUL:
                         spSenderService.finishUpdateProcess(
                                 new SimulatedUpdate(device.getTenant(), device.getId(), actionId1),
-                                device.getUpdateStatus().getStatusMessages(), actionType);
+                                device.getUpdateStatus().getStatusMessages());
                         break;
                     case ERROR:
                         spSenderService.finishUpdateProcessWithError(
                                 new SimulatedUpdate(device.getTenant(), device.getId(), actionId1),
                                 device.getUpdateStatus().getStatusMessages());
+                        break;
+                    case DOWNLOADING:
+                        spSenderService.sendActionStatusMessage(device.getTenant(), DmfActionStatus.DOWNLOAD,
+                                device.getUpdateStatus().getStatusMessages(), actionId1);
+                        break;
+                    case DOWNLOADED:
+                        spSenderService.sendActionStatusMessage(device.getTenant(), DmfActionStatus.DOWNLOADED,
+                                device.getUpdateStatus().getStatusMessages(), actionId1);
+                        break;
+                    case RUNNING:
+                        spSenderService.sendActionStatusMessage(device.getTenant(), DmfActionStatus.RUNNING,
+                                device.getUpdateStatus().getStatusMessages(), actionId1);
                         break;
                     default:
                         break;

@@ -79,10 +79,8 @@ public class DmfSenderService extends MessageService {
      *            indicating whether to download and install or skip
      *            installation due to maintenance window.
      */
-    public void finishUpdateProcess(final SimulatedUpdate update, final List<String> updateResultMessages,
-            final EventTopic actionType) {
-        final Message updateResultMessage = createUpdateResultMessage(update,
-                actionType == EventTopic.DOWNLOAD ? DmfActionStatus.DOWNLOADED : DmfActionStatus.FINISHED,
+    public void finishUpdateProcess(final SimulatedUpdate update, final List<String> updateResultMessages) {
+        final Message updateResultMessage = createUpdateResultMessage(update, DmfActionStatus.FINISHED,
                 updateResultMessages);
         sendMessage(spExchange, updateResultMessage);
     }
