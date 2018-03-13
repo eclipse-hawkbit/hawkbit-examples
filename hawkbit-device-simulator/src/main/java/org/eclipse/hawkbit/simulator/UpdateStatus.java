@@ -76,10 +76,6 @@ public class UpdateStatus {
      * The status to response to the hawkBit update server if an simulated
      * update process should be respond with successful or failure update.
      */
-    /**
-     * @author kaizimmerm
-     *
-     */
     public enum ResponseStatus {
         /**
          * Update has been successful and response the successful update.
