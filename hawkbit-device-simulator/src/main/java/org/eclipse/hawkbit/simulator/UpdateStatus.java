@@ -76,6 +76,10 @@ public class UpdateStatus {
      * The status to response to the hawkBit update server if an simulated
      * update process should be respond with successful or failure update.
      */
+    /**
+     * @author kaizimmerm
+     *
+     */
     public enum ResponseStatus {
         /**
          * Update has been successful and response the successful update.
@@ -87,10 +91,19 @@ public class UpdateStatus {
          */
         ERROR,
 
+        /**
+         * Update is running (intermediate status).
+         */
         RUNNING,
 
+        /**
+         * Device starts to download.
+         */
         DOWNLOADING,
 
+        /**
+         * Device is finished with downloading.
+         */
         DOWNLOADED;
     }
 
