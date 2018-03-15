@@ -8,7 +8,8 @@
     http://www.eclipse.org/legal/epl-v10.html
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
    <parent>
@@ -46,8 +47,8 @@
 
    <properties>
       <feign.extension.version>9.3.1</feign.extension.version>
-      <hawkbit-core.version>0.2.0M4</hawkbit-core.version>
-      
+      <hawkbit-core.version>0.2.0-SNAPSHOT</hawkbit-core.version>
+
       <!-- Sonar - START -->
       <sonar.github.repository>eclipse/hawkbit-examples</sonar.github.repository>
       <sonar.links.ci>https://circleci.com/gh/eclipse/hawkbit-examples</sonar.links.ci>
@@ -55,8 +56,28 @@
    </properties>
 
    <dependencyManagement>
-   <dependencies>
-      <dependency>
+      <dependencies>
+         <dependency>
+            <groupId>org.eclipse.hawkbit</groupId>
+            <artifactId>hawkbit-boot-starter</artifactId>
+            <version>${hawkbit-core.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.eclipse.hawkbit</groupId>
+            <artifactId>hawkbit-dmf-api</artifactId>
+            <version>${hawkbit-core.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.eclipse.hawkbit</groupId>
+            <artifactId>hawkbit-ddi-api</artifactId>
+            <version>${hawkbit-core.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.eclipse.hawkbit</groupId>
+            <artifactId>hawkbit-mgmt-api</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+         <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-jackson</artifactId>
             <version>${feign.extension.version}</version>
@@ -72,10 +93,10 @@
             <version>${feign.extension.version}</version>
          </dependency>
          <dependency>
-         <groupId>com.vaadin</groupId>
-         <artifactId>vaadin-spring-boot-starter</artifactId>
-         <version>${vaadin.spring.version}</version>
-      </dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-spring-boot-starter</artifactId>
+            <version>${vaadin.spring.version}</version>
+         </dependency>
       </dependencies>
    </dependencyManagement>
 </project>

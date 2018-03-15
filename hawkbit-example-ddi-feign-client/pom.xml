@@ -29,7 +29,6 @@
       <dependency>
          <groupId>org.eclipse.hawkbit</groupId>
          <artifactId>hawkbit-ddi-api</artifactId>
-         <version>${project.version}</version>
       </dependency>
       <dependency>
          <groupId>com.google.guava</groupId>

@@ -61,7 +61,6 @@
       <dependency>
          <groupId>org.eclipse.hawkbit</groupId>
          <artifactId>hawkbit-boot-starter</artifactId>
-         <version>${hawkbit-core.version}</version>
       </dependency>
       <dependency>
          <groupId>com.h2database</groupId>
