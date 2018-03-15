@@ -28,6 +28,7 @@ import org.eclipse.hawkbit.dmf.amqp.api.EventTopic;
 import org.eclipse.hawkbit.dmf.json.model.DmfArtifact;
 import org.eclipse.hawkbit.dmf.json.model.DmfArtifactHash;
 import org.eclipse.hawkbit.dmf.json.model.DmfSoftwareModule;
+import org.eclipse.hawkbit.simulator.DeviceSimulatorUpdater.UpdaterCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -164,40 +165,44 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
 
         deviceUpdater.startUpdate(getTenant(), getId(), actionId, swVersion,
                 modules.stream().map(DDISimulatedDevice::convertChunk).collect(Collectors.toList()), null, gatewayToken,
-                (device, actionId1) -> {
+                sendFeedback(actionId),
+                HandlingType.SKIP.equals(updateType) ? EventTopic.DOWNLOAD : EventTopic.DOWNLOAD_AND_INSTALL);
+    }
 
-                    DdiActionFeedback feedback;
+    private UpdaterCallback sendFeedback(final long actionId) {
+        return (device) -> {
 
-                    switch (device.getUpdateStatus().getResponseStatus()) {
-                    case SUCCESSFUL:
-                        feedback = new DdiActionFeedback(actionId1, null, new DdiStatus(ExecutionStatus.CLOSED,
-                                new DdiResult(FinalResult.SUCESS, null), device.getUpdateStatus().getStatusMessages()));
-                        break;
-                    case ERROR:
-                        feedback = new DdiActionFeedback(actionId1, null,
-                                new DdiStatus(ExecutionStatus.CLOSED, new DdiResult(FinalResult.FAILURE, null),
-                                        device.getUpdateStatus().getStatusMessages()));
-                        break;
-                    case DOWNLOADING:
-                        feedback = new DdiActionFeedback(actionId1, null, new DdiStatus(ExecutionStatus.DOWNLOAD,
-                                new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
-                        break;
-                    case DOWNLOADED:
-                        feedback = new DdiActionFeedback(actionId1, null, new DdiStatus(ExecutionStatus.DOWNLOADED,
-                                new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
-                        break;
-                    case RUNNING:
-                        feedback = new DdiActionFeedback(actionId1, null, new DdiStatus(ExecutionStatus.PROCEEDING,
-                                new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
-                        break;
-                    default:
-                        throw new IllegalStateException("simulated device has an unknown response status + "
-                                + device.getUpdateStatus().getResponseStatus());
-                    }
+            DdiActionFeedback feedback;
 
-                    controllerResource.postBasedeploymentActionFeedback(feedback, getTenant(), getId(), actionId);
+            switch (device.getUpdateStatus().getResponseStatus()) {
+            case SUCCESSFUL:
+                feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.CLOSED,
+                        new DdiResult(FinalResult.SUCESS, null), device.getUpdateStatus().getStatusMessages()));
+                break;
+            case ERROR:
+                feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.CLOSED,
+                        new DdiResult(FinalResult.FAILURE, null), device.getUpdateStatus().getStatusMessages()));
+                break;
+            case DOWNLOADING:
+                feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.DOWNLOAD,
+                        new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
+                break;
+            case DOWNLOADED:
+                feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.DOWNLOADED,
+                        new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
+                break;
+            case RUNNING:
+                feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.PROCEEDING,
+                        new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
+                break;
+            default:
+                throw new IllegalStateException("simulated device has an unknown response status + "
+                        + device.getUpdateStatus().getResponseStatus());
+            }
 
-                    currentActionId = null;
-                }, HandlingType.SKIP.equals(updateType) ? EventTopic.DOWNLOAD : EventTopic.DOWNLOAD_AND_INSTALL);
+            controllerResource.postBasedeploymentActionFeedback(feedback, getTenant(), getId(), actionId);
+
+            currentActionId = null;
+        };
     }
 }

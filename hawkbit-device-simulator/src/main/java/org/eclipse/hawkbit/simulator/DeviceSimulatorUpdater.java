@@ -166,14 +166,14 @@ public class DeviceSimulatorUpdater {
         public void run() {
             if (device.getProgress() <= 0) {
                 device.setUpdateStatus(new UpdateStatus(ResponseStatus.RUNNING, "Simulation begins!"));
-                callback.sendFeedback(device, actionId);
+                callback.sendFeedback(device);
 
                 if (!CollectionUtils.isEmpty(modules)) {
                     device.setUpdateStatus(simulateDownloads());
-                    callback.sendFeedback(device, actionId);
+                    callback.sendFeedback(device);
                     if (isErrorResponse(device.getUpdateStatus())) {
                         device.setProgress(1.0);
-                        callback.sendFeedback(device, actionId);
+                        callback.sendFeedback(device);
                         eventbus.post(new ProgressUpdate(device));
                         return;
                     }
@@ -192,7 +192,7 @@ public class DeviceSimulatorUpdater {
                             rndSleep.nextInt(5_000), TimeUnit.MILLISECONDS);
                 } else {
                     device.setUpdateStatus(new UpdateStatus(ResponseStatus.SUCCESSFUL, "Simulation complete!"));
-                    callback.sendFeedback(device, actionId);
+                    callback.sendFeedback(device);
                     device.clean();
 
                 }
@@ -207,7 +207,7 @@ public class DeviceSimulatorUpdater {
                             .map(art -> "Download starts for: " + art.getFilename() + " with SHA1 hash "
                                     + art.getHashes().getSha1() + " and size " + art.getSize())
                             .collect(Collectors.toList())));
-            callback.sendFeedback(device, actionId);
+            callback.sendFeedback(device);
 
             final List<UpdateStatus> status = new ArrayList<>();
 
@@ -395,6 +395,7 @@ public class DeviceSimulatorUpdater {
      * been finished and the caller of starting the simulated update process can
      * send the result back to the hawkBit update server.
      */
+    @FunctionalInterface
     public interface UpdaterCallback {
         /**
          * Callback method to indicate that the simulated update process has
@@ -402,10 +403,8 @@ public class DeviceSimulatorUpdater {
          *
          * @param device
          *            the device which has been updated
-         * @param actionId
-         *            the ID of the action from the hawkbit update server
          */
-        void sendFeedback(AbstractSimulatedDevice device, final long actionId);
+        void sendFeedback(AbstractSimulatedDevice device);
     }
 
 }
