@@ -17,10 +17,8 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -36,9 +34,6 @@ import org.eclipse.hawkbit.dmf.json.model.DmfArtifact;
 import org.eclipse.hawkbit.dmf.json.model.DmfSoftwareModule;
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
 import org.eclipse.hawkbit.simulator.UpdateStatus.ResponseStatus;
-import org.eclipse.hawkbit.simulator.amqp.DmfSenderService;
-import org.eclipse.hawkbit.simulator.event.InitUpdate;
-import org.eclipse.hawkbit.simulator.event.ProgressUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +43,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import com.google.common.eventbus.EventBus;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 
@@ -65,13 +59,7 @@ public class DeviceSimulatorUpdater {
     private ScheduledExecutorService threadPool;
 
     @Autowired
-    private DmfSenderService spSenderService;
-
-    @Autowired
     private SimulatedDeviceFactory deviceFactory;
-
-    @Autowired
-    private EventBus eventbus;
 
     @Autowired
     private DeviceSimulatorRepository repository;
@@ -113,17 +101,10 @@ public class DeviceSimulatorUpdater {
                     .add(deviceFactory.createSimulatedDevice(id, tenant, Protocol.DMF_AMQP, 1800, null, null));
         }
 
-        if (CollectionUtils.isEmpty(modules)) {
-            device.setSwversion(swVersion);
-        } else {
-            device.setSwversion(
-                    modules.stream().map(DmfSoftwareModule::getModuleVersion).collect(Collectors.joining(", ")));
-        }
         device.setTargetSecurityToken(targetSecurityToken);
-        eventbus.post(new InitUpdate(device));
 
-        threadPool.schedule(new DeviceSimulatorUpdateThread(device, spSenderService, actionId, eventbus, threadPool,
-                callback, modules, actionType, gatewayToken), 2_000, TimeUnit.MILLISECONDS);
+        threadPool.schedule(new DeviceSimulatorUpdateThread(device, callback, modules, actionType, gatewayToken), 2_000,
+                TimeUnit.MILLISECONDS);
     }
 
     private static final class DeviceSimulatorUpdateThread implements Runnable {
@@ -134,70 +115,41 @@ public class DeviceSimulatorUpdater {
 
         private static final int MINIMUM_TOKENLENGTH_FOR_HINT = 6;
 
-        private static final Random rndSleep = new SecureRandom();
-
         private final EventTopic actionType;
 
         private final AbstractSimulatedDevice device;
-        private final DmfSenderService spSenderService;
-        private final long actionId;
-        private final EventBus eventbus;
-        private final ScheduledExecutorService threadPool;
         private final UpdaterCallback callback;
         private final List<DmfSoftwareModule> modules;
         private final String gatewayToken;
 
-        private DeviceSimulatorUpdateThread(final AbstractSimulatedDevice device,
-                final DmfSenderService spSenderService, final long actionId, final EventBus eventbus,
-                final ScheduledExecutorService threadPool, final UpdaterCallback callback,
+        private DeviceSimulatorUpdateThread(final AbstractSimulatedDevice device, final UpdaterCallback callback,
                 final List<DmfSoftwareModule> modules, final EventTopic actionType, final String gatewayToken) {
             this.device = device;
-            this.spSenderService = spSenderService;
-            this.actionId = actionId;
-            this.eventbus = eventbus;
             this.callback = callback;
             this.modules = modules;
-            this.threadPool = threadPool;
             this.actionType = actionType;
             this.gatewayToken = gatewayToken;
         }
 
         @Override
         public void run() {
-            if (device.getProgress() <= 0) {
-                device.setUpdateStatus(new UpdateStatus(ResponseStatus.RUNNING, "Simulation begins!"));
-                callback.sendFeedback(device);
+            device.setUpdateStatus(new UpdateStatus(ResponseStatus.RUNNING, "Simulation begins!"));
+            callback.sendFeedback(device);
 
-                if (!CollectionUtils.isEmpty(modules)) {
-                    device.setUpdateStatus(simulateDownloads());
-                    callback.sendFeedback(device);
-                    if (isErrorResponse(device.getUpdateStatus())) {
-                        device.setProgress(1.0);
-                        callback.sendFeedback(device);
-                        eventbus.post(new ProgressUpdate(device));
-                        return;
-                    }
+            if (!CollectionUtils.isEmpty(modules)) {
+                device.setUpdateStatus(simulateDownloads());
+                callback.sendFeedback(device);
+                if (isErrorResponse(device.getUpdateStatus())) {
+                    device.clean();
+                    return;
                 }
-                // download is 80% of the game after all
-                device.setProgress(0.8);
             }
 
             if (actionType == EventTopic.DOWNLOAD_AND_INSTALL) {
-                final double newProgress = device.getProgress() + 0.2;
-                device.setProgress(newProgress);
-                if (newProgress < 1.0) {
-                    threadPool.schedule(
-                            new DeviceSimulatorUpdateThread(device, spSenderService, actionId, eventbus, threadPool,
-                                    callback, modules, actionType, gatewayToken),
-                            rndSleep.nextInt(5_000), TimeUnit.MILLISECONDS);
-                } else {
-                    device.setUpdateStatus(new UpdateStatus(ResponseStatus.SUCCESSFUL, "Simulation complete!"));
-                    callback.sendFeedback(device);
-                    device.clean();
-
-                }
+                device.setUpdateStatus(new UpdateStatus(ResponseStatus.SUCCESSFUL, "Simulation complete!"));
+                callback.sendFeedback(device);
+                device.clean();
             }
-            eventbus.post(new ProgressUpdate(device));
         }
 
         private UpdateStatus simulateDownloads() {

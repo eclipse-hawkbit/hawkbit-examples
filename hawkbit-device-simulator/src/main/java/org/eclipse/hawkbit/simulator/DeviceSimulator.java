@@ -20,14 +20,12 @@ import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
-import com.vaadin.spring.annotation.EnableVaadin;
 
 /**
  * The main-method to start the Spring-Boot application.
  *
  */
 @SpringBootApplication
-@EnableVaadin
 @EnableScheduling
 public class DeviceSimulator {
 
