@@ -46,7 +46,7 @@ public class DeviceSimulator {
      */
     @Bean
     ScheduledExecutorService threadPool() {
-        return Executors.newScheduledThreadPool(8);
+        return Executors.newScheduledThreadPool(4);
     }
 
     @Bean
