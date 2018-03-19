@@ -19,6 +19,7 @@ public abstract class AbstractSimulatedDevice {
 
     private String id;
     private String tenant;
+    private Status status;
     private double progress;
     private String swversion = "unknown";
     private UpdateStatus updateStatus;
@@ -86,6 +87,7 @@ public abstract class AbstractSimulatedDevice {
     AbstractSimulatedDevice(final String id, final String tenant, final Protocol protocol, final int pollDelaySec) {
         this.id = id;
         this.tenant = tenant;
+        this.status = Status.UNKNWON;
         this.progress = 0.0;
         this.protocol = protocol;
         this.pollDelaySec = pollDelaySec;
@@ -118,6 +120,10 @@ public abstract class AbstractSimulatedDevice {
         return id;
     }
 
+    public Status getStatus() {
+        return status;
+    }
+
     public double getProgress() {
         return progress;
     }
@@ -132,6 +138,10 @@ public abstract class AbstractSimulatedDevice {
 
     public void setTenant(final String tenant) {
         this.tenant = tenant;
+    }
+
+    public void setStatus(final Status status) {
+        this.status = status;
     }
 
     public void setProgress(final double progress) {
