@@ -92,11 +92,6 @@
             <artifactId>feign-jaxrs</artifactId>
             <version>${feign.extension.version}</version>
          </dependency>
-         <dependency>
-            <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-spring-boot-starter</artifactId>
-            <version>${vaadin.spring.version}</version>
-         </dependency>
       </dependencies>
    </dependencyManagement>
 </project>
