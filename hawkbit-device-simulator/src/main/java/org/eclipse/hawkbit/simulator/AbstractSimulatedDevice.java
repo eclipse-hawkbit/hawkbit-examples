@@ -8,23 +8,16 @@
  */
 package org.eclipse.hawkbit.simulator;
 
-import org.eclipse.hawkbit.simulator.UpdateStatus.ResponseStatus;
-
 /**
  * The bean of a simulated device which can be stored in the
  * {@link DeviceSimulatorRepository} or shown in the UI.
- * 
- * @author Michael Hirsch
  *
  */
 public abstract class AbstractSimulatedDevice {
 
     private String id;
     private String tenant;
-    private Status status;
-    private double progress;
-    private String swversion = "unknown";
-    private UpdateStatus updateStatus = new UpdateStatus(ResponseStatus.SUCCESSFUL, "Simulation complete!");
+    private UpdateStatus updateStatus;
     private Protocol protocol = Protocol.DMF_AMQP;
     private String targetSecurityToken;
     private int pollDelaySec;
@@ -46,31 +39,6 @@ public abstract class AbstractSimulatedDevice {
     }
 
     /**
-     * The current status of the simulated device.
-     * 
-     * @author Michael Hirsch
-     *
-     */
-    public enum Status {
-        /**
-         * device is in status unknown.
-         */
-        UNKNWON,
-        /**
-         * device is in status pending which represents is updating software.
-         */
-        PEDNING,
-        /**
-         * device has been updated successfully.
-         */
-        FINISH,
-        /**
-         * device has been updated with an error.
-         */
-        ERROR;
-    }
-
-    /**
      * empty constructor.
      */
     AbstractSimulatedDevice() {
@@ -84,14 +52,11 @@ public abstract class AbstractSimulatedDevice {
      *            the ID of the simulated device
      * @param tenant
      *            the tenant of the simulated device
-     * @param int
-     *            pollDelaySec
+     * @param pollDelaySec
      */
     AbstractSimulatedDevice(final String id, final String tenant, final Protocol protocol, final int pollDelaySec) {
         this.id = id;
         this.tenant = tenant;
-        this.status = Status.UNKNWON;
-        this.progress = 0.0;
         this.protocol = protocol;
         this.pollDelaySec = pollDelaySec;
     }
@@ -115,19 +80,11 @@ public abstract class AbstractSimulatedDevice {
      * removed from the repository.
      */
     public void clean() {
-
+        this.updateStatus = null;
     }
 
     public String getId() {
         return id;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public double getProgress() {
-        return progress;
     }
 
     public String getTenant() {
@@ -140,22 +97,6 @@ public abstract class AbstractSimulatedDevice {
 
     public void setTenant(final String tenant) {
         this.tenant = tenant;
-    }
-
-    public void setStatus(final Status status) {
-        this.status = status;
-    }
-
-    public void setProgress(final double progress) {
-        this.progress = progress;
-    }
-
-    public String getSwversion() {
-        return swversion;
-    }
-
-    public void setSwversion(final String swversion) {
-        this.swversion = swversion;
     }
 
     public UpdateStatus getUpdateStatus() {

@@ -14,8 +14,6 @@ import feign.RequestTemplate;
 /**
  * A feign interceptor to apply the gateway-token header to each http-request.
  * 
- * @author Michael Hirsch
- *
  */
 public class GatewayTokenInterceptor implements RequestInterceptor {
 

@@ -14,13 +14,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.eclipse.hawkbit.simulator.event.NextPollCounterUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import com.google.common.eventbus.EventBus;
 
 /**
  * Poll time trigger which executes the {@link DDISimulatedDevice#poll()} every
@@ -36,9 +33,6 @@ public class NextPollTimeController {
 
     @Autowired
     private DeviceSimulatorRepository repository;
-
-    @Autowired
-    private EventBus eventBus;
 
     /**
      * Constructor which schedules the poll trigger runnable every second.
@@ -65,7 +59,6 @@ public class NextPollTimeController {
 
                 device.setNextPollCounterSec(nextCounter);
             });
-            eventBus.post(new NextPollCounterUpdate(devices));
         }
     }
 }

@@ -43,6 +43,19 @@ public class UpdateStatus {
         statusMessages.add(message);
     }
 
+    /**
+     * Constructor including status message.
+     * 
+     * @param responseStatus
+     *            of the update
+     * @param messages
+     *            of the update status
+     */
+    public UpdateStatus(final ResponseStatus responseStatus, final List<String> statusMessages) {
+        this(responseStatus);
+        this.statusMessages = statusMessages;
+    }
+
     public ResponseStatus getResponseStatus() {
         return responseStatus;
     }
@@ -72,7 +85,22 @@ public class UpdateStatus {
         /**
          * Update has been not successful and response the error update.
          */
-        ERROR;
+        ERROR,
+
+        /**
+         * Update is running (intermediate status).
+         */
+        RUNNING,
+
+        /**
+         * Device starts to download.
+         */
+        DOWNLOADING,
+
+        /**
+         * Device is finished with downloading.
+         */
+        DOWNLOADED;
     }
 
 }

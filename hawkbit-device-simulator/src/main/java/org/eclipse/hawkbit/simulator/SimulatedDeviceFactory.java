@@ -12,15 +12,24 @@ import java.net.URL;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.hawkbit.ddi.client.resource.RootControllerResourceClient;
+import org.eclipse.hawkbit.feign.core.client.IgnoreMultipleConsumersProducersSpringMvcContract;
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
 import org.eclipse.hawkbit.simulator.amqp.DmfSenderService;
-import org.eclipse.hawkbit.simulator.http.ControllerResource;
 import org.eclipse.hawkbit.simulator.http.GatewayTokenInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.netflix.feign.support.ResponseEntityDecoder;
+import org.springframework.hateoas.hal.Jackson2HalModule;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import feign.Feign;
-import feign.Logger;
+import feign.Logger.Level;
+import feign.jackson.JacksonDecoder;
+import feign.jackson.JacksonEncoder;
+import feign.slf4j.Slf4jLogger;
 
 /**
  * The simulated device factory to create either {@link DMFSimulatedDevice} or
@@ -76,10 +85,19 @@ public class SimulatedDeviceFactory {
 
     private AbstractSimulatedDevice createDdiDevice(final String id, final String tenant, final int pollDelaySec,
             final URL baseEndpoint, final String gatewayToken) {
-        final ControllerResource controllerResource = Feign.builder().logger(new Logger.ErrorLogger())
-                .requestInterceptor(new GatewayTokenInterceptor(gatewayToken)).logLevel(Logger.Level.BASIC)
-                .target(ControllerResource.class, baseEndpoint.toString());
-        return new DDISimulatedDevice(id, tenant, pollDelaySec, controllerResource, deviceUpdater);
+
+        final ObjectMapper mapper = new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .registerModule(new Jackson2HalModule());
+
+        final RootControllerResourceClient controllerResource = Feign.builder()
+                .requestInterceptor(new GatewayTokenInterceptor(gatewayToken))
+                .contract(new IgnoreMultipleConsumersProducersSpringMvcContract()).logLevel(Level.HEADERS)
+                .decoder(new ResponseEntityDecoder(new JacksonDecoder(mapper))).encoder(new JacksonEncoder())
+                .logger(new Slf4jLogger()).decode404()
+                .target(RootControllerResourceClient.class, baseEndpoint.toString());
+
+        return new DDISimulatedDevice(id, tenant, pollDelaySec, controllerResource, deviceUpdater, gatewayToken);
     }
 
     private AbstractSimulatedDevice createDmfDevice(final String id, final String tenant, final int pollDelaySec,

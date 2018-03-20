@@ -34,35 +34,20 @@ Configuration property `hawkbit.device.simulator.amqp.enabled=false`
 
 ## Usage
 
-### Graphical User Interface
-The device simulator comes with a graphical user interface which makes it very easy to generate dummy devices handled by the device simulator.
-The status and the update progress of the simulated device are shown in the UI.
-The UI can be accessed via the URL:
-```
-http://localhost:8083
-```
-
- ![](src/main/images/generateScreenshot.png)
-
- ![](src/main/images/updateProcessScreenshot.png)
-
- ![](src/main/images/updateResultOverviewScreenshot.png)
-
-
 ### REST API
 The device simulator exposes an REST-API which can be used to trigger device creation.
 
 Optional parameters:
 * name : name prefix simulated devices (default: "dmfSimulated"), followed by counter
 * amount : number of simulated devices (default: 20, capped at: 4000)
-* tenant : in a multi-tenenat ready hawkBit installation (default: "DEFAULT")
-* api : the API which should be used for the simulated device either `dmf` or `ddi` (default: "ddi")
-* endpoint :  URL which defines the hawkbit DDI base endpoint (deffault: "http://localhost:8080")
+* tenant : in a multi-tenant ready hawkBit installation (default: "DEFAULT")
+* api : the API which should be used for the simulated device either `dmf` or `ddi` (default: "dmf")
+* endpoint :  URL which defines the hawkbit DDI base endpoint (default: "http://localhost:8080")
 * polldelay : number in milliseconds of the delay when DDI simulated devices should poll the endpoint (default: "30")
 * gatewaytoken : an hawkbit gateway token to be used in case hawkbit does not allow anonymous access for DDI devices (default: "")
 
 
-Example: for 20 simulated devices (default)
+Example: for 20 simulated devices by DMF API (default)
 ```
 http://localhost:8083/start
 ```

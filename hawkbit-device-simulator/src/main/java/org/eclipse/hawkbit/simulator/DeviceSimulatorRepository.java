@@ -20,8 +20,6 @@ import org.springframework.stereotype.Service;
  * An in-memory simulated device repository to hold the simulated device in
  * memory and be able to retrieve them again.
  * 
- * @author Michael Hirsch
- *
  */
 @Service
 public class DeviceSimulatorRepository {

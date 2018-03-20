@@ -8,12 +8,32 @@
  */
 package org.eclipse.hawkbit.simulator;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.eclipse.hawkbit.ddi.json.model.DdiActionFeedback;
+import org.eclipse.hawkbit.ddi.json.model.DdiArtifact;
+import org.eclipse.hawkbit.ddi.json.model.DdiChunk;
+import org.eclipse.hawkbit.ddi.json.model.DdiControllerBase;
+import org.eclipse.hawkbit.ddi.json.model.DdiDeployment.HandlingType;
+import org.eclipse.hawkbit.ddi.json.model.DdiDeploymentBase;
+import org.eclipse.hawkbit.ddi.json.model.DdiResult;
+import org.eclipse.hawkbit.ddi.json.model.DdiResult.FinalResult;
+import org.eclipse.hawkbit.ddi.json.model.DdiStatus;
+import org.eclipse.hawkbit.ddi.json.model.DdiStatus.ExecutionStatus;
+import org.eclipse.hawkbit.ddi.rest.api.DdiRootControllerRestApi;
 import org.eclipse.hawkbit.dmf.amqp.api.EventTopic;
-import org.eclipse.hawkbit.simulator.http.ControllerResource;
+import org.eclipse.hawkbit.dmf.json.model.DmfArtifact;
+import org.eclipse.hawkbit.dmf.json.model.DmfArtifactHash;
+import org.eclipse.hawkbit.dmf.json.model.DmfSoftwareModule;
+import org.eclipse.hawkbit.simulator.DeviceSimulatorUpdater.UpdaterCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
-import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
 
 /**
@@ -24,9 +44,11 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DDISimulatedDevice.class);
 
-    private final ControllerResource controllerResource;
+    private final DdiRootControllerRestApi controllerResource;
 
     private final DeviceSimulatorUpdater deviceUpdater;
+
+    private final String gatewayToken;
 
     private volatile boolean removed;
     private volatile Long currentActionId;
@@ -42,12 +64,16 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
      *            the http controller resource
      * @param deviceUpdater
      *            the service to update devices
+     * @param gatewayToken
+     *            to authenticate at DDI and for download as well
      */
     public DDISimulatedDevice(final String id, final String tenant, final int pollDelaySec,
-            final ControllerResource controllerResource, final DeviceSimulatorUpdater deviceUpdater) {
+            final DdiRootControllerRestApi controllerResource, final DeviceSimulatorUpdater deviceUpdater,
+            final String gatewayToken) {
         super(id, tenant, Protocol.DDI_HTTP, pollDelaySec);
         this.controllerResource = controllerResource;
         this.deviceUpdater = deviceUpdater;
+        this.gatewayToken = gatewayToken;
     }
 
     @Override
@@ -62,16 +88,39 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
     @Override
     public void poll() {
         if (!removed) {
-            final String basePollJson = controllerResource.get(getTenant(), getId());
+            ResponseEntity<DdiControllerBase> poll = null;
             try {
-                final String href = JsonPath.parse(basePollJson).read("_links.deploymentBase.href");
+                poll = controllerResource.getControllerBase(getTenant(), getId());
+            } catch (final RuntimeException ex) {
+                LOGGER.error("Failed base poll", ex);
+                return;
+            }
+
+            if (!HttpStatus.OK.equals(poll.getStatusCode())) {
+                return;
+            }
+
+            try {
+                final String href = poll.getBody().getLink("deploymentBase").getHref();
+                if (href == null) {
+                    return;
+                }
+
                 final long actionId = Long.parseLong(href.substring(href.lastIndexOf('/') + 1, href.indexOf('?')));
                 if (currentActionId == null || currentActionId == actionId) {
-                    final String deploymentJson = controllerResource.getDeployment(getTenant(), getId(), actionId);
-                    final String swVersion = JsonPath.parse(deploymentJson).read("deployment.chunks[0].version");
-                    final String updateType = JsonPath.parse(deploymentJson).read("deployment.update");
+                    final ResponseEntity<DdiDeploymentBase> action = controllerResource
+                            .getControllerBasedeploymentAction(getTenant(), getId(), actionId, -1, null);
+
+                    if (!HttpStatus.OK.equals(action.getStatusCode())) {
+                        return;
+                    }
+
+                    final String swVersion = action.getBody().getDeployment().getChunks().get(0).getVersion();
+                    final HandlingType updateType = action.getBody().getDeployment().getUpdate();
+                    final List<DdiChunk> modules = action.getBody().getDeployment().getChunks();
+
                     currentActionId = actionId;
-                    startDdiUpdate(actionId, swVersion, updateType);
+                    startDdiUpdate(actionId, swVersion, updateType, modules);
                 }
             } catch (final PathNotFoundException e) {
                 // href might not be in the json response, so ignore
@@ -82,20 +131,80 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
         }
     }
 
-    private void startDdiUpdate(final long actionId, final String swVersion, final String updateType) {
-        deviceUpdater.startUpdate(getTenant(), getId(), actionId, swVersion, null, null, (device, actionId1) -> {
-            switch (device.getUpdateStatus().getResponseStatus()) {
-            case SUCCESSFUL:
-                controllerResource.postSuccessFeedback(getTenant(), getId(), actionId1);
-                break;
-            case ERROR:
-                controllerResource.postErrorFeedback(getTenant(), getId(), actionId1);
-                break;
-            default:
-                throw new IllegalStateException("simulated device has an unknown response status + "
-                        + device.getUpdateStatus().getResponseStatus());
-            }
+    private static DmfSoftwareModule convertChunk(final DdiChunk ddi) {
+        final DmfSoftwareModule converted = new DmfSoftwareModule();
+        converted.setModuleVersion(ddi.getVersion());
+        converted.setArtifacts(
+                ddi.getArtifacts().stream().map(DDISimulatedDevice::convertArtifact).collect(Collectors.toList()));
+
+        return converted;
+    }
+
+    private static DmfArtifact convertArtifact(final DdiArtifact ddi) {
+        final DmfArtifact converted = new DmfArtifact();
+        converted.setSize(ddi.getSize());
+        converted.setFilename(ddi.getFilename());
+        converted.setHashes(new DmfArtifactHash(ddi.getHashes().getSha1(), (ddi.getHashes().getMd5())));
+        final Map<String, String> urls = new HashMap<>();
+
+        if (ddi.getLink("download") != null) {
+            urls.put("HTTPS", ddi.getLink("download").getHref());
+        }
+
+        if (ddi.getLink("download-http") != null) {
+            urls.put("HTTP", ddi.getLink("download-http").getHref());
+        }
+
+        converted.setUrls(urls);
+
+        return converted;
+    }
+
+    private void startDdiUpdate(final long actionId, final String swVersion, final HandlingType updateType,
+            final List<DdiChunk> modules) {
+
+        deviceUpdater.startUpdate(getTenant(), getId(), actionId, swVersion,
+                modules.stream().map(DDISimulatedDevice::convertChunk).collect(Collectors.toList()), null, gatewayToken,
+                sendFeedback(actionId),
+                HandlingType.SKIP.equals(updateType) ? EventTopic.DOWNLOAD : EventTopic.DOWNLOAD_AND_INSTALL);
+    }
+
+    private UpdaterCallback sendFeedback(final long actionId) {
+        return device -> {
+            final DdiActionFeedback feedback = calculateFeedback(actionId, device);
+            controllerResource.postBasedeploymentActionFeedback(feedback, getTenant(), getId(), actionId);
             currentActionId = null;
-        }, updateType.equals("skip") ? EventTopic.DOWNLOAD : EventTopic.DOWNLOAD_AND_INSTALL);
+        };
+    }
+
+    private DdiActionFeedback calculateFeedback(final long actionId, final AbstractSimulatedDevice device) {
+        DdiActionFeedback feedback;
+
+        switch (device.getUpdateStatus().getResponseStatus()) {
+        case SUCCESSFUL:
+            feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.CLOSED,
+                    new DdiResult(FinalResult.SUCESS, null), device.getUpdateStatus().getStatusMessages()));
+            break;
+        case ERROR:
+            feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.CLOSED,
+                    new DdiResult(FinalResult.FAILURE, null), device.getUpdateStatus().getStatusMessages()));
+            break;
+        case DOWNLOADING:
+            feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.DOWNLOAD,
+                    new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
+            break;
+        case DOWNLOADED:
+            feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.DOWNLOADED,
+                    new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
+            break;
+        case RUNNING:
+            feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.PROCEEDING,
+                    new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
+            break;
+        default:
+            throw new IllegalStateException("simulated device has an unknown response status + "
+                    + device.getUpdateStatus().getResponseStatus());
+        }
+        return feedback;
     }
 }

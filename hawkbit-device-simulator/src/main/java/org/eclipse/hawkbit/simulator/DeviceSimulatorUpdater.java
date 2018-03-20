@@ -17,10 +17,8 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -36,9 +34,6 @@ import org.eclipse.hawkbit.dmf.json.model.DmfArtifact;
 import org.eclipse.hawkbit.dmf.json.model.DmfSoftwareModule;
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
 import org.eclipse.hawkbit.simulator.UpdateStatus.ResponseStatus;
-import org.eclipse.hawkbit.simulator.amqp.DmfSenderService;
-import org.eclipse.hawkbit.simulator.event.InitUpdate;
-import org.eclipse.hawkbit.simulator.event.ProgressUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,8 +41,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
-import com.google.common.eventbus.EventBus;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 
@@ -64,13 +59,7 @@ public class DeviceSimulatorUpdater {
     private ScheduledExecutorService threadPool;
 
     @Autowired
-    private DmfSenderService spSenderService;
-
-    @Autowired
     private SimulatedDeviceFactory deviceFactory;
-
-    @Autowired
-    private EventBus eventbus;
 
     @Autowired
     private DeviceSimulatorRepository repository;
@@ -91,6 +80,9 @@ public class DeviceSimulatorUpdater {
      *            the software version as static value in case modules is null
      * @param targetSecurityToken
      *            the target security token for download authentication
+     * @param gatewayToken
+     *            as alternative to target token the gateway token for download
+     *            authentication
      * @param callback
      *            the callback which gets called when the simulated update
      *            process has been finished
@@ -99,8 +91,8 @@ public class DeviceSimulatorUpdater {
      *            installation due to maintenance window.
      */
     public void startUpdate(final String tenant, final String id, final long actionId, final String swVersion,
-            final List<DmfSoftwareModule> modules, final String targetSecurityToken, final UpdaterCallback callback,
-            final EventTopic actionType) {
+            final List<DmfSoftwareModule> modules, final String targetSecurityToken, final String gatewayToken,
+            final UpdaterCallback callback, final EventTopic actionType) {
         AbstractSimulatedDevice device = repository.get(tenant, id);
 
         // plug and play - non existing device will be auto created
@@ -109,17 +101,10 @@ public class DeviceSimulatorUpdater {
                     .add(deviceFactory.createSimulatedDevice(id, tenant, Protocol.DMF_AMQP, 1800, null, null));
         }
 
-        if (CollectionUtils.isEmpty(modules)) {
-            device.setSwversion(swVersion);
-        } else {
-            device.setSwversion(
-                    modules.stream().map(DmfSoftwareModule::getModuleVersion).collect(Collectors.joining(", ")));
-        }
         device.setTargetSecurityToken(targetSecurityToken);
-        eventbus.post(new InitUpdate(device));
 
-        threadPool.schedule(new DeviceSimulatorUpdateThread(device, spSenderService, actionId, eventbus, threadPool,
-                callback, modules, actionType), 2_000, TimeUnit.MILLISECONDS);
+        threadPool.schedule(new DeviceSimulatorUpdateThread(device, callback, modules, actionType, gatewayToken), 2_000,
+                TimeUnit.MILLISECONDS);
     }
 
     private static final class DeviceSimulatorUpdateThread implements Runnable {
@@ -130,71 +115,61 @@ public class DeviceSimulatorUpdater {
 
         private static final int MINIMUM_TOKENLENGTH_FOR_HINT = 6;
 
-        private static final Random rndSleep = new SecureRandom();
-
         private final EventTopic actionType;
 
         private final AbstractSimulatedDevice device;
-        private final DmfSenderService spSenderService;
-        private final long actionId;
-        private final EventBus eventbus;
-        private final ScheduledExecutorService threadPool;
         private final UpdaterCallback callback;
         private final List<DmfSoftwareModule> modules;
+        private final String gatewayToken;
 
-        private DeviceSimulatorUpdateThread(final AbstractSimulatedDevice device,
-                final DmfSenderService spSenderService, final long actionId, final EventBus eventbus,
-                final ScheduledExecutorService threadPool, final UpdaterCallback callback,
-                final List<DmfSoftwareModule> modules, final EventTopic actionType) {
+        private DeviceSimulatorUpdateThread(final AbstractSimulatedDevice device, final UpdaterCallback callback,
+                final List<DmfSoftwareModule> modules, final EventTopic actionType, final String gatewayToken) {
             this.device = device;
-            this.spSenderService = spSenderService;
-            this.actionId = actionId;
-            this.eventbus = eventbus;
             this.callback = callback;
             this.modules = modules;
-            this.threadPool = threadPool;
             this.actionType = actionType;
+            this.gatewayToken = gatewayToken;
         }
 
         @Override
         public void run() {
-            if (device.getProgress() <= 0) {
-                if (modules != null) {
-                    device.setUpdateStatus(simulateDownloads(device.getTargetSecurityToken()));
-                    if (isErrorResponse(device.getUpdateStatus())) {
-                        device.setProgress(1.0);
-                        callback.updateFinished(device, actionId);
-                        eventbus.post(new ProgressUpdate(device));
-                        return;
-                    }
+            device.setUpdateStatus(new UpdateStatus(ResponseStatus.RUNNING, "Simulation begins!"));
+            callback.sendFeedback(device);
+
+            if (!CollectionUtils.isEmpty(modules)) {
+                device.setUpdateStatus(simulateDownloads());
+                callback.sendFeedback(device);
+                if (isErrorResponse(device.getUpdateStatus())) {
+                    device.clean();
+                    return;
                 }
-                // download is 80% of the game after all
-                device.setProgress(0.8);
             }
 
             if (actionType == EventTopic.DOWNLOAD_AND_INSTALL) {
-                final double newProgress = device.getProgress() + 0.2;
-                device.setProgress(newProgress);
-                if (newProgress < 1.0) {
-                    threadPool.schedule(new DeviceSimulatorUpdateThread(device, spSenderService, actionId, eventbus,
-                            threadPool, callback, modules, actionType), rndSleep.nextInt(5_000), TimeUnit.MILLISECONDS);
-                } else {
-                    callback.updateFinished(device, actionId);
-                }
+                device.setUpdateStatus(new UpdateStatus(ResponseStatus.SUCCESSFUL, "Simulation complete!"));
+                callback.sendFeedback(device);
+                device.clean();
             }
-            eventbus.post(new ProgressUpdate(device));
         }
 
-        private UpdateStatus simulateDownloads(final String targetToken) {
+        private UpdateStatus simulateDownloads() {
+
+            device.setUpdateStatus(new UpdateStatus(ResponseStatus.DOWNLOADING,
+                    modules.stream().flatMap(mod -> mod.getArtifacts().stream())
+                            .map(art -> "Download starts for: " + art.getFilename() + " with SHA1 hash "
+                                    + art.getHashes().getSha1() + " and size " + art.getSize())
+                            .collect(Collectors.toList())));
+            callback.sendFeedback(device);
+
             final List<UpdateStatus> status = new ArrayList<>();
 
             LOGGER.info("Simulate downloads for {}", device.getId());
 
-            modules.forEach(
-                    module -> module.getArtifacts().forEach(artifact -> handleArtifact(targetToken, status, artifact)));
+            modules.forEach(module -> module.getArtifacts().forEach(
+                    artifact -> handleArtifact(device.getTargetSecurityToken(), gatewayToken, status, artifact)));
 
-            final UpdateStatus result = new UpdateStatus(ResponseStatus.SUCCESSFUL);
-            result.getStatusMessages().add("Simulation complete!");
+            final UpdateStatus result = new UpdateStatus(ResponseStatus.DOWNLOADED);
+            result.getStatusMessages().add("Simulator: Download complete!");
             status.forEach(download -> {
                 result.getStatusMessages().addAll(download.getStatusMessages());
                 if (isErrorResponse(download)) {
@@ -215,20 +190,20 @@ public class DeviceSimulatorUpdater {
             return ResponseStatus.ERROR.equals(status.getResponseStatus());
         }
 
-        private static void handleArtifact(final String targetToken, final List<UpdateStatus> status,
-                final DmfArtifact artifact) {
+        private static void handleArtifact(final String targetToken, final String gatewayToken,
+                final List<UpdateStatus> status, final DmfArtifact artifact) {
 
             if (artifact.getUrls().containsKey("HTTPS")) {
-                status.add(downloadUrl(artifact.getUrls().get("HTTPS"), targetToken, artifact.getHashes().getSha1(),
-                        artifact.getSize()));
+                status.add(downloadUrl(artifact.getUrls().get("HTTPS"), gatewayToken, targetToken,
+                        artifact.getHashes().getSha1(), artifact.getSize()));
             } else if (artifact.getUrls().containsKey("HTTP")) {
-                status.add(downloadUrl(artifact.getUrls().get("HTTP"), targetToken, artifact.getHashes().getSha1(),
-                        artifact.getSize()));
+                status.add(downloadUrl(artifact.getUrls().get("HTTP"), gatewayToken, targetToken,
+                        artifact.getHashes().getSha1(), artifact.getSize()));
             }
         }
 
-        private static UpdateStatus downloadUrl(final String url, final String targetToken, final String sha1Hash,
-                final long size) {
+        private static UpdateStatus downloadUrl(final String url, final String gatewayToken, final String targetToken,
+                final String sha1Hash, final long size) {
 
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Downloading {} with token {}, expected sha1 hash {} and size {}", url,
@@ -236,7 +211,7 @@ public class DeviceSimulatorUpdater {
             }
 
             try {
-                return readAndCheckDownloadUrl(url, targetToken, sha1Hash, size);
+                return readAndCheckDownloadUrl(url, gatewayToken, targetToken, sha1Hash, size);
             } catch (IOException | KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
                 LOGGER.error("Failed to download " + url, e);
                 return new UpdateStatus(ResponseStatus.ERROR, "Failed to download " + url + ": " + e.getMessage());
@@ -244,13 +219,18 @@ public class DeviceSimulatorUpdater {
 
         }
 
-        private static UpdateStatus readAndCheckDownloadUrl(final String url, final String targetToken,
-                final String sha1Hash, final long size)
+        private static UpdateStatus readAndCheckDownloadUrl(final String url, final String gatewayToken,
+                final String targetToken, final String sha1Hash, final long size)
                 throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException, IOException {
             long overallread;
             final CloseableHttpClient httpclient = createHttpClientThatAcceptsAllServerCerts();
             final HttpGet request = new HttpGet(url);
-            request.addHeader(HttpHeaders.AUTHORIZATION, "TargetToken " + targetToken);
+
+            if (!StringUtils.isEmpty(targetToken)) {
+                request.addHeader(HttpHeaders.AUTHORIZATION, "TargetToken " + targetToken);
+            } else if (!StringUtils.isEmpty(gatewayToken)) {
+                request.addHeader(HttpHeaders.AUTHORIZATION, "GatewayToken " + gatewayToken);
+            }
 
             final String sha1HashResult;
             try (final CloseableHttpResponse response = httpclient.execute(request)) {
@@ -375,10 +355,8 @@ public class DeviceSimulatorUpdater {
          *
          * @param device
          *            the device which has been updated
-         * @param actionId
-         *            the ID of the action from the hawkbit update server
          */
-        void updateFinished(AbstractSimulatedDevice device, final Long actionId);
+        void sendFeedback(AbstractSimulatedDevice device);
     }
 
 }

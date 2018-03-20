@@ -29,7 +29,6 @@
       <dependency>
          <groupId>org.eclipse.hawkbit</groupId>
          <artifactId>hawkbit-mgmt-api</artifactId>
-         <version>${project.version}</version>
       </dependency>
       <dependency>
          <groupId>com.google.guava</groupId>
@@ -50,6 +49,10 @@
       <dependency>
          <artifactId>hibernate-validator</artifactId>
          <groupId>org.hibernate</groupId>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.tomcat.embed</groupId>
+         <artifactId>tomcat-embed-el</artifactId>
       </dependency>
    </dependencies>
 </project>

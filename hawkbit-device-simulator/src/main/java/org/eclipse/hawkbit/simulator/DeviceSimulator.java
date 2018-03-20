@@ -18,16 +18,11 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 
-import com.google.common.eventbus.AsyncEventBus;
-import com.google.common.eventbus.EventBus;
-import com.vaadin.spring.annotation.EnableVaadin;
-
 /**
  * The main-method to start the Spring-Boot application.
  *
  */
 @SpringBootApplication
-@EnableVaadin
 @EnableScheduling
 public class DeviceSimulator {
 
@@ -36,19 +31,11 @@ public class DeviceSimulator {
     }
 
     /**
-     * @return an asynchronous event bus to publish and retrieve events.
-     */
-    @Bean
-    EventBus eventBus() {
-        return new AsyncEventBus(Executors.newFixedThreadPool(4));
-    }
-
-    /**
      * @return central ScheduledExecutorService
      */
     @Bean
     ScheduledExecutorService threadPool() {
-        return Executors.newScheduledThreadPool(8);
+        return Executors.newScheduledThreadPool(4);
     }
 
     @Bean
