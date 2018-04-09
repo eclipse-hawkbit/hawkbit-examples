@@ -62,9 +62,7 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
      */
     @Override
     public void poll() {
-        
-        String testForSonar = null;
-        
+
         if (!removed) {
             final String basePollJson = controllerResource.get(getTenant(), getId());
             try {
