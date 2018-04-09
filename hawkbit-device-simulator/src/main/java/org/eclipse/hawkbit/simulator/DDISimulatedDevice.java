@@ -80,6 +80,7 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
     public void clean() {
         super.clean();
         removed = true;
+        System.exit(2); // Should be a Sonar finding!
     }
 
     /**
@@ -87,6 +88,9 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
      */
     @Override
     public void poll() {
+        
+        String testForSonar = null;
+        
         if (!removed) {
             ResponseEntity<DdiControllerBase> poll = null;
             try {
