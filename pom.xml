@@ -47,7 +47,7 @@
 
    <properties>
       <feign.extension.version>9.3.1</feign.extension.version>
-      <hawkbit-core.version>0.2.0M7</hawkbit-core.version>
+      <hawkbit.version>0.2.0M7</hawkbit.version>
       
       <!-- Release - START -->
       <release.scm.connection>scm:git:git@github.com:eclipse/hawkbit-examples.git</release.scm.connection>
@@ -60,6 +60,12 @@
       <sonar.links.ci>https://circleci.com/gh/eclipse/hawkbit-examples</sonar.links.ci>
       <!-- Sonar - END -->
    </properties>
+   
+   <scm>
+      <connection>${release.scm.connection}</connection>
+      <developerConnection>${release.scm.developerConnection}</developerConnection>
+      <url>${release.scm.url}</url>
+   </scm>
    
    <build>
       <plugins>
@@ -164,22 +170,22 @@
          <dependency>
             <groupId>org.eclipse.hawkbit</groupId>
             <artifactId>hawkbit-boot-starter</artifactId>
-            <version>${hawkbit-core.version}</version>
+            <version>${hawkbit.version}</version>
          </dependency>
          <dependency>
             <groupId>org.eclipse.hawkbit</groupId>
             <artifactId>hawkbit-dmf-api</artifactId>
-            <version>${hawkbit-core.version}</version>
+            <version>${hawkbit.version}</version>
          </dependency>
          <dependency>
             <groupId>org.eclipse.hawkbit</groupId>
             <artifactId>hawkbit-ddi-api</artifactId>
-            <version>${hawkbit-core.version}</version>
+            <version>${hawkbit.version}</version>
          </dependency>
          <dependency>
             <groupId>org.eclipse.hawkbit</groupId>
             <artifactId>hawkbit-mgmt-api</artifactId>
-            <version>${project.version}</version>
+            <version>${hawkbit.version}</version>
          </dependency>
          <dependency>
             <groupId>io.github.openfeign</groupId>
