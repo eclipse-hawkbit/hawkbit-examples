@@ -48,12 +48,116 @@
    <properties>
       <feign.extension.version>9.3.1</feign.extension.version>
       <hawkbit-core.version>0.2.0M7</hawkbit-core.version>
+      
+      <!-- Release - START -->
+      <release.scm.connection>scm:git:git@github.com:eclipse/hawkbit-examples.git</release.scm.connection>
+      <release.scm.developerConnection>scm:git:https://github.com/eclipse/hawkbit-examples.git</release.scm.developerConnection>
+      <release.scm.url>https://github.com/eclipse/hawkbit-examples.git</release.scm.url>
+      <!-- Release - END -->
 
       <!-- Sonar - START -->
       <sonar.github.repository>eclipse/hawkbit-examples</sonar.github.repository>
       <sonar.links.ci>https://circleci.com/gh/eclipse/hawkbit-examples</sonar.links.ci>
       <!-- Sonar - END -->
    </properties>
+   
+   <build>
+      <plugins>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+               <compilerArgument>-Xlint:all</compilerArgument>
+               <showWarnings>true</showWarnings>
+               <showDeprecation>true</showDeprecation>
+            </configuration>
+         </plugin>
+         <plugin>
+            <groupId>com.mycila</groupId>
+            <artifactId>license-maven-plugin</artifactId>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <version>1.4.1</version>
+            <executions>
+               <execution>
+                  <!-- Make sure that only non-snapshot versions are used for the dependencies. Only active when property 'snapshotDependencyAllowed' is
+                     false. -->
+                  <id>enforce-no-snapshots</id>
+                  <goals>
+                     <goal>enforce</goal>
+                  </goals>
+                  <configuration>
+                     <skip>${snapshotDependencyAllowed}</skip>
+                     <rules>
+                        <requireReleaseDeps>
+                           <message>No Snapshots Allowed!</message>
+                        </requireReleaseDeps>
+                        <requireReleaseVersion>
+                           <message>No Snapshots Allowed!</message>
+                        </requireReleaseVersion>
+                     </rules>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>versions-maven-plugin</artifactId>
+            <version>2.5</version>
+         </plugin>
+         <plugin>
+            <artifactId>maven-scm-plugin</artifactId>
+            <version>${maven.scm.plugin.version}</version>
+            <configuration>
+               <tag>${project.version}</tag>
+            </configuration>
+         </plugin>
+         <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>prepare-ut-agent</id>
+                  <phase>process-test-classes</phase>
+                  <goals>
+                     <goal>prepare-agent</goal>
+                  </goals>
+                  <configuration>
+                     <destFile>${jacoco.reportPath}</destFile>
+                     <propertyName>jacoco.agent.ut.arg</propertyName>
+                     <append>true</append>
+                  </configuration>
+               </execution>
+               <execution>
+                  <id>prepare-it-agent</id>
+                  <phase>pre-integration-test</phase>
+                  <goals>
+                     <goal>prepare-agent</goal>
+                  </goals>
+                  <configuration>
+                     <destFile>${jacoco.itReportPath}</destFile>
+                     <propertyName>jacoco.agent.it.arg</propertyName>
+                     <append>true</append>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>attach-sources</id>
+                  <goals>
+                     <goal>jar</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+      </plugins>
+   </build>
 
    <dependencyManagement>
       <dependencies>
