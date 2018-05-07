@@ -40,7 +40,7 @@ public class SimulatedDeviceFactory {
     @Autowired
     private DeviceSimulatorUpdater deviceUpdater;
 
-    @Autowired
+    @Autowired(required = false)
     private DmfSenderService spSenderService;
 
     @Autowired
