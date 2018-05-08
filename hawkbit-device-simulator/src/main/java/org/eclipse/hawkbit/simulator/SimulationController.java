@@ -52,7 +52,7 @@ public class SimulationController {
      *            the URL endpoint to be used of the hawkbit-update-server for
      *            DDI devices
      * @param pollDelay
-     *            number of delay in milliseconds to delay polling of DDI
+     *            number of delay in seconds to delay polling of DDI
      *            devices
      * @param gatewayToken
      *            the hawkbit-update-server gatewaytoken in case authentication
