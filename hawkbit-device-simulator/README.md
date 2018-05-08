@@ -43,7 +43,7 @@ Optional parameters:
 * tenant : in a multi-tenant ready hawkBit installation (default: "DEFAULT")
 * api : the API which should be used for the simulated device either `dmf` or `ddi` (default: "dmf")
 * endpoint :  URL which defines the hawkbit DDI base endpoint (default: "http://localhost:8080")
-* polldelay : number in seconds of the delay when DDI simulated devices should poll the endpoint (default: "1800")
+* polldelay : number in seconds of the delay when DDI simulated devices should poll the endpoint (default: "30")
 * gatewaytoken : an hawkbit gateway token to be used in case hawkbit does not allow anonymous access for DDI devices (default: "")
 
 
