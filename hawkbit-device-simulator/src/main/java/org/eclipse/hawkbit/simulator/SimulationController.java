@@ -52,7 +52,7 @@ public class SimulationController {
      *            the URL endpoint to be used of the hawkbit-update-server for
      *            DDI devices
      * @param pollDelay
-     *            number of delay in milliseconds to delay polling of DDI
+     *            number of delay in seconds to delay polling of DDI
      *            devices
      * @param gatewayToken
      *            the hawkbit-update-server gatewaytoken in case authentication
@@ -66,7 +66,7 @@ public class SimulationController {
             @RequestParam(value = "tenant", required = false) final String tenant,
             @RequestParam(value = "api", defaultValue = "dmf") final String api,
             @RequestParam(value = "endpoint", defaultValue = "http://localhost:8080") final String endpoint,
-            @RequestParam(value = "polldelay", defaultValue = "1800") final int pollDelay,
+            @RequestParam(value = "polldelay", defaultValue = "30") final int pollDelay,
             @RequestParam(value = "gatewaytoken", defaultValue = "") final String gatewayToken)
             throws MalformedURLException {
 
