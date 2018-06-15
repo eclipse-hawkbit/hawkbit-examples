@@ -54,3 +54,7 @@ maven.properties
 
 # Test Files
 *.tmp
+
+# Intellij IDE
+*.iml
+.idea

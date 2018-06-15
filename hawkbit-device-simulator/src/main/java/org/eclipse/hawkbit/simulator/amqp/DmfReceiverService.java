@@ -178,10 +178,21 @@ public class DmfReceiverService extends MessageService {
         case CANCEL_DOWNLOAD:
             handleCancelDownloadAction(message, thingId);
             break;
+        case REQUEST_ATTRIBUTES_UPDATE:
+            handleAttributeUpdateRequest(message, thingId);
+            break;
         default:
             LOGGER.info("No valid event property.");
             break;
         }
+    }
+
+    private void handleAttributeUpdateRequest(final Message message, final String thingId) {
+        final MessageProperties messageProperties = message.getMessageProperties();
+        final Map<String, Object> headers = messageProperties.getHeaders();
+        final String tenant = (String) headers.get(MessageHeaderKey.TENANT);
+
+        spSenderService.updateAttributesOfThing(tenant, thingId);
     }
 
     private void handleCancelDownloadAction(final Message message, final String thingId) {
