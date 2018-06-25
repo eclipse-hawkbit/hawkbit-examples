@@ -74,6 +74,7 @@
 |org.springframework.boot|spring-boot-starter|1.4.7.RELEASE| [CQ12984](https://dev.eclipse.org/ipzilla/show_bug.cgi?id=12984) |
 |org.springframework.boot|spring-boot|1.4.7.RELEASE| [CQ12985](https://dev.eclipse.org/ipzilla/show_bug.cgi?id=12985) |
 |org.springframework.cloud|spring-cloud-bus|1.2.2.RELEASE| [CQ12986](https://dev.eclipse.org/ipzilla/show_bug.cgi?id=12986) |
+|org.springframework.cloud|spring-cloud-commons|1.1.8.RELEASE| [CQ16812](https://dev.eclipse.org/ipzilla/show_bug.cgi?id=16812) |
 |org.springframework.cloud|spring-cloud-context|1.1.8.RELEASE| [CQ12987](https://dev.eclipse.org/ipzilla/show_bug.cgi?id=12987) |
 |org.springframework.cloud|spring-cloud-netflix-core|1.2.6.RELEASE| [CQ16808](https://dev.eclipse.org/ipzilla/show_bug.cgi?id=16808) |
 |org.springframework.cloud|spring-cloud-stream|1.1.2.RELEASE| [CQ12989](https://dev.eclipse.org/ipzilla/show_bug.cgi?id=12989) |

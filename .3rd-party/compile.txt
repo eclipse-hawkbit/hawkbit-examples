@@ -68,6 +68,7 @@
    org.springframework.boot:spring-boot-starter:jar:1.4.7.RELEASE:compile
    org.springframework.boot:spring-boot:jar:1.4.7.RELEASE:compile
    org.springframework.cloud:spring-cloud-bus:jar:1.2.2.RELEASE:compile
+   org.springframework.cloud:spring-cloud-commons:jar:1.1.8.RELEASE:compile
    org.springframework.cloud:spring-cloud-context:jar:1.1.8.RELEASE:compile
    org.springframework.cloud:spring-cloud-netflix-core:jar:1.2.6.RELEASE:compile
    org.springframework.cloud:spring-cloud-stream:jar:1.1.2.RELEASE:compile
