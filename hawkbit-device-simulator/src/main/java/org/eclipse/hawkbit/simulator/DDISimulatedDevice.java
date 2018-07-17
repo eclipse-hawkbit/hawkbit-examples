@@ -34,8 +34,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import com.jayway.jsonpath.PathNotFoundException;
-
 /**
  * A simulated device using the DDI API of the hawkBit update server.
  *
@@ -100,34 +98,27 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
                 return;
             }
 
-            try {
-                final String href = poll.getBody().getLink("deploymentBase").getHref();
-                if (href == null) {
+            final String href = poll.getBody().getLink("deploymentBase").getHref();
+            if (href == null) {
+                return;
+            }
+
+            final long actionId = Long.parseLong(href.substring(href.lastIndexOf('/') + 1, href.indexOf('?')));
+            if (currentActionId == null || currentActionId == actionId) {
+                final ResponseEntity<DdiDeploymentBase> action = controllerResource
+                        .getControllerBasedeploymentAction(getTenant(), getId(), actionId, -1, null);
+
+                if (!HttpStatus.OK.equals(action.getStatusCode())) {
                     return;
                 }
 
-                final long actionId = Long.parseLong(href.substring(href.lastIndexOf('/') + 1, href.indexOf('?')));
-                if (currentActionId == null || currentActionId == actionId) {
-                    final ResponseEntity<DdiDeploymentBase> action = controllerResource
-                            .getControllerBasedeploymentAction(getTenant(), getId(), actionId, -1, null);
+                final String swVersion = action.getBody().getDeployment().getChunks().get(0).getVersion();
+                final HandlingType updateType = action.getBody().getDeployment().getUpdate();
+                final List<DdiChunk> modules = action.getBody().getDeployment().getChunks();
 
-                    if (!HttpStatus.OK.equals(action.getStatusCode())) {
-                        return;
-                    }
-
-                    final String swVersion = action.getBody().getDeployment().getChunks().get(0).getVersion();
-                    final HandlingType updateType = action.getBody().getDeployment().getUpdate();
-                    final List<DdiChunk> modules = action.getBody().getDeployment().getChunks();
-
-                    currentActionId = actionId;
-                    startDdiUpdate(actionId, swVersion, updateType, modules);
-                }
-            } catch (final PathNotFoundException e) {
-                // href might not be in the json response, so ignore
-                // exception here.
-                LOGGER.trace("Response does not contain a deploymentbase href link, ignoring.", e);
+                currentActionId = actionId;
+                startDdiUpdate(actionId, swVersion, updateType, modules);
             }
-
         }
     }
 
