@@ -1,9 +1,9 @@
-# 3rd party dependencies for Release X.X.X
+# 3rd party dependencies
 
 ## Eclipse CQs - Provided/compile
 
 | Group ID  | Artifact ID  | Version  | CQ  |
-|---|---|---|---|---|
+|---|---|---|---|
 |aopalliance|aopalliance|1.0| [CQ10346](https://dev.eclipse.org/ipzilla/show_bug.cgi?id=10346) |
 |ch.qos.logback|logback-classic|1.1.11| [CQ10347](https://dev.eclipse.org/ipzilla/show_bug.cgi?id=10347) |
 |ch.qos.logback|logback-core|1.1.11| [CQ12925](https://dev.eclipse.org/ipzilla/show_bug.cgi?id=12925)   |
@@ -113,9 +113,3 @@
 |org.vaadin.spring.extensions|vaadin-spring-ext-security|0.0.6.RELEASE| [CQ11049](https://dev.eclipse.org/ipzilla/show_bug.cgi?id=11049) |
 |org.w3c.css|sac|1.3| [CQ11052](https://dev.eclipse.org/ipzilla/show_bug.cgi?id=11052) |
 
-## Test and build dependencies
-
-CQ: 
-
-| Group ID  | Artifact ID  | Version  |
-|---|---|---|
