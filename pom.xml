@@ -46,7 +46,8 @@
    </modules>
 
    <properties>
-      <feign.extension.version>9.3.1</feign.extension.version>
+      <feign.version>9.7.0</feign.version>
+      <feign.extension.version>9.7.0</feign.extension.version>
       <hawkbit.version>0.3.0-SNAPSHOT</hawkbit.version>
 
       <!-- Release - START -->
@@ -189,7 +190,17 @@
          </dependency>
          <dependency>
             <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-core</artifactId>
+            <version>${feign.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>io.github.openfeign</groupId>
             <artifactId>feign-jackson</artifactId>
+            <version>${feign.extension.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-slf4j</artifactId>
             <version>${feign.extension.version}</version>
          </dependency>
          <dependency>

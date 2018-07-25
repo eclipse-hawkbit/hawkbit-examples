@@ -25,17 +25,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class SimulationController {
 
-    @Autowired
-    private DeviceSimulatorRepository repository;
+    private final DeviceSimulatorRepository repository;
+
+    private final SimulatedDeviceFactory deviceFactory;
+
+    private final AmqpProperties amqpProperties;
+
+    private final SimulationProperties simulationProperties;
 
     @Autowired
-    private SimulatedDeviceFactory deviceFactory;
-
-    @Autowired
-    private AmqpProperties amqpProperties;
-
-    @Autowired
-    private SimulationProperties simulationProperties;
+    public SimulationController(final DeviceSimulatorRepository repository, final SimulatedDeviceFactory deviceFactory, final AmqpProperties amqpProperties, final SimulationProperties simulationProperties) {
+        this.repository = repository;
+        this.deviceFactory = deviceFactory;
+        this.amqpProperties = amqpProperties;
+        this.simulationProperties = simulationProperties;
+    }
 
     /**
      * The start resource to start a device creation.
@@ -96,6 +100,43 @@ public class SimulationController {
         }
 
         return ResponseEntity.ok("Updated " + amount + " " + protocol + " connected targets!");
+    }
+
+    /**
+     * Remove a simulated device
+     *
+     * @param tenant
+     *            The tenant the device belongs to
+     * @param controllerId
+     *            The controller id of the device that should be removed.
+     * @return HTTP OK (200) if the device was removed, or HTTP NO FOUND (404)
+     *         if not found.
+     */
+    @RequestMapping("/remove")
+    ResponseEntity remove(@RequestParam(value = "tenant", required = false) final String tenant,
+            @RequestParam(value = "controllerid") final String controllerId) {
+
+        final AbstractSimulatedDevice controller = repository
+                .remove((tenant != null ? tenant : simulationProperties.getDefaultTenant()), controllerId);
+
+        if (controller == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok("Deleted");
+    }
+
+    /**
+     * Reset the device simulator by removing all simulated devices
+     * 
+     * @return A response string that the simulator has been reset
+     */
+    @RequestMapping("/reset")
+    ResponseEntity<String> reset() {
+
+        repository.clear();
+
+        return ResponseEntity.ok("All simulated devices have been removed.");
     }
 
     private boolean isDmfDisabled() {
