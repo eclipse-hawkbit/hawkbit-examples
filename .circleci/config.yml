@@ -18,10 +18,6 @@ jobs:
       environment:
         _JAVA_OPTIONS: "-Xms512m -Xmx1024m"
 
-    - image: rabbitmq:3-management
-      environment:
-        RABBITMQ_DEFAULT_VHOST: "/"
-
     steps:
 
     - checkout
