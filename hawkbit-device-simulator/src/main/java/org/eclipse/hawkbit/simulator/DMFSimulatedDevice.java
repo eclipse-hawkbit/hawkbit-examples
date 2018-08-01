@@ -47,8 +47,8 @@ public class DMFSimulatedDevice extends AbstractSimulatedDevice {
             case "remove" :
                 updateMode = DmfUpdateMode.REMOVE;
                 break;
-            default :
             case "merge" :
+            default :
                 updateMode = DmfUpdateMode.MERGE;
                 break;
         }
