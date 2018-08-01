@@ -12,7 +12,7 @@ import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
 import org.eclipse.hawkbit.simulator.amqp.AmqpProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -64,7 +64,7 @@ public class SimulationController {
      * @return a response string that devices has been created
      * @throws MalformedURLException
      */
-    @RequestMapping("/start")
+    @GetMapping("/start")
     ResponseEntity<String> start(@RequestParam(value = "name", defaultValue = "simulated") final String name,
             @RequestParam(value = "amount", defaultValue = "20") final int amount,
             @RequestParam(value = "tenant", required = false) final String tenant,
@@ -120,14 +120,12 @@ public class SimulationController {
      *            Value of the attribute
      * @return HTTP OK (200) if the update has been triggered.
      */
-    @RequestMapping("/update")
+    @GetMapping("/attributes")
     ResponseEntity<String> update(@RequestParam(value = "tenant", required = false) final String tenant,
             @RequestParam(value = "controllerid") final String controllerId,
             @RequestParam(value = "mode", defaultValue = "merge") final String mode,
             @RequestParam(value = "key") final String key,
             @RequestParam(value = "value", required = false) final String value) {
-
-
 
         final AbstractSimulatedDevice simulatedDevice = repository
                 .get((tenant != null ? tenant : simulationProperties.getDefaultTenant()), controllerId);
@@ -151,7 +149,7 @@ public class SimulationController {
      * @return HTTP OK (200) if the device was removed, or HTTP NO FOUND (404)
      *         if not found.
      */
-    @RequestMapping("/remove")
+    @GetMapping("/remove")
     ResponseEntity remove(@RequestParam(value = "tenant", required = false) final String tenant,
             @RequestParam(value = "controllerid") final String controllerId) {
 
@@ -170,7 +168,7 @@ public class SimulationController {
      * 
      * @return A response string that the simulator has been reset
      */
-    @RequestMapping("/reset")
+    @GetMapping("/reset")
     ResponseEntity<String> reset() {
 
         repository.clear();
