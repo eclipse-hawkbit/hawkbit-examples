@@ -35,7 +35,7 @@ public abstract class AbstractSimulatedDevice {
         /**
          * Direct Device Interface via HTTP, poll mechanism.
          */
-        DDI_HTTP;
+        DDI_HTTP
     }
 
     /**
@@ -74,6 +74,8 @@ public abstract class AbstractSimulatedDevice {
     public void setPollDelaySec(final int pollDelaySec) {
         this.pollDelaySec = pollDelaySec;
     }
+
+    public abstract void updateAttribute(final String mode, final String key, final String value);
 
     /**
      * Method to clean-up resource e.g. when the simulated device has been

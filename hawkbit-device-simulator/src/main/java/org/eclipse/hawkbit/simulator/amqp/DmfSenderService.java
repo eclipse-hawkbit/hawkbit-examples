@@ -21,6 +21,7 @@ import org.eclipse.hawkbit.dmf.amqp.api.MessageType;
 import org.eclipse.hawkbit.dmf.json.model.DmfActionStatus;
 import org.eclipse.hawkbit.dmf.json.model.DmfActionUpdateStatus;
 import org.eclipse.hawkbit.dmf.json.model.DmfAttributeUpdate;
+import org.eclipse.hawkbit.dmf.json.model.DmfUpdateMode;
 import org.eclipse.hawkbit.simulator.SimulationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -195,7 +196,7 @@ public class DmfSenderService extends MessageService {
     }
 
     /**
-     * Create new thing created message and send to udpate server.
+     * Create new thing created message and send to update server.
      *
      * @param tenant
      *            the tenant to create the target
@@ -222,6 +223,26 @@ public class DmfSenderService extends MessageService {
         LOGGER.debug("Create update attributes message and send to update server for Thing \"{}\"", targetId);
     }
 
+    /**
+     * Create new attribute update message for specific attribute and send to
+     * update server
+     *
+     * @param tenant
+     *            the tenant to create the target
+     * @param targetId
+     *            the ID of the target to create or update
+     * @param mode
+     *            the update mode ('merge', 'replace', or 'remove')
+     * @param key
+     *            the key of the attribute
+     * @param value
+     *            the value of the attribute
+     */
+    public void updateAttributesOfThing(final String tenant, final String targetId, final DmfUpdateMode mode,
+            final String key, final String value) {
+        sendMessage(spExchange, updateAttribute(tenant, targetId, mode, key, value));
+    }
+
     private Message thingCreatedMessage(final String tenant, final String targetId) {
         final MessageProperties messagePropertiesForSP = new MessageProperties();
         messagePropertiesForSP.setHeader(MessageHeaderKey.TYPE, MessageType.THING_CREATED.name());
@@ -234,6 +255,16 @@ public class DmfSenderService extends MessageService {
     }
 
     private Message attributeUpdateMessage(final String tenant, final String targetId) {
+        final MessageProperties messagePropertiesForSP = createAttributeUpdateMessage(tenant, targetId);
+        final DmfAttributeUpdate attributeUpdate = new DmfAttributeUpdate();
+
+        attributeUpdate.getAttributes().putAll(simulationProperties.getAttributes().stream().collect(
+                Collectors.toMap(SimulationProperties.Attribute::getKey, SimulationProperties.Attribute::getValue)));
+
+        return convertMessage(attributeUpdate, messagePropertiesForSP);
+    }
+
+    private MessageProperties createAttributeUpdateMessage(final String tenant, final String targetId) {
         final MessageProperties messagePropertiesForSP = new MessageProperties();
         messagePropertiesForSP.setHeader(MessageHeaderKey.TYPE, MessageType.EVENT.name());
         messagePropertiesForSP.setHeader(MessageHeaderKey.TOPIC, EventTopic.UPDATE_ATTRIBUTES);
@@ -241,10 +272,15 @@ public class DmfSenderService extends MessageService {
         messagePropertiesForSP.setHeader(MessageHeaderKey.THING_ID, targetId);
         messagePropertiesForSP.setContentType(MessageProperties.CONTENT_TYPE_JSON);
         messagePropertiesForSP.setReplyTo(amqpProperties.getSenderForSpExchange());
-        final DmfAttributeUpdate attributeUpdate = new DmfAttributeUpdate();
+        return messagePropertiesForSP;
+    }
 
-        attributeUpdate.getAttributes().putAll(simulationProperties.getAttributes().stream().collect(
-                Collectors.toMap(SimulationProperties.Attribute::getKey, SimulationProperties.Attribute::getValue)));
+    private Message updateAttribute(final String tenant, final String targetId, final DmfUpdateMode mode,
+            final String key, final String value) {
+        final MessageProperties messagePropertiesForSP = createAttributeUpdateMessage(tenant, targetId);
+        final DmfAttributeUpdate attributeUpdate = new DmfAttributeUpdate();
+        attributeUpdate.setMode(mode);
+        attributeUpdate.getAttributes().put(key, value);
 
         return convertMessage(attributeUpdate, messagePropertiesForSP);
     }

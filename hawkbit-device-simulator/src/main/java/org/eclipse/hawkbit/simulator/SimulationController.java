@@ -8,9 +8,6 @@
  */
 package org.eclipse.hawkbit.simulator;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
 import org.eclipse.hawkbit.simulator.amqp.AmqpProperties;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +15,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * REST endpoint for controlling the device simulator.
@@ -100,6 +100,45 @@ public class SimulationController {
         }
 
         return ResponseEntity.ok("Updated " + amount + " " + protocol + " connected targets!");
+    }
+
+    /**
+     * Update an attribute of a device.
+     *
+     * NOTE: This represents not the expected client behaviour for DDI, since a
+     *       DDI client shall only update its attributes if requested by hawkBit.
+     *
+     * @param tenant
+     *            The tenant the device belongs to
+     * @param controllerId
+     *            The controller id of the device that should be updated.
+     * @param mode
+     *            Update mode ('merge', 'replace', or 'remove')
+     * @param key
+     *            Key of the attribute to be updated
+     * @param value
+     *            Value of the attribute
+     * @return HTTP OK (200) if the update has been triggered.
+     */
+    @RequestMapping("/update")
+    ResponseEntity<String> update(@RequestParam(value = "tenant", required = false) final String tenant,
+            @RequestParam(value = "controllerid") final String controllerId,
+            @RequestParam(value = "mode", defaultValue = "merge") final String mode,
+            @RequestParam(value = "key") final String key,
+            @RequestParam(value = "value", required = false) final String value) {
+
+
+
+        final AbstractSimulatedDevice simulatedDevice = repository
+                .get((tenant != null ? tenant : simulationProperties.getDefaultTenant()), controllerId);
+
+        if (simulatedDevice == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        simulatedDevice.updateAttribute(mode, key, value);
+
+        return ResponseEntity.ok("Update triggered");
     }
 
     /**
