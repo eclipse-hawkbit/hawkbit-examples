@@ -144,7 +144,7 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
         }
 
         final DdiStatus status = new DdiStatus(ExecutionStatus.CLOSED,
-                new DdiResult(FinalResult.SUCESS, new DdiProgress(1, 1)), null);
+                new DdiResult(FinalResult.SUCESS, null), null);
 
         final DdiConfigData configData = new DdiConfigData(null, null, status, Collections.singletonMap(key, value),
                 updateMode);

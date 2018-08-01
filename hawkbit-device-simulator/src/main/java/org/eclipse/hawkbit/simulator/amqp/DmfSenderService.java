@@ -9,6 +9,7 @@
 package org.eclipse.hawkbit.simulator.amqp;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -218,7 +219,9 @@ public class DmfSenderService extends MessageService {
      *            the ID of the target to create or update
      */
     public void updateAttributesOfThing(final String tenant, final String targetId) {
-        sendMessage(spExchange, attributeUpdateMessage(tenant, targetId));
+        sendMessage(spExchange, updateAttributes(tenant, targetId, DmfUpdateMode.MERGE,
+                simulationProperties.getAttributes().stream().collect(Collectors
+                        .toMap(SimulationProperties.Attribute::getKey, SimulationProperties.Attribute::getValue))));
 
         LOGGER.debug("Create update attributes message and send to update server for Thing \"{}\"", targetId);
     }
@@ -240,7 +243,7 @@ public class DmfSenderService extends MessageService {
      */
     public void updateAttributesOfThing(final String tenant, final String targetId, final DmfUpdateMode mode,
             final String key, final String value) {
-        sendMessage(spExchange, updateAttribute(tenant, targetId, mode, key, value));
+        sendMessage(spExchange, updateAttributes(tenant, targetId, mode, Collections.singletonMap(key, value)));
     }
 
     private Message thingCreatedMessage(final String tenant, final String targetId) {
@@ -254,16 +257,6 @@ public class DmfSenderService extends MessageService {
         return new Message(null, messagePropertiesForSP);
     }
 
-    private Message attributeUpdateMessage(final String tenant, final String targetId) {
-        final MessageProperties messagePropertiesForSP = createAttributeUpdateMessage(tenant, targetId);
-        final DmfAttributeUpdate attributeUpdate = new DmfAttributeUpdate();
-
-        attributeUpdate.getAttributes().putAll(simulationProperties.getAttributes().stream().collect(
-                Collectors.toMap(SimulationProperties.Attribute::getKey, SimulationProperties.Attribute::getValue)));
-
-        return convertMessage(attributeUpdate, messagePropertiesForSP);
-    }
-
     private MessageProperties createAttributeUpdateMessage(final String tenant, final String targetId) {
         final MessageProperties messagePropertiesForSP = new MessageProperties();
         messagePropertiesForSP.setHeader(MessageHeaderKey.TYPE, MessageType.EVENT.name());
@@ -275,12 +268,12 @@ public class DmfSenderService extends MessageService {
         return messagePropertiesForSP;
     }
 
-    private Message updateAttribute(final String tenant, final String targetId, final DmfUpdateMode mode,
-            final String key, final String value) {
+    private Message updateAttributes(final String tenant, final String targetId, final DmfUpdateMode mode,
+            final Map<String, String> attributes) {
         final MessageProperties messagePropertiesForSP = createAttributeUpdateMessage(tenant, targetId);
         final DmfAttributeUpdate attributeUpdate = new DmfAttributeUpdate();
         attributeUpdate.setMode(mode);
-        attributeUpdate.getAttributes().put(key, value);
+        attributeUpdate.getAttributes().putAll(attributes);
 
         return convertMessage(attributeUpdate, messagePropertiesForSP);
     }
