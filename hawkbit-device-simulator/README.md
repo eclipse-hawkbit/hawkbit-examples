@@ -1,6 +1,7 @@
 # hawkBit Device Simulator
 
-The device simulator handles software update commands from the update server.
+The device simulator handles software update commands from the update server. It is designed to be used very conveniently, 
+for example, from within a browser. Hence, all the endpoints use the GET verb.
 
 ## Run on your own workstation
 ```
