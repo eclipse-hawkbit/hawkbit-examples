@@ -28,6 +28,7 @@ public class TargetBuilder {
     private String name;
     private String description;
     private String address;
+    private Boolean requestAttributes;
 
     /**
      * @param controllerId
@@ -66,6 +67,16 @@ public class TargetBuilder {
      */
     public TargetBuilder description(final String description) {
         this.description = description;
+        return this;
+    }
+
+    /**
+     * @param requestAttributes
+     *            flag to request new attributes from target
+     * @return the builder itself
+     */
+    public TargetBuilder requestAttributes(final Boolean requestAttributes) {
+        this.requestAttributes = requestAttributes;
         return this;
     }
 
@@ -122,6 +133,7 @@ public class TargetBuilder {
         body.setName(name + suffix);
         body.setDescription(description);
         body.setAddress(address);
+        body.setRequestAttributes(requestAttributes);
         return body;
     }
 

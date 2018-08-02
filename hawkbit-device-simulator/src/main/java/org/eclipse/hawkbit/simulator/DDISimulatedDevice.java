@@ -174,7 +174,7 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
         switch (device.getUpdateStatus().getResponseStatus()) {
         case SUCCESSFUL:
             feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.CLOSED,
-                    new DdiResult(FinalResult.SUCESS, null), device.getUpdateStatus().getStatusMessages()));
+                    new DdiResult(FinalResult.SUCCESS, null), device.getUpdateStatus().getStatusMessages()));
             break;
         case ERROR:
             feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.CLOSED,
