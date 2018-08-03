@@ -21,7 +21,6 @@ import org.eclipse.hawkbit.ddi.json.model.DdiConfigData;
 import org.eclipse.hawkbit.ddi.json.model.DdiControllerBase;
 import org.eclipse.hawkbit.ddi.json.model.DdiDeployment.HandlingType;
 import org.eclipse.hawkbit.ddi.json.model.DdiDeploymentBase;
-import org.eclipse.hawkbit.ddi.json.model.DdiProgress;
 import org.eclipse.hawkbit.ddi.json.model.DdiResult;
 import org.eclipse.hawkbit.ddi.json.model.DdiResult.FinalResult;
 import org.eclipse.hawkbit.ddi.json.model.DdiStatus;
@@ -144,7 +143,7 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
         }
 
         final DdiStatus status = new DdiStatus(ExecutionStatus.CLOSED,
-                new DdiResult(FinalResult.SUCESS, null), null);
+                new DdiResult(FinalResult.SUCCESS, null), null);
 
         final DdiConfigData configData = new DdiConfigData(null, null, status, Collections.singletonMap(key, value),
                 updateMode);
@@ -204,7 +203,7 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
         switch (device.getUpdateStatus().getResponseStatus()) {
             case SUCCESSFUL :
                 feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.CLOSED,
-                        new DdiResult(FinalResult.SUCESS, null), device.getUpdateStatus().getStatusMessages()));
+                        new DdiResult(FinalResult.SUCCESS, null), device.getUpdateStatus().getStatusMessages()));
                 break;
             case ERROR :
                 feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.CLOSED,
