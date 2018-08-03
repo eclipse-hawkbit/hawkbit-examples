@@ -8,6 +8,7 @@
  */
 package org.eclipse.hawkbit.simulator;
 
+import org.eclipse.hawkbit.dmf.json.model.DmfUpdateMode;
 import org.eclipse.hawkbit.simulator.amqp.DmfSenderService;
 
 /**
@@ -31,6 +32,28 @@ public class DMFSimulatedDevice extends AbstractSimulatedDevice {
     @Override
     public void poll() {
         spSenderService.createOrUpdateThing(super.getTenant(), super.getId());
+    }
+
+    @Override
+    public void updateAttribute(final String mode, final String key, final String value) {
+
+        final DmfUpdateMode updateMode;
+
+        switch (mode.toLowerCase()) {
+
+            case "replace" :
+                updateMode = DmfUpdateMode.REPLACE;
+                break;
+            case "remove" :
+                updateMode = DmfUpdateMode.REMOVE;
+                break;
+            case "merge" :
+            default :
+                updateMode = DmfUpdateMode.MERGE;
+                break;
+        }
+
+        spSenderService.updateAttributesOfThing(super.getTenant(), super.getId(), updateMode, key, value);
     }
 
 }

@@ -8,6 +8,7 @@
  */
 package org.eclipse.hawkbit.simulator;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 import org.eclipse.hawkbit.ddi.json.model.DdiActionFeedback;
 import org.eclipse.hawkbit.ddi.json.model.DdiArtifact;
 import org.eclipse.hawkbit.ddi.json.model.DdiChunk;
+import org.eclipse.hawkbit.ddi.json.model.DdiConfigData;
 import org.eclipse.hawkbit.ddi.json.model.DdiControllerBase;
 import org.eclipse.hawkbit.ddi.json.model.DdiDeployment.HandlingType;
 import org.eclipse.hawkbit.ddi.json.model.DdiDeploymentBase;
@@ -23,6 +25,7 @@ import org.eclipse.hawkbit.ddi.json.model.DdiResult;
 import org.eclipse.hawkbit.ddi.json.model.DdiResult.FinalResult;
 import org.eclipse.hawkbit.ddi.json.model.DdiStatus;
 import org.eclipse.hawkbit.ddi.json.model.DdiStatus.ExecutionStatus;
+import org.eclipse.hawkbit.ddi.json.model.DdiUpdateMode;
 import org.eclipse.hawkbit.ddi.rest.api.DdiRootControllerRestApi;
 import org.eclipse.hawkbit.dmf.amqp.api.EventTopic;
 import org.eclipse.hawkbit.dmf.json.model.DmfArtifact;
@@ -122,6 +125,32 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
         }
     }
 
+    @Override
+    public void updateAttribute(final String mode, final String key, final String value) {
+
+        final DdiUpdateMode updateMode;
+        switch (mode.toLowerCase()) {
+            case "replace" :
+                updateMode = DdiUpdateMode.REPLACE;
+                break;
+            case "remove" :
+                updateMode = DdiUpdateMode.REMOVE;
+                break;
+            case "merge" :
+            default :
+                updateMode = DdiUpdateMode.MERGE;
+                break;
+        }
+
+        final DdiStatus status = new DdiStatus(ExecutionStatus.CLOSED,
+                new DdiResult(FinalResult.SUCCESS, null), null);
+
+        final DdiConfigData configData = new DdiConfigData(null, null, status, Collections.singletonMap(key, value),
+                updateMode);
+
+        controllerResource.putConfigData(configData, super.getTenant(), super.getId());
+    }
+
     private static DmfSoftwareModule convertChunk(final DdiChunk ddi) {
         final DmfSoftwareModule converted = new DmfSoftwareModule();
         converted.setModuleVersion(ddi.getVersion());
@@ -172,29 +201,29 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
         DdiActionFeedback feedback;
 
         switch (device.getUpdateStatus().getResponseStatus()) {
-        case SUCCESSFUL:
-            feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.CLOSED,
-                    new DdiResult(FinalResult.SUCCESS, null), device.getUpdateStatus().getStatusMessages()));
-            break;
-        case ERROR:
-            feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.CLOSED,
-                    new DdiResult(FinalResult.FAILURE, null), device.getUpdateStatus().getStatusMessages()));
-            break;
-        case DOWNLOADING:
-            feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.DOWNLOAD,
-                    new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
-            break;
-        case DOWNLOADED:
-            feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.DOWNLOADED,
-                    new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
-            break;
-        case RUNNING:
-            feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.PROCEEDING,
-                    new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
-            break;
-        default:
-            throw new IllegalStateException("simulated device has an unknown response status + "
-                    + device.getUpdateStatus().getResponseStatus());
+            case SUCCESSFUL :
+                feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.CLOSED,
+                        new DdiResult(FinalResult.SUCCESS, null), device.getUpdateStatus().getStatusMessages()));
+                break;
+            case ERROR :
+                feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.CLOSED,
+                        new DdiResult(FinalResult.FAILURE, null), device.getUpdateStatus().getStatusMessages()));
+                break;
+            case DOWNLOADING :
+                feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.DOWNLOAD,
+                        new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
+                break;
+            case DOWNLOADED :
+                feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.DOWNLOADED,
+                        new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
+                break;
+            case RUNNING :
+                feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.PROCEEDING,
+                        new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
+                break;
+            default :
+                throw new IllegalStateException("simulated device has an unknown response status + "
+                        + device.getUpdateStatus().getResponseStatus());
         }
         return feedback;
     }
