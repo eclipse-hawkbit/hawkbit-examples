@@ -4,6 +4,8 @@
 
 Example projects that show how [hawkBit](https://github.com/eclipse/hawkbit) can be customized or hawkBit compatible APIs leveraged.
 
+[![Circle CI](https://circleci.com/gh/eclipse/hawkbit-examples.svg?style=shield)](https://circleci.com/gh/eclipse/hawkbit-examples)
+
 ## API client examples 
 
 - `hawkbit-example-ddi-feign-client` : Example client based on the feign project for hawkBit's [Direct Device Integration API](http://www.eclipse.org/hawkbit/documentation/interfaces/ddi-api.html).
