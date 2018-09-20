@@ -1,4 +1,4 @@
-FROM openjdk:8u121-jre-alpine
+FROM openjdk:8u171-jre-alpine
 
 MAINTAINER Kai Zimmermann <kai.zimmermann@bosch-si.com>
 

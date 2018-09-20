@@ -1,4 +1,4 @@
-FROM openjdk:8u121-jre-alpine
+FROM openjdk:8u171-jre-alpine
 
 ENV HAWKBIT_SIM_VERSION=0.3.0-SNAPSHOT \
     HAWKBIT_SIM_HOME=/opt/hawkbit-simulator
