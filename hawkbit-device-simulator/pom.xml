@@ -34,7 +34,6 @@
                   </goals>
                   <configuration>
                      <outputDirectory>${baseDir}</outputDirectory>
-                     <addResources>false</addResources>
                      <mainClass>org.eclipse.hawkbit.simulator.DeviceSimulator</mainClass>
                      <layout>JAR</layout>
                   </configuration>
