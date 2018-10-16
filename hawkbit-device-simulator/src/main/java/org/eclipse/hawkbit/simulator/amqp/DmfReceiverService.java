@@ -38,6 +38,7 @@ import org.springframework.scheduling.annotation.Scheduled;
  *
  */
 public class DmfReceiverService extends MessageService {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(DmfReceiverService.class);
 
     private final DmfSenderService spSenderService;
@@ -215,7 +216,7 @@ public class DmfReceiverService extends MessageService {
         final Long actionId = downloadAndUpdateRequest.getActionId();
         final String targetSecurityToken = downloadAndUpdateRequest.getTargetSecurityToken();
 
-        deviceUpdater.startUpdate(tenant, thingId, actionId, null, downloadAndUpdateRequest.getSoftwareModules(),
+        deviceUpdater.startUpdate(tenant, thingId, null, downloadAndUpdateRequest.getSoftwareModules(),
                 targetSecurityToken, null, device -> sendFeedback(actionId, device), actionType);
     }
 

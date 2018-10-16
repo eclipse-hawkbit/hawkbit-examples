@@ -26,9 +26,9 @@ import java.util.stream.Collectors;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLContextBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.eclipse.hawkbit.dmf.amqp.api.EventTopic;
 import org.eclipse.hawkbit.dmf.json.model.DmfArtifact;
 import org.eclipse.hawkbit.dmf.json.model.DmfSoftwareModule;
@@ -71,9 +71,6 @@ public class DeviceSimulatorUpdater {
      *            the tenant of the device
      * @param id
      *            the ID of the simulated device
-     * @param actionId
-     *            the actionId from the hawkbit update server to start the
-     *            update.
      * @param modules
      *            the software module version from the hawkbit update server
      * @param swVersion
@@ -90,7 +87,7 @@ public class DeviceSimulatorUpdater {
      *            indicating whether to download and install or skip
      *            installation due to maintenance window.
      */
-    public void startUpdate(final String tenant, final String id, final long actionId, final String swVersion,
+    public void startUpdate(final String tenant, final String id, final String swVersion,
             final List<DmfSoftwareModule> modules, final String targetSecurityToken, final String gatewayToken,
             final UpdaterCallback callback, final EventTopic actionType) {
         AbstractSimulatedDevice device = repository.get(tenant, id);
@@ -335,7 +332,7 @@ public class DeviceSimulatorUpdater {
 
         private static CloseableHttpClient createHttpClientThatAcceptsAllServerCerts()
                 throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-            final SSLContextBuilder builder = new SSLContextBuilder();
+            final SSLContextBuilder builder = SSLContextBuilder.create();
             builder.loadTrustMaterial(null, (chain, authType) -> true);
             final SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(builder.build());
             return HttpClients.custom().setSSLSocketFactory(sslsf).build();
