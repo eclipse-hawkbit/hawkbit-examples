@@ -48,7 +48,6 @@ import com.google.common.io.ByteStreams;
 
 /**
  * Update simulation handler.
- *
  */
 @Service
 public class DeviceSimulatorUpdater {
@@ -73,8 +72,6 @@ public class DeviceSimulatorUpdater {
      *            the ID of the simulated device
      * @param modules
      *            the software module version from the hawkbit update server
-     * @param swVersion
-     *            the software version as static value in case modules is null
      * @param targetSecurityToken
      *            the target security token for download authentication
      * @param gatewayToken
@@ -87,9 +84,10 @@ public class DeviceSimulatorUpdater {
      *            indicating whether to download and install or skip
      *            installation due to maintenance window.
      */
-    public void startUpdate(final String tenant, final String id, final String swVersion,
-            final List<DmfSoftwareModule> modules, final String targetSecurityToken, final String gatewayToken,
-            final UpdaterCallback callback, final EventTopic actionType) {
+    public void startUpdate(final String tenant, final String id, final List<DmfSoftwareModule> modules,
+            final String targetSecurityToken, final String gatewayToken, final UpdaterCallback callback,
+            final EventTopic actionType) {
+
         AbstractSimulatedDevice device = repository.get(tenant, id);
 
         // plug and play - non existing device will be auto created

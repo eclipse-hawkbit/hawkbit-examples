@@ -216,8 +216,8 @@ public class DmfReceiverService extends MessageService {
         final Long actionId = downloadAndUpdateRequest.getActionId();
         final String targetSecurityToken = downloadAndUpdateRequest.getTargetSecurityToken();
 
-        deviceUpdater.startUpdate(tenant, thingId, null, downloadAndUpdateRequest.getSoftwareModules(),
-                targetSecurityToken, null, device -> sendFeedback(actionId, device), actionType);
+        deviceUpdater.startUpdate(tenant, thingId, downloadAndUpdateRequest.getSoftwareModules(), targetSecurityToken,
+                null, device -> sendFeedback(actionId, device), actionType);
     }
 
     private void sendFeedback(final Long actionId, final AbstractSimulatedDevice device) {

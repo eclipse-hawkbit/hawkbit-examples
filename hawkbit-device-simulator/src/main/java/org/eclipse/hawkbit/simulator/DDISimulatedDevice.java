@@ -115,12 +115,11 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
                     return;
                 }
 
-                final String swVersion = action.getBody().getDeployment().getChunks().get(0).getVersion();
                 final HandlingType updateType = action.getBody().getDeployment().getUpdate();
                 final List<DdiChunk> modules = action.getBody().getDeployment().getChunks();
 
                 currentActionId = actionId;
-                startDdiUpdate(actionId, swVersion, updateType, modules);
+                startDdiUpdate(actionId, updateType, modules);
             }
         }
     }
@@ -179,10 +178,9 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
         return converted;
     }
 
-    private void startDdiUpdate(final long actionId, final String swVersion, final HandlingType updateType,
-            final List<DdiChunk> modules) {
+    private void startDdiUpdate(final long actionId, final HandlingType updateType, final List<DdiChunk> modules) {
 
-        deviceUpdater.startUpdate(getTenant(), getId(), swVersion,
+        deviceUpdater.startUpdate(getTenant(), getId(),
                 modules.stream().map(DDISimulatedDevice::convertChunk).collect(Collectors.toList()), null, gatewayToken,
                 sendFeedback(actionId),
                 HandlingType.SKIP.equals(updateType) ? EventTopic.DOWNLOAD : EventTopic.DOWNLOAD_AND_INSTALL);
