@@ -6,10 +6,10 @@ Example projects that show how [hawkBit](https://github.com/eclipse/hawkbit) can
 
 [![Circle CI](https://circleci.com/gh/eclipse/hawkbit-examples.svg?style=shield)](https://circleci.com/gh/eclipse/hawkbit-examples)
 
-## API client examples 
+## API client examples
 
-- `hawkbit-example-ddi-feign-client` : Example client based on the feign project for hawkBit's [Direct Device Integration API](http://www.eclipse.org/hawkbit/documentation/interfaces/ddi-api.html).
-- `hawkbit-example-mgmt-feign-client` : Example client based on the feign project for hawkBit's [Management API](http://www.eclipse.org/hawkbit/documentation/interfaces/management-api.html)
+- `hawkbit-example-ddi-feign-client` : Example client based on the feign project for hawkBit's [Direct Device Integration API](https://www.eclipse.org/hawkbit/apis/ddi_api).
+- `hawkbit-example-mgmt-feign-client` : Example client based on the feign project for hawkBit's [Management API](https://www.eclipse.org/hawkbit/apis/management_api)
 
 ## Simulators
 
@@ -19,4 +19,4 @@ Example projects that show how [hawkBit](https://github.com/eclipse/hawkbit) can
 
 ## Customization examples
 
-- `hawkbit-custom-theme-example` : Example for a customized theme for [Management UI](http://www.eclipse.org/hawkbit/documentation/interfaces/management-ui.html).
+- `hawkbit-custom-theme-example` : Example for a customized theme for [Management UI](https://www.eclipse.org/hawkbit/ui).
