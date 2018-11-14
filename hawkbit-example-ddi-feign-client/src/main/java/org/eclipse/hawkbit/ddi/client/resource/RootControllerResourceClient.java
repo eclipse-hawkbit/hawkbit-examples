@@ -9,7 +9,7 @@
 package org.eclipse.hawkbit.ddi.client.resource;
 
 import org.eclipse.hawkbit.ddi.rest.api.DdiRootControllerRestApi;
-import org.springframework.cloud.netflix.feign.FeignClient;
+import org.springframework.cloud.openfeign.FeignClient;
 
 /**
  * Client binding for the Rootcontroller resource of the DDI API.

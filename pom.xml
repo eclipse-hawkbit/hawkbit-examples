@@ -15,7 +15,7 @@
    <parent>
       <groupId>org.eclipse.hawkbit</groupId>
       <artifactId>hawkbit-parent</artifactId>
-      <version>0.2.4</version>
+      <version>0.3.0-SNAPSHOT</version>
    </parent>
 
    <artifactId>hawkbit-examples-parent</artifactId>
@@ -46,9 +46,9 @@
    </modules>
 
    <properties>
-      <feign.version>9.7.0</feign.version>
-      <feign.extension.version>9.7.0</feign.extension.version>
-      <hawkbit.version>0.2.4</hawkbit.version>
+      <spring.feign.version>2.0.2.RELEASE</spring.feign.version>
+      <feign.extension.version>10.1.0</feign.extension.version>
+      <hawkbit.version>0.3.0-SNAPSHOT</hawkbit.version>
 
       <!-- Release - START -->
       <release.scm.connection>scm:git:git@github.com:eclipse/hawkbit-examples.git</release.scm.connection>
@@ -189,20 +189,16 @@
             <version>${hawkbit.version}</version>
          </dependency>
          <dependency>
-            <groupId>io.github.openfeign</groupId>
-            <artifactId>feign-core</artifactId>
-            <version>${feign.version}</version>
-         </dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+            <version>${spring.feign.version}</version>
+         </dependency>         
          <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-jackson</artifactId>
             <version>${feign.extension.version}</version>
          </dependency>
-         <dependency>
-            <groupId>io.github.openfeign</groupId>
-            <artifactId>feign-slf4j</artifactId>
-            <version>${feign.extension.version}</version>
-         </dependency>
+         <!--         
          <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-gson</artifactId>
@@ -213,6 +209,7 @@
             <artifactId>feign-jaxrs</artifactId>
             <version>${feign.extension.version}</version>
          </dependency>
+         -->
       </dependencies>
    </dependencyManagement>
 </project>

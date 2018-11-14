@@ -9,7 +9,7 @@
 package org.eclipse.hawkbit.mgmt.client.resource;
 
 import org.eclipse.hawkbit.mgmt.rest.api.MgmtDownloadArtifactRestApi;
-import org.springframework.cloud.netflix.feign.FeignClient;
+import org.springframework.cloud.openfeign.FeignClient;
 
 /**
  * A feign-client interface declaration which allows to build a feign-client

@@ -8,7 +8,6 @@
  */
 package org.eclipse.hawkbit.simulator.amqp;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -28,8 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.rabbit.support.CorrelationData;
 import org.springframework.amqp.support.converter.AbstractJavaTypeMapper;
 
 /**
@@ -63,7 +62,7 @@ public class DmfSenderService extends MessageService {
         final MessageProperties messageProperties = new MessageProperties();
         messageProperties.getHeaders().put(MessageHeaderKey.TENANT, tenant);
         messageProperties.getHeaders().put(MessageHeaderKey.TYPE, MessageType.PING.toString());
-        messageProperties.setCorrelationId(correlationId.getBytes());
+        messageProperties.setCorrelationId(correlationId);
         messageProperties.setReplyTo(amqpProperties.getSenderForSpExchange());
         messageProperties.setContentType(MessageProperties.CONTENT_TYPE_TEXT_PLAIN);
 
@@ -118,7 +117,7 @@ public class DmfSenderService extends MessageService {
         final String correlationId = UUID.randomUUID().toString();
 
         if (isCorrelationIdEmpty(message)) {
-            message.getMessageProperties().setCorrelationId(correlationId.getBytes(StandardCharsets.UTF_8));
+            message.getMessageProperties().setCorrelationId(correlationId);
         }
 
         if (LOGGER.isTraceEnabled()) {
@@ -132,7 +131,7 @@ public class DmfSenderService extends MessageService {
 
     private static boolean isCorrelationIdEmpty(final Message message) {
         return message.getMessageProperties().getCorrelationId() == null
-                || message.getMessageProperties().getCorrelationId().length <= 0;
+                || message.getMessageProperties().getCorrelationId().length() <= 0;
     }
 
     /**
