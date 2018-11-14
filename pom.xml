@@ -192,13 +192,13 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
             <version>${spring.feign.version}</version>
-         </dependency>         
+         </dependency>
          <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-jackson</artifactId>
             <version>${feign.extension.version}</version>
          </dependency>
-         <!--         
+         <!--
          <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-gson</artifactId>
