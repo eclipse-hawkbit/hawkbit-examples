@@ -198,18 +198,6 @@
             <artifactId>feign-jackson</artifactId>
             <version>${feign.extension.version}</version>
          </dependency>
-         <!--
-         <dependency>
-            <groupId>io.github.openfeign</groupId>
-            <artifactId>feign-gson</artifactId>
-            <version>${feign.extension.version}</version>
-         </dependency>
-         <dependency>
-            <groupId>io.github.openfeign</groupId>
-            <artifactId>feign-jaxrs</artifactId>
-            <version>${feign.extension.version}</version>
-         </dependency>
-         -->
       </dependencies>
    </dependencyManagement>
 </project>

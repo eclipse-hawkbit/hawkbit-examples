@@ -150,7 +150,7 @@ public class SimulationController {
      *         if not found.
      */
     @GetMapping("/remove")
-    ResponseEntity remove(@RequestParam(value = "tenant", required = false) final String tenant,
+    ResponseEntity<String> remove(@RequestParam(value = "tenant", required = false) final String tenant,
             @RequestParam(value = "controllerid") final String controllerId) {
 
         final AbstractSimulatedDevice controller = repository
