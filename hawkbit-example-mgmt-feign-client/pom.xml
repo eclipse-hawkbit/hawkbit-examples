@@ -38,5 +38,9 @@
          <groupId>org.apache.tomcat.embed</groupId>
          <artifactId>tomcat-embed-el</artifactId>
       </dependency>
-   </dependencies>
+      <dependency>
+         <groupId>org.hibernate.validator</groupId>
+         <artifactId>hibernate-validator</artifactId>
+      </dependency>
+    </dependencies>
 </project>
