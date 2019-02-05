@@ -10,11 +10,12 @@ package org.eclipse.hawkbit.simulator.amqp;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import com.google.common.collect.Sets;
 import org.eclipse.hawkbit.dmf.amqp.api.EventTopic;
 import org.eclipse.hawkbit.dmf.amqp.api.MessageHeaderKey;
 import org.eclipse.hawkbit.dmf.amqp.api.MessageType;
@@ -47,7 +48,7 @@ public class DmfReceiverService extends MessageService {
 
     private final DeviceSimulatorRepository repository;
 
-    private final Set<String> openPings = Sets.newConcurrentHashSet();
+    private final Set<String> openPings = Collections.synchronizedSet(new HashSet<>());
 
     /**
      * Constructor.
