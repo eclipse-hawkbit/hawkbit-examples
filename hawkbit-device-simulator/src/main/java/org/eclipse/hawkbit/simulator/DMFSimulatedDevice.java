@@ -27,6 +27,7 @@ public class DMFSimulatedDevice extends AbstractSimulatedDevice {
             final int pollDelaySec) {
         super(id, tenant, Protocol.DMF_AMQP, pollDelaySec);
         this.spSenderService = spSenderService;
+        System.out.printf("[DMFSimulatedDevice] Id: %s, tenant: %s \n", id, tenant);
     }
 
     @Override

@@ -75,6 +75,8 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
         this.controllerResource = controllerResource;
         this.deviceUpdater = deviceUpdater;
         this.gatewayToken = gatewayToken;
+        System.out.printf("[DDISimulatedDevice] Id: %s, tenant: %s \n", id, tenant);
+
     }
 
     @Override
