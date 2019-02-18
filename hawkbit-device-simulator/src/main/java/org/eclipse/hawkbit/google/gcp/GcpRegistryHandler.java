@@ -1,8 +1,11 @@
 package org.eclipse.hawkbit.google.gcp;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -13,14 +16,15 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.cloudiot.v1.CloudIot;
 import com.google.api.services.cloudiot.v1.CloudIotScopes;
 import com.google.api.services.cloudiot.v1.model.Device;
+import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.api.services.cloudiot.v1.model.DeviceRegistry;
-
+import com.google.api.services.cloudiot.v1.model.EventNotificationConfig;
+import com.google.api.services.cloudiot.v1.model.PublicKeyCredential;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 
 public class GcpRegistryHandler {
-
-	final static String APP_NAME = "ota-iot-231619";
-
 
 	private static GoogleCredential getCredentialsFromFile()
 	{
@@ -37,15 +41,97 @@ public class GcpRegistryHandler {
 	}
 
 
-	public static void listDevices(String projectId, String cloudRegion, String registryName)
-			throws GeneralSecurityException, IOException {
+	public static List<Device> getAllDevices(String projectId, String cloudRegion) throws GeneralSecurityException, IOException
+	{
+		List<Device> allDevices_per_project = new ArrayList<Device>();
+		List<DeviceRegistry> gcp_registries = GcpRegistryHandler.listRegistries(GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION);
+		for(DeviceRegistry gcp_registry : gcp_registries)
+		{
+			allDevices_per_project.addAll(listDevices(projectId, cloudRegion, gcp_registry.getId()));
+		}
+		return allDevices_per_project;
+	}
+
+
+	/** Create a registry for Cloud IoT. */
+	public static DeviceRegistry createRegistry(
+			String cloudRegion, String projectId, String registryName, String pubsubTopicPath)
+					throws GeneralSecurityException, IOException {
 		GoogleCredential credential =
 				GoogleCredential.getApplicationDefault().createScoped(CloudIotScopes.all());
 		JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
 		HttpRequestInitializer init = new RetryHttpInitializerWrapper(credential);
 		final CloudIot service =
 				new CloudIot.Builder(GoogleNetHttpTransport.newTrustedTransport(), jsonFactory, init)
-				.setApplicationName(APP_NAME)
+				.build();
+
+		final String projectPath = "projects/" + projectId + "/locations/" + cloudRegion;
+		final String fullPubsubPath = "projects/" + projectId + "/topics/" + pubsubTopicPath;
+
+		DeviceRegistry registry = new DeviceRegistry();
+		EventNotificationConfig notificationConfig = new EventNotificationConfig();
+		notificationConfig.setPubsubTopicName(fullPubsubPath);
+		List<EventNotificationConfig> notificationConfigs = new ArrayList<EventNotificationConfig>();
+		notificationConfigs.add(notificationConfig);
+		registry.setEventNotificationConfigs(notificationConfigs);
+		registry.setId(registryName);
+
+		DeviceRegistry reg =
+				service.projects().locations().registries().create(projectPath, registry).execute();
+		System.out.println("Created registry: " + reg.getName());
+		
+		return reg;
+	}
+
+	
+	 public static Device createDeviceWithRs256(
+		      String deviceId,
+		      String certificateFilePath,
+		      String projectId,
+		      String cloudRegion,
+		      String registryName)
+		      throws GeneralSecurityException, IOException {
+		    JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+		    HttpRequestInitializer init = new RetryHttpInitializerWrapper(getCredentialsFromFile());
+		    final CloudIot service =
+		        new CloudIot.Builder(GoogleNetHttpTransport.newTrustedTransport(), jsonFactory, init)
+		            .build();
+
+		    final String registryPath =
+		        String.format(
+		            "projects/%s/locations/%s/registries/%s", projectId, cloudRegion, registryName);
+
+		    PublicKeyCredential publicKeyCredential = new PublicKeyCredential();
+		    String key = Files.asCharSource(new File(certificateFilePath), Charsets.UTF_8).read();
+		    publicKeyCredential.setKey(key);
+		    publicKeyCredential.setFormat("RSA_X509_PEM");
+
+		    DeviceCredential devCredential = new DeviceCredential();
+		    devCredential.setPublicKey(publicKeyCredential);
+
+		    System.out.println("Creating device with id: " + deviceId);
+		    Device device = new Device();
+		    device.setId(deviceId);
+		    device.setCredentials(Arrays.asList(devCredential));
+		    Device createdDevice =
+		        service
+		            .projects()
+		            .locations()
+		            .registries()
+		            .devices()
+		            .create(registryPath, device)
+		            .execute();
+
+		    System.out.println("Created device: " + createdDevice.toPrettyString());
+		    return createdDevice;
+		  }
+
+	public static List<Device> listDevices(String projectId, String cloudRegion, String registryName)
+			throws GeneralSecurityException, IOException {
+		JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+		HttpRequestInitializer init = new RetryHttpInitializerWrapper(getCredentialsFromFile());
+		final CloudIot service =
+				new CloudIot.Builder(GoogleNetHttpTransport.newTrustedTransport(), jsonFactory, init)
 				.build();
 
 		final String registryPath =
@@ -75,19 +161,17 @@ public class GcpRegistryHandler {
 		} else {
 			System.out.println("Registry has no devices.");
 		}
+		return devices;
 	}
 
 	/** Lists all of the registries associated with the given project. */
-	public static void listRegistries(String projectId, String cloudRegion)
+	public static List<DeviceRegistry> listRegistries(String projectId, String cloudRegion)
 			throws GeneralSecurityException, IOException {
-
-
 
 		JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
 		HttpRequestInitializer init = new RetryHttpInitializerWrapper(getCredentialsFromFile());
 		final CloudIot service = new CloudIot.Builder(
-				GoogleNetHttpTransport.newTrustedTransport(),jsonFactory, init)
-				.setApplicationName(APP_NAME).build();
+				GoogleNetHttpTransport.newTrustedTransport(),jsonFactory, init).build();
 
 		final String projectPath = "projects/" + projectId + "/locations/" + cloudRegion;
 
@@ -113,6 +197,8 @@ public class GcpRegistryHandler {
 		} else {
 			System.out.println("Project has no registries.");
 		}
+		return registries;
+
 	}
 
 
@@ -126,8 +212,7 @@ public class GcpRegistryHandler {
 		JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
 		HttpRequestInitializer init = new RetryHttpInitializerWrapper(credential);
 		final CloudIot service = new CloudIot.Builder(
-				GoogleNetHttpTransport.newTrustedTransport(),jsonFactory, init)
-				.setApplicationName(APP_NAME).build();
+				GoogleNetHttpTransport.newTrustedTransport(),jsonFactory, init).build();
 
 		final String registryPath = String.format("projects/%s/locations/%s/registries/%s",
 				projectId, cloudRegion, registryName);

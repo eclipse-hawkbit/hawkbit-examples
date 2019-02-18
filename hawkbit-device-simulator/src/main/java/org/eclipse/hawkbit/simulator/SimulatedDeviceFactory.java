@@ -79,11 +79,6 @@ public class SimulatedDeviceFactory {
             final int pollDelaySec, final URL baseEndpoint, final String gatewayToken, final boolean pollImmediatly) {
         switch (protocol) {
         case DMF_AMQP:
-        	try {
-				GcpRegistryHandler.listRegistries(GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION);
-			} catch (GeneralSecurityException | IOException e) {
-				e.printStackTrace();
-			}
             return createDmfDevice(id, tenant, pollDelaySec, pollImmediatly);
         case DDI_HTTP:
             return createDdiDevice(id, tenant, pollDelaySec, baseEndpoint, gatewayToken);

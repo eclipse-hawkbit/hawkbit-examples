@@ -1,3 +1,18 @@
+# hawkBit GCP Device Simulator
+
+
+## First Credentials for GCP
+
+- Create a json file [link](https://docs.cloudendure.com/Content/Generating_and_Using_Your_Credentials/Working_with_GCP_Credentials/Generating_the_Required_GCP_Credentials/Generating_the_Required_GCP_Credentials.htm)
+
+- Rename the downloaded file to `keys.json`
+
+- Add it to `src/main/resources`
+
+
+
+
+
 # hawkBit Device Simulator
 
 The device simulator handles software update commands from the update server. It is designed to be used very conveniently, 
