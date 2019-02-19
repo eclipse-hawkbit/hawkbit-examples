@@ -8,6 +8,14 @@
  */
 package org.eclipse.hawkbit.simulator;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.GeneralSecurityException;
+import java.util.List;
+
+import org.eclipse.hawkbit.google.gcp.GCP_IoTHandler;
+import org.eclipse.hawkbit.google.gcp.GCP_OTA;
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
 import org.eclipse.hawkbit.simulator.amqp.AmqpProperties;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +24,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import com.google.api.services.cloudiot.v1.model.Device;
 
 /**
  * REST endpoint for controlling the device simulator.
@@ -41,6 +48,80 @@ public class SimulationController {
         this.simulationProperties = simulationProperties;
     }
 
+    
+    /**
+     * The start resource to start a device creation.
+     * 
+     * @param name
+     *            the name prefix of the generated device naming
+     * @param amount
+     *            the amount of devices to be created
+     * @param tenant
+     *            the tenant to create the device to
+     * @param api
+     *            the api-protocol to be used either {@code dmf} or {@code ddi}
+     * @param endpoint
+     *            the URL endpoint to be used of the hawkbit-update-server for
+     *            DDI devices
+     * @param pollDelay
+     *            number of delay in seconds to delay polling of DDI
+     *            devices
+     * @param gatewayToken
+     *            the hawkbit-update-server gatewaytoken in case authentication
+     *            is enforced in hawkbit
+     * @return a response string that devices has been created
+     * @throws MalformedURLException
+     */
+    @GetMapping("/gcp")
+    ResponseEntity<String> gcp(@RequestParam(value = "name", defaultValue = "simulated") final String name,
+            @RequestParam(value = "amount", defaultValue = "1") final int amount,
+            @RequestParam(value = "tenant", required = false) final String tenant,
+            @RequestParam(value = "api", defaultValue = "dmf") final String api,
+            @RequestParam(value = "endpoint", defaultValue = "http://localhost:8080") final String endpoint,
+            @RequestParam(value = "polldelay", defaultValue = "30") final int pollDelay,
+            @RequestParam(value = "gatewaytoken", defaultValue = "") final String gatewayToken)
+            throws MalformedURLException {
+
+        final Protocol protocol;
+        switch (api.toLowerCase()) {
+        case "dmf":
+            protocol = Protocol.DMF_AMQP;
+            break;
+        case "ddi":
+            protocol = Protocol.DDI_HTTP;
+            break;
+        default:
+            return ResponseEntity.badRequest().body("query param api only allows value of 'dmf' or 'ddi'");
+        }
+
+        if (protocol == Protocol.DMF_AMQP && isDmfDisabled()) {
+            return ResponseEntity.badRequest()
+                    .body("The AMQP interface has been disabled, to use DMF protocol you need to enable the AMQP interface via '"
+                            + AmqpProperties.CONFIGURATION_PREFIX + ".enabled=true'");
+        }
+        
+        
+        try {
+			List<Device> allDevices_gcp = GCP_IoTHandler.getAllDevices(GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION);
+			for(Device gcp_device : allDevices_gcp)
+			{
+				System.out.println("[GCP Device] "+gcp_device.getId());
+				repository.add(deviceFactory.
+						createSimulatedDevice(gcp_device.getId(), 
+								simulationProperties.getDefaultTenant(),
+								protocol, pollDelay,
+			                    new URL(endpoint), gatewayToken));
+			}
+			
+		} catch (GeneralSecurityException | IOException e) {
+			e.printStackTrace();
+			
+		}
+        return ResponseEntity.ok("Updated " + amount + " " + protocol + " connected targets!");
+    }
+    
+    
+    
     /**
      * The start resource to start a device creation.
      * 

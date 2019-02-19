@@ -10,6 +10,9 @@
 - Add it to `src/main/resources`
 
 
+## Get the devices from GCP registry
+
+- Set the projectId and the cloud region in the GCP_OTA.java
 
 
 

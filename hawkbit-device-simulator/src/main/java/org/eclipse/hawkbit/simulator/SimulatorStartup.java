@@ -8,14 +8,9 @@
  */
 package org.eclipse.hawkbit.simulator;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.GeneralSecurityException;
-import java.util.List;
 
-import org.eclipse.hawkbit.google.gcp.GCP_OTA;
-import org.eclipse.hawkbit.google.gcp.GcpRegistryHandler;
 import org.eclipse.hawkbit.simulator.amqp.AmqpProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,9 +19,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
-
-import com.google.api.services.cloudiot.v1.model.Device;
-import com.google.api.services.cloudiot.v1.model.DeviceRegistry;
 
 /**
  * Execution of operations after startup. Set up of simulations.
@@ -54,16 +46,6 @@ public class SimulatorStartup implements ApplicationListener<ApplicationReadyEve
     	System.out.println("AutoStarting application ...");
         LOGGER.debug("{} autostarts will be executed connecting to GCP");
 
-    	try {
-			List<Device> allDevices_gcp = GcpRegistryHandler.getAllDevices(GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION);
-			for(Device gcp_device : allDevices_gcp)
-			{
-				System.out.println("[GCP Device] "+gcp_device.getId());
-			}
-			
-		} catch (GeneralSecurityException | IOException e) {
-			e.printStackTrace();
-		}
         LOGGER.debug("{} autostarts will be executed", simulationProperties.getAutostarts().size());
 
         simulationProperties.getAutostarts().forEach(autostart -> {

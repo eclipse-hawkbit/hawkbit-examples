@@ -32,11 +32,14 @@ public class DMFSimulatedDevice extends AbstractSimulatedDevice {
 
     @Override
     public void poll() {
+    	System.out.println("[DMFSimulatedDevice] handling event "+super.getTenant());
+
         spSenderService.createOrUpdateThing(super.getTenant(), super.getId());
     }
 
     @Override
     public void updateAttribute(final String mode, final String key, final String value) {
+    	System.out.println("[DMFSimulatedDevice] handling updateAttribute");
 
         final DmfUpdateMode updateMode;
 

@@ -8,16 +8,12 @@
  */
 package org.eclipse.hawkbit.simulator;
 
-import java.io.IOException;
 import java.net.URL;
-import java.security.GeneralSecurityException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.hawkbit.ddi.client.resource.RootControllerResourceClient;
 import org.eclipse.hawkbit.feign.core.client.IgnoreMultipleConsumersProducersSpringMvcContract;
-import org.eclipse.hawkbit.google.gcp.GCP_OTA;
-import org.eclipse.hawkbit.google.gcp.GcpRegistryHandler;
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
 import org.eclipse.hawkbit.simulator.amqp.DmfSenderService;
 import org.eclipse.hawkbit.simulator.http.GatewayTokenInterceptor;
@@ -79,6 +75,7 @@ public class SimulatedDeviceFactory {
             final int pollDelaySec, final URL baseEndpoint, final String gatewayToken, final boolean pollImmediatly) {
         switch (protocol) {
         case DMF_AMQP:
+        	System.out.println("Creating DMF device "+id);
             return createDmfDevice(id, tenant, pollDelaySec, pollImmediatly);
         case DDI_HTTP:
             return createDdiDevice(id, tenant, pollDelaySec, baseEndpoint, gatewayToken);
