@@ -8,6 +8,7 @@
  */
 package org.eclipse.hawkbit.simulator;
 
+
 import java.net.URL;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;

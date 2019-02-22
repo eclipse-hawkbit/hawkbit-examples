@@ -243,6 +243,13 @@ public class SimulationController {
 
         return ResponseEntity.ok("Deleted");
     }
+    
+    
+    @GetMapping("/hi")
+    ResponseEntity<String> hi() {
+        return ResponseEntity.ok("hi");
+    }
+    
 
     /**
      * Reset the device simulator by removing all simulated devices

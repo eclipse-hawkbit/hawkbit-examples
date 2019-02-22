@@ -34,9 +34,11 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.util.Base64;
 
+
+
 public class GCP_IoTHandler {
 
-	private static GoogleCredential getCredentialsFromFile()
+	public static GoogleCredential getCredentialsFromFile()
 	{
 		GoogleCredential credential = null;
 		try {
@@ -338,6 +340,27 @@ public class GCP_IoTHandler {
 		return registries;
 
 	}
+	
+	
+	/*  @SuppressWarnings("deprecation")
+	  public static String uploadFile(Part filePart, final String bucketName) throws IOException {
+	    DateTimeFormatter dtf = DateTimeFormat.forPattern("-YYYY-MM-dd-HHmmssSSS");
+	    DateTime dt = DateTime.now(DateTimeZone.UTC);
+	    String dtString = dt.toString(dtf);
+	    final String fileName = filePart.getSubmittedFileName() + dtString;
+
+	    // the inputstream is closed by default, so we don't need to close it here
+	    BlobInfo blobInfo =
+	        storage.create(
+	            BlobInfo
+	                .newBuilder(bucketName, fileName)
+	                // Modify access list to allow all users with link to read file
+	                .setAcl(new ArrayList<>(Arrays.asList(Acl.of(User.ofAllUsers(), Role.READER))))
+	                .build(),
+	            filePart.getInputStream());
+	    // return the public download link
+	    return blobInfo.getMediaLink();
+	  }*/
 
 	public static void sendCommand(
 		      String deviceId, String projectId, String cloudRegion, String registryName, String data)

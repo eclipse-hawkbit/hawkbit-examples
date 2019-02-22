@@ -10,6 +10,7 @@ package org.eclipse.hawkbit.simulator.amqp;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -22,7 +23,6 @@ import org.eclipse.hawkbit.dmf.json.model.DmfDownloadAndUpdateRequest;
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorRepository;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorUpdater;
-import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
@@ -32,6 +32,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.scheduling.annotation.Scheduled;
+
 
 /**
  * Handle all incoming Messages from hawkBit update server.
@@ -47,7 +48,7 @@ public class DmfReceiverService extends MessageService {
 
 	private final DeviceSimulatorRepository repository;
 
-	private final Set<String> openPings = new ConcurrentHashSet<>();
+	private final Set<String> openPings = new HashSet<String>();
 
 	/**
 	 * Constructor.

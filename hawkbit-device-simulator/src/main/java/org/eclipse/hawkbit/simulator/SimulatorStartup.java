@@ -8,10 +8,16 @@
  */
 package org.eclipse.hawkbit.simulator;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.GeneralSecurityException;
 
+import org.eclipse.hawkbit.google.gcp.BucketHandler;
+import org.eclipse.hawkbit.simulator.SimulationProperties.Autostart;
 import org.eclipse.hawkbit.simulator.amqp.AmqpProperties;
+//import org.eclipse.hawkbit.google.gcp.BucketHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,9 +51,24 @@ public class SimulatorStartup implements ApplicationListener<ApplicationReadyEve
     public void onApplicationEvent(final ApplicationReadyEvent event) {
     	System.out.println("AutoStarting application ...");
         LOGGER.debug("{} autostarts will be executed connecting to GCP");
-
         LOGGER.debug("{} autostarts will be executed", simulationProperties.getAutostarts().size());
 
+//        simulationProperties.setDefaultTenant("GCP");
+//        Autostart autoStart = new Autostart();
+//        autoStart.setTenant("GCP");
+//        
+//        simulationProperties.getAutostarts().add(e)
+        try {
+			BucketHandler.init();
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		} catch (GeneralSecurityException e) {
+			e.printStackTrace();
+		}
+//        
+        
         simulationProperties.getAutostarts().forEach(autostart -> {
             LOGGER.debug("Autostart runs for tenant {} and API {}", autostart.getTenant(), autostart.getApi());
             for (int i = 0; i < autostart.getAmount(); i++) {

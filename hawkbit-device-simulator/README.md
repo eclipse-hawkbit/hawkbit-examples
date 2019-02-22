@@ -13,13 +13,17 @@
 ## Get the devices from GCP registry
 
 - Set the projectId and the cloud region in the GCP_OTA.java
-
+- Create a bucket: gsutil mb gs://FW/
 
 
 # hawkBit Device Simulator
 
 The device simulator handles software update commands from the update server. It is designed to be used very conveniently, 
 for example, from within a browser. Hence, all the endpoints use the GET verb.
+
+
+
+
 
 ## Run on your own workstation
 ```
