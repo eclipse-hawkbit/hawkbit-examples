@@ -67,7 +67,6 @@ public class SimulatorStartup implements ApplicationListener<ApplicationReadyEve
 		} catch (GeneralSecurityException e) {
 			e.printStackTrace();
 		}
-//        
         
         simulationProperties.getAutostarts().forEach(autostart -> {
             LOGGER.debug("Autostart runs for tenant {} and API {}", autostart.getTenant(), autostart.getApi());

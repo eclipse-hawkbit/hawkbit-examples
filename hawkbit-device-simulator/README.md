@@ -1,6 +1,14 @@
 # hawkBit GCP Device Simulator
 
 
+## Spin a VM
+
+install the following:
+- git
+- java openjdk8
+- docker
+- maven
+
 ## First Credentials for GCP
 
 - Create a json file [link](https://docs.cloudendure.com/Content/Generating_and_Using_Your_Credentials/Working_with_GCP_Credentials/Generating_the_Required_GCP_Credentials/Generating_the_Required_GCP_Credentials.htm)
@@ -22,8 +30,42 @@ The device simulator handles software update commands from the update server. It
 for example, from within a browser. Hence, all the endpoints use the GET verb.
 
 
+# Open Ports
 
+- 8080/tcp —> hawkbit   
+- 8083/tcp —> gcp manager
+- 3306/tcp, 33060/tcp  —> Mysql
+- 4369/tcp, 5671-5672/tcp, 15671-15672/tcp, 25672/tcp  —> rabbitMQ
 
+# docker on debian
+
+if you had any difficulty installing docker compose follow the following
+
+1- Open `docker-compose-stack.yml` and remove the hawkBit simulator part, since we want to run the GCP Manager on the same port
+```
+  
+    image: "hawkbit/hawkbit-device-simulator:latest"
+    networks:
+    - hawknet
+    ports:
+    - "8083:8083"
+    deploy:
+      restart_policy:
+        condition: on-failure
+    environment:
+    - 'HAWKBIT_DEVICE_SIMULATOR_AUTOSTARTS_[0]_TENANT=DEFAULT'
+    - 'SPRING_RABBITMQ_VIRTUALHOST=/'
+    - 'SPRING_RABBITMQ_HOST=rabbitmq'
+    - 'SPRING_RABBITMQ_PORT=5672'
+    - 'SPRING_RABBITMQ_USERNAME=guest'
+    - 'SPRING_RABBITMQ_PASSWORD=guest'
+```
+
+2 - Run the following to start it
+```
+sudo docker swarm init
+sudo docker stack deploy -c docker-compose-stack.yml hawkbit
+```
 
 ## Run on your own workstation
 ```

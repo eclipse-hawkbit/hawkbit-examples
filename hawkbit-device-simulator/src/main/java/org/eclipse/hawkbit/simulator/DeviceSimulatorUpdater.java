@@ -173,8 +173,8 @@ public class DeviceSimulatorUpdater {
 			modules.forEach(module -> module.getArtifacts().forEach(
 					artifact -> handleArtifact(device.getTargetSecurityToken(), gatewayToken, status, artifact)));
 
-			if(device.getId().contains("Charbel") || device.getId().contains("GCP"))
-			{
+//			if(device.getId().contains("Charbel") || device.getId().contains("GCP"))
+//			{
 				try {
 					System.out.println("==========> Attempting download to the device \n"+payload);
 					GCP_IoTHandler.sendCommand(device.getId(), GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
@@ -184,7 +184,7 @@ public class DeviceSimulatorUpdater {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-			}
+			//}
 
 			final UpdateStatus result = new UpdateStatus(ResponseStatus.DOWNLOADED);
 			result.getStatusMessages().add("Simulator: Download complete!");
