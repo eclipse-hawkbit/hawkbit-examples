@@ -28,7 +28,7 @@ install the following:
 
 The device simulator handles software update commands from the update server. It is designed to be used very conveniently, 
 for example, from within a browser. Hence, all the endpoints use the GET verb.
-
+-Dhawkbit.device.simulator.amqp.enabled=true
 
 # Open Ports
 

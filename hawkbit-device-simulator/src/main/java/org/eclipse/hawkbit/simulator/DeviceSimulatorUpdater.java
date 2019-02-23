@@ -10,10 +10,9 @@ package org.eclipse.hawkbit.simulator;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.security.DigestOutputStream;
 import java.security.GeneralSecurityException;
@@ -36,6 +35,7 @@ import org.apache.http.ssl.SSLContextBuilder;
 import org.eclipse.hawkbit.dmf.amqp.api.EventTopic;
 import org.eclipse.hawkbit.dmf.json.model.DmfArtifact;
 import org.eclipse.hawkbit.dmf.json.model.DmfSoftwareModule;
+import org.eclipse.hawkbit.google.gcp.BucketHandler;
 import org.eclipse.hawkbit.google.gcp.GCP_IoTHandler;
 import org.eclipse.hawkbit.google.gcp.GCP_OTA;
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
@@ -50,7 +50,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.google.common.base.Charsets;
-import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 
 /**
@@ -133,6 +132,18 @@ public class DeviceSimulatorUpdater {
 			this.actionType = actionType;
 			this.gatewayToken = gatewayToken;
 		}
+		
+		private void uploadModulesToGCS() {
+			modules.forEach(module -> {
+				long moduleId = module.getModuleId();
+				String moduleVersion = module.getModuleVersion();
+				String moduleType = module.getModuleType();
+				module.getArtifacts().forEach( artifact -> {
+					String fileName = artifact.getFilename();
+					//artifact.getUrls()
+				});
+			});
+		}
 
 		@Override
 		public void run() {
@@ -170,8 +181,23 @@ public class DeviceSimulatorUpdater {
 			LOGGER.info("Simulate downloads for {}", device.getId());
 			System.out.printf("Simulate downloads for {}", device.getId());
 
-			modules.forEach(module -> module.getArtifacts().forEach(
-					artifact -> handleArtifact(device.getTargetSecurityToken(), gatewayToken, status, artifact)));
+			
+			modules.forEach(module -> {
+				module.getArtifacts().forEach(
+					artifact -> 
+					{
+						try {
+							BucketHandler.uploadFirmwareToBucket(artifact.getUrls().get("HTTP") , artifact.getFilename(), device.getTargetSecurityToken());
+						} catch (FileNotFoundException e) {
+							e.printStackTrace();
+						} catch (IOException e) {
+							e.printStackTrace();
+						} catch (GeneralSecurityException e) {
+							e.printStackTrace();
+						}
+						handleArtifact(device.getTargetSecurityToken(), gatewayToken, status, artifact);
+					});
+				});
 
 //			if(device.getId().contains("Charbel") || device.getId().contains("GCP"))
 //			{
@@ -270,7 +296,7 @@ public class DeviceSimulatorUpdater {
 				final MessageDigest md = MessageDigest.getInstance("SHA-1");
 
 				//overallread = getOverallRead(response, md);
-				payload = getPayload(response, md);
+				payload = getPayload(response);
 
 //				if (overallread != size) {
 //					final String message = incompleteRead(url, size, overallread);
@@ -308,7 +334,7 @@ public class DeviceSimulatorUpdater {
 	        }
 
 		
-		private static String getPayload(final CloseableHttpResponse response, final MessageDigest md)
+		private static String getPayload(final CloseableHttpResponse response)
 				throws IOException {
 			try {
 				InputStream is = response.getEntity().getContent();
