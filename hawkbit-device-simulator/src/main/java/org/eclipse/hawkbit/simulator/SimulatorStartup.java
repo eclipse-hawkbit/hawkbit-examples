@@ -15,6 +15,7 @@ import java.net.URL;
 import java.security.GeneralSecurityException;
 
 import org.eclipse.hawkbit.google.gcp.GCPBucketHandler;
+import org.eclipse.hawkbit.google.gcp.GCP_FireStore;
 import org.eclipse.hawkbit.google.gcp.GCP_Subscriber;
 import org.eclipse.hawkbit.simulator.amqp.AmqpProperties;
 //import org.eclipse.hawkbit.google.gcp.BucketHandler;
@@ -52,8 +53,16 @@ public class SimulatorStartup implements ApplicationListener<ApplicationReadyEve
 		System.out.println("AutoStarting application ...");
 		LOGGER.debug("{} autostarts will be executed", simulationProperties.getAutostarts().size());
 		
-		GCP_Subscriber.init();
+		
  
+		System.out.println("Trying Firestore ... ");
+		GCP_FireStore.init();
+		GCP_FireStore.addDocument("GCP_Test");
+		
+		
+		
+		
+		
 		//TODO: Nice to have: at startup read the Hawkbit artifacts and upload them to the bucket
 		simulationProperties.getAutostarts().forEach(autostart -> {
 			LOGGER.debug("Autostart runs for tenant {} and API {}", autostart.getTenant(), autostart.getApi());
@@ -71,6 +80,8 @@ public class SimulatorStartup implements ApplicationListener<ApplicationReadyEve
 				}
 			}
 		});
+		
+		GCP_Subscriber.init();
 	}
 
 }
