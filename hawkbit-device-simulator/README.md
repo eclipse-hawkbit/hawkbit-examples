@@ -22,7 +22,8 @@ install the following:
 
 - Set the projectId and the cloud region in the GCP_OTA.java
 - Create a `state` subscription on the state topic
-- Create a bucket: gsutil mb gs:///
+- Create a bucket: gsutil mb gs:/firmware-ota/
+- enable the Token Service API: `cloud iot token`
 
 
 # hawkBit Device Simulator
