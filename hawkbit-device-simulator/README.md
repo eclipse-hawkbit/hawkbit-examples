@@ -18,10 +18,11 @@ install the following:
 - Add it to `src/main/resources`
 
 
-## Get the devices from GCP registry
+## GCP Config
 
 - Set the projectId and the cloud region in the GCP_OTA.java
-- Create a bucket: gsutil mb gs://FW/
+- Create a `state` subscription on the state topic
+- Create a bucket: gsutil mb gs:///
 
 
 # hawkBit Device Simulator

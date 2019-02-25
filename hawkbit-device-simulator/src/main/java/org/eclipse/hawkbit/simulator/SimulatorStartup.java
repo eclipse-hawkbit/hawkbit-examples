@@ -14,7 +14,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 
-import org.eclipse.hawkbit.google.gcp.BucketHandler;
+import org.eclipse.hawkbit.google.gcp.GCPBucketHandler;
+import org.eclipse.hawkbit.google.gcp.GCP_Subscriber;
 import org.eclipse.hawkbit.simulator.amqp.AmqpProperties;
 //import org.eclipse.hawkbit.google.gcp.BucketHandler;
 import org.slf4j.Logger;
@@ -49,9 +50,10 @@ public class SimulatorStartup implements ApplicationListener<ApplicationReadyEve
 	@Override
 	public void onApplicationEvent(final ApplicationReadyEvent event) {
 		System.out.println("AutoStarting application ...");
-		LOGGER.debug("{} autostarts will be executed connecting to GCP");
 		LOGGER.debug("{} autostarts will be executed", simulationProperties.getAutostarts().size());
 		
+		GCP_Subscriber.init();
+
 		//TODO: Nice to have: at startup read the Hawkbit artifacts and upload them to the bucket
 		simulationProperties.getAutostarts().forEach(autostart -> {
 			LOGGER.debug("Autostart runs for tenant {} and API {}", autostart.getTenant(), autostart.getApi());

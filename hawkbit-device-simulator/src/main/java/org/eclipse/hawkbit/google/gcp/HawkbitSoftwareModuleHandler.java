@@ -13,7 +13,6 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
-import org.eclipse.hawkbit.simulator.DeviceSimulatorUpdater;
 import org.eclipse.hawkbit.simulator.UpdateStatus;
 import org.eclipse.hawkbit.simulator.UpdateStatus.ResponseStatus;
 import org.slf4j.Logger;

@@ -8,7 +8,10 @@
  */
 package org.eclipse.hawkbit.simulator.amqp;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -20,6 +23,7 @@ import org.eclipse.hawkbit.dmf.amqp.api.MessageHeaderKey;
 import org.eclipse.hawkbit.dmf.amqp.api.MessageType;
 import org.eclipse.hawkbit.dmf.json.model.DmfActionStatus;
 import org.eclipse.hawkbit.dmf.json.model.DmfDownloadAndUpdateRequest;
+import org.eclipse.hawkbit.google.gcp.GCPBucketHandler;
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorRepository;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorUpdater;
@@ -201,7 +205,7 @@ public class DmfReceiverService extends MessageService {
 			final String correlationId = UUID.randomUUID().toString();
 			spSenderService.ping(tenant, correlationId);
 			openPings.add(correlationId);
-			LOGGER.debug("Ping tenant {} with correlationId {}", tenant, correlationId);
+			LOGGER.debug("Ping tenant {%s} with correlationId {%s}", tenant, correlationId);
 		});
 	}
 
@@ -272,6 +276,23 @@ public class DmfReceiverService extends MessageService {
 		final String targetSecurityToken = downloadAndUpdateRequest.getTargetSecurityToken();
 		System.out.println("[DmfReceiverService] handleUpdateProcess event "+thingId);
 
+		downloadAndUpdateRequest.getSoftwareModules().forEach(module -> {
+			module.getArtifacts().forEach(
+				artifact -> 
+				{
+					try {
+						GCPBucketHandler.uploadFirmwareToBucket(artifact.getUrls().get("HTTP") , artifact.getFilename(), targetSecurityToken);
+					} catch (FileNotFoundException e) {
+						e.printStackTrace();
+					} catch (IOException e) {
+						e.printStackTrace();
+					} catch (GeneralSecurityException e) {
+						e.printStackTrace();
+					}
+				});
+			});
+		
+		
 		deviceUpdater.startUpdate(tenant, thingId, downloadAndUpdateRequest.getSoftwareModules(), targetSecurityToken,
 				null, device -> sendFeedback(actionId, device), actionType);
 	}

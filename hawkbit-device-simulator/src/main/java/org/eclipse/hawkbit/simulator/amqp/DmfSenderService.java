@@ -83,7 +83,7 @@ public class DmfSenderService extends MessageService {
 	 *            indicating whether to download and install or skip
 	 *            installation due to maintenance window.
 	 */
-	public void finishUpdateProcess(final SimulatedUpdate update, final List<String> updateResultMessages) {        System.out.println("[DmfSenderService] init");
+	public void finishUpdateProcess(final SimulatedUpdate update, final List<String> updateResultMessages) { 
 	System.out.println("[DmfSenderService] Update Process");
 	final Message updateResultMessage = createUpdateResultMessage(update, DmfActionStatus.FINISHED,
 			updateResultMessages);

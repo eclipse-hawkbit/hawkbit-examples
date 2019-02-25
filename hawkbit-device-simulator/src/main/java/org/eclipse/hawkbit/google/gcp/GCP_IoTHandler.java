@@ -370,7 +370,8 @@ public class GCP_IoTHandler {
 	/** List all of the configs for the given device. */
 	public static void listDeviceConfigs(
 			String deviceId, String projectId, String cloudRegion, String registryName)
-					throws GeneralSecurityException, IOException {
+					 {
+		try {
 		JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
 		HttpRequestInitializer init = new RetryHttpInitializerWrapper(getCredentialsFromFile());
 		final CloudIot service = new CloudIot.Builder(
@@ -396,14 +397,19 @@ public class GCP_IoTHandler {
 			System.out.println("Contents: " + config.getBinaryData());
 			System.out.println();
 		}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 
-	/** Set a device configuration to the specified data (string, JSON) and version (0 for latest). */
-	public static void setDeviceConfiguration(
-			String deviceId, String projectId, String cloudRegion, String registryName,
-			String data, long version)
-					throws GeneralSecurityException, IOException {
+	/** List all of the configs for the given device. */
+	public static long getLatestConfig(
+			String deviceId, String projectId, String cloudRegion, String registryName)
+					 {
+		long configVersion = 0;
+		try {
 		JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
 		HttpRequestInitializer init = new RetryHttpInitializerWrapper(getCredentialsFromFile());
 		final CloudIot service = new CloudIot.Builder(
@@ -412,53 +418,108 @@ public class GCP_IoTHandler {
 		final String devicePath = String.format("projects/%s/locations/%s/registries/%s/devices/%s",
 				projectId, cloudRegion, registryName, deviceId);
 
-		ModifyCloudToDeviceConfigRequest req = new ModifyCloudToDeviceConfigRequest();
-		req.setVersionToUpdate(version);
-
-		// Data sent through the wire has to be base64 encoded.
-		Base64.Encoder encoder = Base64.getEncoder();
-		String encPayload = encoder.encodeToString(data.getBytes("UTF-8"));
-		req.setBinaryData(encPayload);
-
-		DeviceConfig config =
+		System.out.println("Listing device configs for " + devicePath);
+		List<DeviceConfig> deviceConfigs =
 				service
 				.projects()
 				.locations()
 				.registries()
 				.devices()
-				.modifyCloudToDeviceConfig(devicePath, req).execute();
+				.configVersions()
+				.list(devicePath)
+				.execute()
+				.getDeviceConfigs();
 
-		System.out.println("Updated: " + config.getVersion());
+		
+		for (DeviceConfig config : deviceConfigs) {
+			System.out.println("Config version: " + config.getVersion());
+			System.out.println("Contents: " + config.getBinaryData());
+			if(configVersion < config.getVersion())
+			{
+				configVersion = config.getVersion();
+			}
+		}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return configVersion;
+	}
+
+	
+	/** Set a device configuration to the specified data (string, JSON) and version (0 for latest). */
+	public static void setDeviceConfiguration(
+			String deviceId, String projectId, String cloudRegion, String registryName,
+			String data, long version)
+	{
+		try {
+			JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+			HttpRequestInitializer init = new RetryHttpInitializerWrapper(getCredentialsFromFile());
+			CloudIot service = new CloudIot.Builder(
+					GoogleNetHttpTransport.newTrustedTransport(),jsonFactory, init).build();
+			final String devicePath = String.format("projects/%s/locations/%s/registries/%s/devices/%s",
+					projectId, cloudRegion, registryName, deviceId);
+
+			ModifyCloudToDeviceConfigRequest req = new ModifyCloudToDeviceConfigRequest();
+			req.setVersionToUpdate(version);
+
+			// Data sent through the wire has to be base64 encoded.
+			Base64.Encoder encoder = Base64.getEncoder();
+			String encPayload = encoder.encodeToString(data.getBytes("UTF-8"));
+			req.setBinaryData(encPayload);
+
+			DeviceConfig config =
+					service
+					.projects()
+					.locations()
+					.registries()
+					.devices()
+					.modifyCloudToDeviceConfig(devicePath, req).execute();
+
+			System.out.println("Updated: " + config.getVersion());
+		} catch (GeneralSecurityException | IOException e) {
+			e.printStackTrace();
+		}
+
+
 	}
 
 	/** Retrieves device metadata from a registry. **/
 	public static List<DeviceState> getDeviceStates(
 			String deviceId, String projectId, String cloudRegion, String registryName)
-					throws GeneralSecurityException, IOException {
-		JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-		HttpRequestInitializer init = new RetryHttpInitializerWrapper(getCredentialsFromFile());
-		final CloudIot service = new CloudIot.Builder(
-				GoogleNetHttpTransport.newTrustedTransport(),jsonFactory, init).build();
+	{
 
-		final String devicePath = String.format("projects/%s/locations/%s/registries/%s/devices/%s",
-				projectId, cloudRegion, registryName, deviceId);
+		try {
+			JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+			HttpRequestInitializer init = new RetryHttpInitializerWrapper(getCredentialsFromFile());
+			final CloudIot service = new CloudIot.Builder(
+					GoogleNetHttpTransport.newTrustedTransport(),jsonFactory, init).build();
 
-		System.out.println("Retrieving device states " + devicePath);
+			final String devicePath = String.format("projects/%s/locations/%s/registries/%s/devices/%s",
+					projectId, cloudRegion, registryName, deviceId);
 
-		ListDeviceStatesResponse resp  = service
-				.projects()
-				.locations()
-				.registries()
-				.devices()
-				.states()
-				.list(devicePath).execute();
+			System.out.println("Retrieving device states " + devicePath);
 
-		return resp.getDeviceStates();
+			ListDeviceStatesResponse resp  = service
+					.projects()
+					.locations()
+					.registries()
+					.devices()
+					.states()
+					.list(devicePath).execute();
+
+			return resp.getDeviceStates();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	public static void sendCommand(
 			String deviceId, String projectId, String cloudRegion, String registryName, String data)
-					throws GeneralSecurityException, IOException {
+					{
+		try {
 		JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
 		HttpRequestInitializer init = new RetryHttpInitializerWrapper(getCredentialsFromFile());
 		final CloudIot service =
@@ -477,8 +538,6 @@ public class GCP_IoTHandler {
 		String encPayload = encoder.encodeToString(data.getBytes("UTF-8"));
 		req.setBinaryData(encPayload);
 		System.out.printf("Sending command to %s\n", devicePath);
-		try {
-
 			SendCommandToDeviceResponse res =
 					service
 					.projects()

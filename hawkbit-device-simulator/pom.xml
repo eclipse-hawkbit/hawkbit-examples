@@ -66,11 +66,8 @@
 			<artifactId>hawkbit-example-ddi-feign-client</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-	<!-- 	<dependency>
-			<groupId>org.eclipse.hawkbit</groupId>
-			<artifactId>hawkbit-example-core-feign-client</artifactId>
-			<version>${project.version}</version>
-		</dependency> -->
+		<!-- <dependency> <groupId>org.eclipse.hawkbit</groupId> <artifactId>hawkbit-example-core-feign-client</artifactId> 
+			<version>${project.version}</version> </dependency> -->
 		<dependency>
 			<groupId>org.springframework.amqp</groupId>
 			<artifactId>spring-rabbit</artifactId>
@@ -182,6 +179,11 @@
 			<groupId>commons-cli</groupId>
 			<artifactId>commons-cli</artifactId>
 			<version>1.4</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-pubsub</artifactId>
+			<version>1.63.0</version>
 		</dependency>
 		<!-- API Client Library: Storage -->
 		<dependency>

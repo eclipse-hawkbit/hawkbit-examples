@@ -10,12 +10,10 @@ package org.eclipse.hawkbit.simulator;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.DigestOutputStream;
-import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
@@ -35,9 +33,10 @@ import org.apache.http.ssl.SSLContextBuilder;
 import org.eclipse.hawkbit.dmf.amqp.api.EventTopic;
 import org.eclipse.hawkbit.dmf.json.model.DmfArtifact;
 import org.eclipse.hawkbit.dmf.json.model.DmfSoftwareModule;
-import org.eclipse.hawkbit.google.gcp.BucketHandler;
+import org.eclipse.hawkbit.google.gcp.GCPBucketHandler;
 import org.eclipse.hawkbit.google.gcp.GCP_IoTHandler;
 import org.eclipse.hawkbit.google.gcp.GCP_OTA;
+import org.eclipse.hawkbit.google.gcp.GCP_Subscriber;
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
 import org.eclipse.hawkbit.simulator.UpdateStatus.ResponseStatus;
 import org.slf4j.Logger;
@@ -104,8 +103,14 @@ public class DeviceSimulatorUpdater {
 
 		device.setTargetSecurityToken(targetSecurityToken);
 
-		threadPool.schedule(new DeviceSimulatorUpdateThread(device, callback, modules, actionType, gatewayToken), 2_000,
-				TimeUnit.MILLISECONDS);
+		if(GCP_OTA.FW_VIA_COMMAND) {
+			threadPool.schedule(new DeviceSimulatorUpdateThread(device, callback, modules, actionType, gatewayToken), 2_000,
+					TimeUnit.MILLISECONDS);
+		}
+		else //use the subscription on state
+		{
+			GCP_Subscriber.updateDevice(device, callback, modules, actionType);
+		}
 	}
 
 	private static final class DeviceSimulatorUpdateThread implements Runnable {
@@ -132,39 +137,41 @@ public class DeviceSimulatorUpdater {
 			this.actionType = actionType;
 			this.gatewayToken = gatewayToken;
 		}
-		
-		private void uploadModulesToGCS() {
-			modules.forEach(module -> {
-				long moduleId = module.getModuleId();
-				String moduleVersion = module.getModuleVersion();
-				String moduleType = module.getModuleType();
-				module.getArtifacts().forEach( artifact -> {
-					String fileName = artifact.getFilename();
-					//artifact.getUrls()
-				});
-			});
-		}
 
 		@Override
 		public void run() {
-			device.setUpdateStatus(new UpdateStatus(ResponseStatus.RUNNING, "Simulation begins!"));
-			callback.sendFeedback(device);
 
-			if (!CollectionUtils.isEmpty(modules)) {
-				device.setUpdateStatus(simulateDownloads());
+
+			if(GCP_OTA.FW_VIA_COMMAND)
+			{
+				device.setUpdateStatus(new UpdateStatus(ResponseStatus.RUNNING, "Simulation begins!"));
 				callback.sendFeedback(device);
-				if (isErrorResponse(device.getUpdateStatus())) {
+
+				if (!CollectionUtils.isEmpty(modules)) {
+					device.setUpdateStatus(simulateDownloads());
+					callback.sendFeedback(device);
+					if (isErrorResponse(device.getUpdateStatus())) {
+						device.clean();
+						return;
+					}
+				}
+
+				if (actionType == EventTopic.DOWNLOAD_AND_INSTALL) {
+					System.out.println("[DeviceSimulator] Download & Install");
+					device.setUpdateStatus(new UpdateStatus(ResponseStatus.SUCCESSFUL, "Simulation complete!"));
+					callback.sendFeedback(device);
 					device.clean();
-					return;
 				}
 			}
+		}
 
-			if (actionType == EventTopic.DOWNLOAD_AND_INSTALL) {
-				System.out.println("[DeviceSimulator] Download & Install");
-				device.setUpdateStatus(new UpdateStatus(ResponseStatus.SUCCESSFUL, "Simulation complete!"));
-				callback.sendFeedback(device);
-				device.clean();
-			}
+
+
+		private void syncDownloadGCP(String deviceId, String data) 
+		{
+			System.out.println("==========> Attempting download to the device \n"+data);
+			GCP_IoTHandler.sendCommand(device.getId(), GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
+					GCP_OTA.REGISTRY_NAME, "This is a payload from HawkBit:\n"+data);
 		}
 
 		private UpdateStatus simulateDownloads() {
@@ -181,36 +188,13 @@ public class DeviceSimulatorUpdater {
 			LOGGER.info("Simulate downloads for {}", device.getId());
 			System.out.printf("Simulate downloads for {}", device.getId());
 
-			
+
 			modules.forEach(module -> {
 				module.getArtifacts().forEach(
-					artifact -> 
-					{
-						try {
-							BucketHandler.uploadFirmwareToBucket(artifact.getUrls().get("HTTP") , artifact.getFilename(), device.getTargetSecurityToken());
-						} catch (FileNotFoundException e) {
-							e.printStackTrace();
-						} catch (IOException e) {
-							e.printStackTrace();
-						} catch (GeneralSecurityException e) {
-							e.printStackTrace();
-						}
-						handleArtifact(device.getTargetSecurityToken(), gatewayToken, status, artifact);
-					});
-				});
+						artifact -> handleArtifact(device.getTargetSecurityToken(), gatewayToken, status, artifact));
+			});
 
-//			if(device.getId().contains("Charbel") || device.getId().contains("GCP"))
-//			{
-				try {
-					System.out.println("==========> Attempting download to the device \n"+payload);
-					GCP_IoTHandler.sendCommand(device.getId(), GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
-							GCP_OTA.REGISTRY_NAME, "This is a payload from HawkBit\n"+payload);
-				} catch (GeneralSecurityException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			//}
+			syncDownloadGCP(device.getId(), payload);
 
 			final UpdateStatus result = new UpdateStatus(ResponseStatus.DOWNLOADED);
 			result.getStatusMessages().add("Simulator: Download complete!");
@@ -298,18 +282,18 @@ public class DeviceSimulatorUpdater {
 				//overallread = getOverallRead(response, md);
 				payload = getPayload(response);
 
-//				if (overallread != size) {
-//					final String message = incompleteRead(url, size, overallread);
-//					return new UpdateStatus(ResponseStatus.ERROR, message);
-//				}
-//
-//				sha1HashResult = BaseEncoding.base16().lowerCase().encode(md.digest());
+				//				if (overallread != size) {
+				//					final String message = incompleteRead(url, size, overallread);
+				//					return new UpdateStatus(ResponseStatus.ERROR, message);
+				//				}
+				//
+				//				sha1HashResult = BaseEncoding.base16().lowerCase().encode(md.digest());
 			}
 
-//			if (!sha1Hash.equalsIgnoreCase(sha1HashResult)) {
-//				final String message = wrongHash(url, sha1Hash, overallread, sha1HashResult);
-//				return new UpdateStatus(ResponseStatus.ERROR, message);
-//			}
+			//			if (!sha1Hash.equalsIgnoreCase(sha1HashResult)) {
+			//				final String message = wrongHash(url, sha1Hash, overallread, sha1HashResult);
+			//				return new UpdateStatus(ResponseStatus.ERROR, message);
+			//			}
 
 			final String message = "Downloaded " + url + " (" + payload.getBytes().length + " bytes)";
 			System.out.println("[DeviceSimulator] "+message);
@@ -317,23 +301,23 @@ public class DeviceSimulatorUpdater {
 			return new UpdateStatus(ResponseStatus.SUCCESSFUL, message);
 		}
 
-	     private static long getOverallRead(final CloseableHttpResponse response, final MessageDigest md)
-	                throws IOException {
+		private static long getOverallRead(final CloseableHttpResponse response, final MessageDigest md)
+				throws IOException {
 
-	            long overallread;
+			long overallread;
 
-	            try (final OutputStream os = ByteStreams.nullOutputStream();
-	                    final BufferedOutputStream bos = new BufferedOutputStream(new DigestOutputStream(os, md))) {
+			try (final OutputStream os = ByteStreams.nullOutputStream();
+					final BufferedOutputStream bos = new BufferedOutputStream(new DigestOutputStream(os, md))) {
 
-	                try (BufferedInputStream bis = new BufferedInputStream(response.getEntity().getContent())) {
-	                    overallread = ByteStreams.copy(bis, bos);
-	                }
-	            }
+				try (BufferedInputStream bis = new BufferedInputStream(response.getEntity().getContent())) {
+					overallread = ByteStreams.copy(bis, bos);
+				}
+			}
 
-	            return overallread;
-	        }
+			return overallread;
+		}
 
-		
+
 		private static String getPayload(final CloseableHttpResponse response)
 				throws IOException {
 			try {
