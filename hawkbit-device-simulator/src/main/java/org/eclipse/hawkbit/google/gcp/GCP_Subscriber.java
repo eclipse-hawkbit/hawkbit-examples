@@ -60,7 +60,9 @@ public class GCP_Subscriber {
 			// Continue to listen to messages
 			while (true) {
 				PubsubMessage message = messages.take();
-				updateHawkbitStatus(message);
+				if(!GCP_OTA.FW_VIA_COMMAND) {
+					updateHawkbitStatus(message);
+				}
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
