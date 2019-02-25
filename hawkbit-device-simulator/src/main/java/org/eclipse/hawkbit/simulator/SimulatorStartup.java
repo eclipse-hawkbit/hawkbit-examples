@@ -53,7 +53,7 @@ public class SimulatorStartup implements ApplicationListener<ApplicationReadyEve
 		LOGGER.debug("{} autostarts will be executed", simulationProperties.getAutostarts().size());
 		
 		GCP_Subscriber.init();
-
+ 
 		//TODO: Nice to have: at startup read the Hawkbit artifacts and upload them to the bucket
 		simulationProperties.getAutostarts().forEach(autostart -> {
 			LOGGER.debug("Autostart runs for tenant {} and API {}", autostart.getTenant(), autostart.getApi());
