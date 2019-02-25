@@ -57,7 +57,7 @@ public class SimulatorStartup implements ApplicationListener<ApplicationReadyEve
  
 		System.out.println("Trying Firestore ... ");
 		GCP_FireStore.init();
-		GCP_FireStore.addDocument("GCP_Test");
+		GCP_FireStore.addDocument("GCP_Test", null);
 		
 		
 		
