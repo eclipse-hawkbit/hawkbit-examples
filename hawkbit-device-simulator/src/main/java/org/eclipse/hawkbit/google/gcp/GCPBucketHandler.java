@@ -68,7 +68,6 @@ public class GCPBucketHandler {
 
 	public static void uploadFirmwareToBucket(String fileUrl, String artifactName, String targetToken) throws FileNotFoundException, IOException, GeneralSecurityException {
 
-		listBuckets();
 		Storage gcs = getStorage();
 		String data = HawkbitSoftwareModuleHandler.downloadFileData(fileUrl, targetToken);
 		if(!checkIfExists(artifactName))

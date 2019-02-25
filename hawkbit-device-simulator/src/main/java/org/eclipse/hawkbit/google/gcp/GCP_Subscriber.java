@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.eclipse.hawkbit.dmf.amqp.api.EventTopic;
 import org.eclipse.hawkbit.dmf.json.model.DmfSoftwareModule;
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice;
+import org.eclipse.hawkbit.simulator.DeviceSimulatorUpdater;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorUpdater.UpdaterCallback;
 import org.eclipse.hawkbit.simulator.UpdateStatus;
 import org.eclipse.hawkbit.simulator.UpdateStatus.ResponseStatus;
@@ -78,6 +79,7 @@ public class GCP_Subscriber {
 		if(data != null) {
 			long configVersion = GCP_IoTHandler.getLatestConfig(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
 					GCP_OTA.REGISTRY_NAME);
+			LOGGER.info("Sending Configuration Message to %s with data:\n%s", deviceId, data);
 			GCP_IoTHandler.setDeviceConfiguration(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
 					GCP_OTA.REGISTRY_NAME, data, configVersion);
 		}
@@ -85,6 +87,22 @@ public class GCP_Subscriber {
 	}  
 
 
+	private static void sendUpate(String deviceId, UpdateStatus updateStatus) {
+		AbstractSimulatedDevice device = mapDevices.get(deviceId);
+		UpdaterCallback callback = mapCallbacks.get(deviceId);
+		if(device != null && callback != null) {
+			device.setUpdateStatus(updateStatus);
+			callback.sendFeedback(device);
+		} else {
+			if(device == null) {
+			LOGGER.error("Map didnt find device on "+ updateStatus.getResponseStatus().toString());
+			} 
+			if(callback == null) {
+				LOGGER.error("Map didnt find callback on "+ updateStatus.getResponseStatus().toString());
+				}
+		}
+	}
+	
 	public static void updateHawkbitStatus(PubsubMessage message){
 		System.out.println("Message Id: " + message.getMessageId());
 		//{"deviceId":"CharbelDevice","fw-state":"installed"}
@@ -95,24 +113,25 @@ public class GCP_Subscriber {
 		String fw_state = stateFromDevice.get("fw-state").getAsString();
 
 		if(deviceId != null && fw_state != null) {
-			AbstractSimulatedDevice device = mapDevices.get(deviceId);
-			UpdaterCallback callback = mapCallbacks.get(deviceId);
-
-
 			UpdateStatus updateStatus = null;
 
 			switch (fw_state) {
 			case "msg-received" :
 				updateStatus = new UpdateStatus(ResponseStatus.RUNNING, "Message sent to initiate fw update!");
+				sendUpate(deviceId, updateStatus);
 				break;			
 			case "installing" :
 				updateStatus = new UpdateStatus(ResponseStatus.DOWNLOADED, "Payload installing");
+				sendUpate(deviceId, updateStatus);
 				break;
 			case "downloading" :
 				updateStatus = new UpdateStatus(ResponseStatus.DOWNLOADING, "Payload downloading");
+				sendUpate(deviceId, updateStatus);
 				break;
 			case "installed":
 				updateStatus = new UpdateStatus(ResponseStatus.SUCCESSFUL, "Payload installed");
+				sendUpate(deviceId, updateStatus);
+
 				//remove device and callback
 				mapCallbacks.remove(deviceId);
 				mapDevices.remove(deviceId);
@@ -121,8 +140,9 @@ public class GCP_Subscriber {
 				LOGGER.error("Unknown fw-state: "+fw_state);
 				break;
 			}
-			device.setUpdateStatus(updateStatus);
-			callback.sendFeedback(device);
+			
+		} else {
+			LOGGER.error("state: %s, deviceId %s", fw_state, deviceId);
 		}
 
 	}
@@ -132,7 +152,8 @@ public class GCP_Subscriber {
 
 		LOGGER.info("Update device with eventTopic: %s",actionType);
 
-		if (actionType == EventTopic.DOWNLOAD_AND_INSTALL) {
+		//if the device is still updating, wait until it is finished
+		if (actionType == EventTopic.DOWNLOAD_AND_INSTALL && !mapDevices.containsKey(device.getId())) {
 			LOGGER.info("[GCP Async] Download & Install");
 
 			List<String> fwNameList = modules.stream().flatMap(mod -> mod.getArtifacts().stream())
@@ -144,6 +165,9 @@ public class GCP_Subscriber {
 			mapCallbacks.put(device.getId(), callback);
 			mapDevices.put(device.getId(), device);
 			//device.clean();
+		}
+		else {
+			LOGGER.error("Unsupported actionType: "+actionType);
 		}
 	}
 }

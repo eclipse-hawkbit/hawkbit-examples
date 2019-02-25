@@ -226,7 +226,7 @@ public class DmfReceiverService extends MessageService {
 		switch (eventTopic) {
 		case DOWNLOAD_AND_INSTALL:
 		case DOWNLOAD:
-			System.out.println("[DmfReceiverService] ===============> Download");
+			System.out.println("[DmfReceiverService] Download");
 			System.out.println(toStringMessage(message));
 			handleUpdateProcess(message, thingId, eventTopic);
 			break;
@@ -251,7 +251,7 @@ public class DmfReceiverService extends MessageService {
 		spSenderService.updateAttributesOfThing(tenant, thingId);
 	}
 
-	private void handleCancelDownloadAction(final Message message, final String thingId) {
+	public void handleCancelDownloadAction(final Message message, final String thingId) {
 		System.out.println("[DmfReceiverService] handling Cancel/Download Action "+thingId);
 
 		final MessageProperties messageProperties = message.getMessageProperties();

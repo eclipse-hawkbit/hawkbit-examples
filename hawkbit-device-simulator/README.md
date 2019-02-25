@@ -69,6 +69,12 @@ sudo docker swarm init
 sudo docker stack deploy -c docker-compose-stack.yml hawkbit
 ```
 
+
+## MySQL Info
+  MYSQL_DATABASE: "hawkbit"
+      MYSQL_USER: "root"
+      port : 3306
+
 ## Run on your own workstation
 ```
 java -jar examples/hawkbit-device-simulator/target/hawkbit-device-simulator-*-SNAPSHOT.jar
