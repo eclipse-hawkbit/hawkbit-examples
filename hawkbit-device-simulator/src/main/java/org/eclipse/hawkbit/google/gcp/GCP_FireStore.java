@@ -4,14 +4,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.core.ApiFuture;
 import com.google.api.services.iam.v1.IamScopes;
-import com.google.api.services.storage.model.StorageObject;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
@@ -41,24 +38,20 @@ public class GCP_FireStore {
 			e.printStackTrace();
 		}
 	}
-
-	public static void addDocument(String deviceId, StorageObject storageObject) {
-
-
+	
+	
+	public static void addDocument(String deviceId, Map<String, Map<String, String>> map) {
 		try {
-			DocumentReference docRef = db.collection(GCP_OTA.FIRESTORE_STATE_COLLECTION).document(deviceId);
-			Map<String, Object> data = new HashMap<>();
-			data.put("first", "Ada");
-			data.put("last", "Lovelace");
-			data.put("born", 1815);
-			//asynchronously write data
-			ApiFuture<WriteResult> result = docRef.set(data);
+			DocumentReference docRef = db
+					.collection(GCP_OTA.FIRESTORE_DEVICES_COLLECTION)
+					.document(deviceId)
+					.collection(GCP_OTA.FIRESTORE_CONFIG_COLLECTION)
+					.document(deviceId);
+			ApiFuture<WriteResult> result = docRef.set(map);
 			System.out.println("Update time : " + result.get().getUpdateTime());
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

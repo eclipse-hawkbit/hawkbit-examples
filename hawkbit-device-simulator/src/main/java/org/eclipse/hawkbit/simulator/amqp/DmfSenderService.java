@@ -243,7 +243,7 @@ public class DmfSenderService extends MessageService {
 	 *            the ID of the target to create or update
 	 */
 	public void updateAttributesOfThing(final String tenant, final String targetId) {
-		System.out.printf("Create update attributes message and send to update server for Thing \"{}\"", targetId);
+		System.out.printf("Create update attributes message and send to update server for Thing \"{%s}\"", targetId);
 		sendMessage(spExchange, updateAttributes(tenant, targetId, DmfUpdateMode.MERGE,
 				simulationProperties.getAttributes().stream().collect(Collectors
 						.toMap(SimulationProperties.Attribute::getKey, SimulationProperties.Attribute::getValue))));

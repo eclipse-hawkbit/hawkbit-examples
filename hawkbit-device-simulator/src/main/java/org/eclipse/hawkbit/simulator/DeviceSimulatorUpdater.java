@@ -33,7 +33,6 @@ import org.apache.http.ssl.SSLContextBuilder;
 import org.eclipse.hawkbit.dmf.amqp.api.EventTopic;
 import org.eclipse.hawkbit.dmf.json.model.DmfArtifact;
 import org.eclipse.hawkbit.dmf.json.model.DmfSoftwareModule;
-import org.eclipse.hawkbit.google.gcp.GCPBucketHandler;
 import org.eclipse.hawkbit.google.gcp.GCP_IoTHandler;
 import org.eclipse.hawkbit.google.gcp.GCP_OTA;
 import org.eclipse.hawkbit.google.gcp.GCP_Subscriber;

@@ -8,5 +8,8 @@ public class GCP_OTA {
 	public final static String BUCKET_NAME = "ota-iot-231619.appspot.com";
 	public final static String SUBSCRIPTION_STATE_ID = "state";
 	public final static boolean FW_VIA_COMMAND = false;
-	public final static String FIRESTORE_STATE_COLLECTION = "State";
+	public final static String FIRESTORE_DEVICES_COLLECTION = "devices";
+	public final static String FIRESTORE_CONFIG_COLLECTION = "config";
+
 }
+

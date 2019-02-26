@@ -9,7 +9,9 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,6 +101,28 @@ public class GCPBucketHandler {
 		return null;
 	}
 
+	
+	public static Map<String,Map<String,String>> getFirmwareInfoBucket_Map(String artifactName)
+	{
+		try {
+			StorageObject storageObject = GCPBucketHandler.getStorageObjectInfo(artifactName);
+			if(storageObject != null)
+			{
+				Map<String,Map<String,String>> fw_update = new HashMap<>(1);
+				Map<String, String> mapContent = new HashMap<>(3);
+				LOGGER.debug(artifactName+" exists!");
+				mapContent.put("ObjectName", storageObject.getName());
+				mapContent.put("Url", storageObject.getMediaLink());
+				mapContent.put("Md5Hash", storageObject.getMd5Hash());
+				fw_update.put("firmware-update", mapContent);
+				return fw_update;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
 	private static boolean checkIfExists(String artifactName) throws IOException {
 
 		Storage.Objects.List objectsList = storage.objects().list(GCP_OTA.BUCKET_NAME);
