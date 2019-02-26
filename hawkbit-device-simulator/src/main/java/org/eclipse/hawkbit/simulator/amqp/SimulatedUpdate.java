@@ -24,7 +24,15 @@ public class SimulatedUpdate implements Serializable {
     private final Long actionId;
     private transient LocalDateTime startCacheTime;
 
-    SimulatedUpdate(final String tenant, final String thingId, final Long actionId) {
+    /**
+     * @param tenant
+     *          the tenant for this thing and for this simulated update
+     * @param thingId
+     *          the thing id that this simulated update correlates to
+     * @param actionId
+     *          the id of the action related to this simulated update
+     */
+    public SimulatedUpdate(final String tenant, final String thingId, final Long actionId) {
         this.tenant = tenant;
         this.thingId = thingId;
         this.actionId = actionId;
