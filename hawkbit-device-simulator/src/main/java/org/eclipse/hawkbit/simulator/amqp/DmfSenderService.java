@@ -114,11 +114,13 @@ public class DmfSenderService extends MessageService {
 	 *            the amqp message which will be send if its not null
 	 */
 	public void sendMessage(final String address, final Message message) {
-		System.out.println("[DmfSenderService] send message "+toStringMessage(message));
+		
 
 		if (message == null) {
+			System.out.println("[DmfSenderService] received a null message");
 			return;
 		}
+		System.out.println("[DmfSenderService] send message "+message.toString());
 		message.getMessageProperties().getHeaders().remove(AbstractJavaTypeMapper.DEFAULT_CLASSID_FIELD_NAME);
 
 		final String correlationId = UUID.randomUUID().toString();
@@ -153,11 +155,8 @@ public class DmfSenderService extends MessageService {
 	 * @return converted message
 	 */
 	public Message convertMessage(final Object object, final MessageProperties messageProperties) {      
-		System.out.println("[DmfSenderService] convert Message");
-
-
 		Message m = rabbitTemplate.getMessageConverter().toMessage(object, messageProperties);
-		System.out.println("Converted Message "+toStringMessage(m));
+		System.out.println("[DmfSenderService] Converted Message "+m.toString());
 		return m;
 	}
 
@@ -248,7 +247,7 @@ public class DmfSenderService extends MessageService {
 				simulationProperties.getAttributes().stream().collect(Collectors
 						.toMap(SimulationProperties.Attribute::getKey, SimulationProperties.Attribute::getValue))));
 
-		LOGGER.info("Create update attributes message and send to update server for Thing \"{}\"", targetId);
+		LOGGER.info("Create update attributes message and send to update server for Thing \"{%s}\"", targetId);
 	}
 
 	/**
@@ -309,37 +308,11 @@ public class DmfSenderService extends MessageService {
 		attributeUpdate.getAttributes().putAll(attributes);
 
 		Message m = convertMessage(attributeUpdate, messagePropertiesForSP);
-		System.out.println("Converted Message "+toStringMessage(m));
+		System.out.println("Converted Message "+m.toString());
 		return m;
 	}
 
-	String toStringMessage(Message m)
-	{
-		StringBuilder sb = new StringBuilder("Message content:\n");
-		MessageProperties prop = m.getMessageProperties();
-//		sb.append("-AppId: ").append(prop.getAppId()).
-//		append("\n-MessageId: ").append(prop.getMessageId()).
-//		append("\n-Type: ").append(prop.getType()).
-//		append("\n-ClutsterId: ").append(prop.getClusterId()).
-//		append("\n-ConsumerQueue: ").append(prop.getConsumerQueue()).
-//		append("\n-ContentType: ").append(prop.getContentType()).
-//		append("\n-CorrelationString: ").append(prop.getCorrelationIdString()).
-//		append("\n-ConsumerTag: ").append(prop.getConsumerTag()).
-//		append("\n-DeliveryTag: ").append(prop.getDeliveryTag()).
-//		append("\n-TimeStamp: ").append(prop.getTimestamp()).
-//		append("\n-ReceivedExchange: ").append(prop.getReceivedExchange()).
-//		append("\n-UserId: ").append(prop.getUserId()).
-//		append("\n-DeliveryMode: ").append(prop.getDeliveryMode().name()).
-		sb.append("\n-RoutingKey: ").append(prop.getReceivedRoutingKey());
-		
-		prop.getHeaders().entrySet().stream().forEach( item ->
-		{
-			sb.append("\n--").append(item).append(":").append(prop.getHeaders().get(item));
-		});
-		
-		
-		return sb.toString();
-	}
+	
 
 	/**
 	 * Send a created message to SP.
@@ -348,7 +321,7 @@ public class DmfSenderService extends MessageService {
 	 *            the message to get send
 	 */
 	private void sendMessage(final Message message) {
-		LOGGER.info("[DmfSenderService] sending "+toStringMessage(message));
+		LOGGER.info("[DmfSenderService] sending "+message.toString());
 
 		sendMessage(spExchange, message);
 	}

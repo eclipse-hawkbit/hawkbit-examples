@@ -37,6 +37,9 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
 
 /**
  * Handle all incoming Messages from hawkBit update server.
@@ -53,6 +56,8 @@ public class DmfReceiverService extends MessageService {
 	private final DeviceSimulatorRepository repository;
 
 	private final Set<String> openPings = new HashSet<String>();
+
+	private Gson gson = new Gson();
 
 	/**
 	 * Constructor.
@@ -123,7 +128,7 @@ public class DmfReceiverService extends MessageService {
 
 			final MessageType messageType = MessageType.valueOf(type);
 
-			System.out.println("[DmfReceiverService] Message received "+toStringMessage(message));
+			System.out.println("[DmfReceiverService] Message received :\n"+message.toString());
 
 			if (MessageType.EVENT.equals(messageType)) {
 				checkContentTypeJson(message);
@@ -156,35 +161,6 @@ public class DmfReceiverService extends MessageService {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-
-
-	String toStringMessage(Message m)
-	{
-		StringBuilder sb = new StringBuilder("Message content:\n");
-		MessageProperties prop = m.getMessageProperties();
-//		sb.append("-AppId: ").append(prop.getAppId()).
-//		append("\n-MessageId: ").append(prop.getMessageId()).
-//		append("\n-Type: ").append(prop.getType()).
-//		append("\n-ClutsterId: ").append(prop.getClusterId()).
-//		append("\n-ConsumerQueue: ").append(prop.getConsumerQueue()).
-//		append("\n-ContentType: ").append(prop.getContentType()).
-//		append("\n-CorrelationString: ").append(prop.getCorrelationIdString()).
-//		append("\n-ConsumerTag: ").append(prop.getConsumerTag()).
-//		append("\n-DeliveryTag: ").append(prop.getDeliveryTag()).
-//		append("\n-TimeStamp: ").append(prop.getTimestamp()).
-//		append("\n-ReceivedExchange: ").append(prop.getReceivedExchange()).
-//		append("\n-UserId: ").append(prop.getUserId()).
-		//append("\n-DeliveryMode: ").append(prop.getDeliveryMode().name()).
-		sb.append("\n-RoutingKey: ").append(prop.getReceivedRoutingKey());
-
-		prop.getHeaders().entrySet().stream().forEach( item ->
-		{
-			sb.append("\n--").append(item).append(":").append(prop.getHeaders().get(item));
-		});
-
-
-		return sb.toString();
 	}
 
 	@Scheduled(fixedDelay = 5_000, initialDelay = 5_000)
@@ -226,14 +202,15 @@ public class DmfReceiverService extends MessageService {
 		switch (eventTopic) {
 		case DOWNLOAD_AND_INSTALL:
 		case DOWNLOAD:
-			System.out.println("[DmfReceiverService] Download");
-			System.out.println(toStringMessage(message));
+			System.out.println("[DmfReceiverService] Download with message:\n"+message.toString());
 			handleUpdateProcess(message, thingId, eventTopic);
 			break;
 		case CANCEL_DOWNLOAD:
+			System.out.println("[DmfReceiverService] Cancel Download with message:\n"+message.toString());
 			handleCancelDownloadAction(message, thingId);
 			break;
 		case REQUEST_ATTRIBUTES_UPDATE:
+			System.out.println("[DmfReceiverService] Attributes update with message:\n"+message.toString());
 			handleAttributeUpdateRequest(message, thingId);
 			break;
 		default:
@@ -246,8 +223,7 @@ public class DmfReceiverService extends MessageService {
 		final MessageProperties messageProperties = message.getMessageProperties();
 		final Map<String, Object> headers = messageProperties.getHeaders();
 		final String tenant = (String) headers.get(MessageHeaderKey.TENANT);
-		System.out.println("[DmfReceiverService] handleAttributeUpdateRequest event "+thingId);
-		System.out.println(toStringMessage(message));
+		System.out.println("[DmfReceiverService] handleAttributeUpdateRequest event: "+thingId+ " with message: "+message.toString());
 		spSenderService.updateAttributesOfThing(tenant, thingId);
 	}
 
@@ -257,10 +233,16 @@ public class DmfReceiverService extends MessageService {
 		final MessageProperties messageProperties = message.getMessageProperties();
 		final Map<String, Object> headers = messageProperties.getHeaders();
 		final String tenant = (String) headers.get(MessageHeaderKey.TENANT);
-		final Long actionId = convertMessage(message, Long.class);
-
-		final SimulatedUpdate update = new SimulatedUpdate(tenant, thingId, actionId);
-		spSenderService.finishUpdateProcess(update, Arrays.asList("Simulation canceled"));
+		System.out.println(message.toString());
+		//final Long actionId = convertMessage(message, Long.class);
+		JsonObject actionIdJson = gson.fromJson(message.getBody().toString(), JsonObject.class);
+		if(actionIdJson.has("actionId")) {
+			final long actionId = actionIdJson.get("actionId").getAsLong();	
+			final SimulatedUpdate update = new SimulatedUpdate(tenant, thingId, actionId);
+			spSenderService.finishUpdateProcess(update, Arrays.asList("Simulation canceled"));
+		} else {
+			LOGGER.error("Action ID does not exist in message: "+message.toString());	
+		}
 	}
 
 	private void handleUpdateProcess(final Message message, final String thingId, final EventTopic actionType) {
@@ -276,23 +258,29 @@ public class DmfReceiverService extends MessageService {
 		final String targetSecurityToken = downloadAndUpdateRequest.getTargetSecurityToken();
 		System.out.println("[DmfReceiverService] handleUpdateProcess event "+thingId);
 
+
+		//TODO: This does not work if the there are two or more fws (os and app)
+		// Following options to consider:
+		//1- merge into one ZIP and upload to Bucket instead and point the device to it
+		//2- upload each file separately and upload it to a folder which is the device id, and point the device to the folder 
 		downloadAndUpdateRequest.getSoftwareModules().forEach(module -> {
 			module.getArtifacts().forEach(
-				artifact -> 
-				{
-					try {
-						GCPBucketHandler.uploadFirmwareToBucket(artifact.getUrls().get("HTTP") , artifact.getFilename(), targetSecurityToken);
-					} catch (FileNotFoundException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					} catch (GeneralSecurityException e) {
-						e.printStackTrace();
-					}
-				});
-			});
-		
-		
+					artifact -> 
+					{
+						try {
+							System.out.println("Handling artifact : "+artifact.getFilename());
+							GCPBucketHandler.uploadFirmwareToBucket(artifact.getUrls().get("HTTP") , artifact.getFilename(), targetSecurityToken);
+						} catch (FileNotFoundException e) {
+							e.printStackTrace();
+						} catch (IOException e) {
+							e.printStackTrace();
+						} catch (GeneralSecurityException e) {
+							e.printStackTrace();
+						}
+					});
+		});
+
+
 		deviceUpdater.startUpdate(tenant, thingId, downloadAndUpdateRequest.getSoftwareModules(), targetSecurityToken,
 				null, device -> sendFeedback(actionId, device), actionType);
 	}
