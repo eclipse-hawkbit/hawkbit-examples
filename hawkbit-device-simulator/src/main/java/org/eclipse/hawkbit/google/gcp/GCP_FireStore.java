@@ -14,6 +14,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.FirestoreOptions;
+import com.google.cloud.firestore.SetOptions;
 import com.google.cloud.firestore.WriteResult;
 
 public class GCP_FireStore {
@@ -48,7 +49,7 @@ public class GCP_FireStore {
 					.document(deviceId)
 					.collection(GCP_OTA.FIRESTORE_CONFIG_COLLECTION)
 					.document(deviceId);
-			ApiFuture<WriteResult> result = docRef.set(mapList);
+			ApiFuture<WriteResult> result = docRef.set(mapList, SetOptions.merge());
 			System.out.println("Update time : " + result.get().getUpdateTime());
 		} catch (InterruptedException e) {
 			e.printStackTrace();

@@ -174,11 +174,11 @@ public class GCP_Subscriber {
 	private static void sendAsyncFwUpgrade(String deviceId, String artifactName) {
 		String data = GCPBucketHandler.getFirmwareInfoBucket(artifactName);
 		if(data != null) {
-			long configVersion = GCP_IoTHandler.getLatestConfig(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
-					GCP_OTA.REGISTRY_NAME);
-			LOGGER.info("Sending Configuration Message to %s with data:\n%s", deviceId, data);
-			GCP_IoTHandler.setDeviceConfiguration(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
-					GCP_OTA.REGISTRY_NAME, data, configVersion);
+//			long configVersion = GCP_IoTHandler.getLatestConfig(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
+//					GCP_OTA.REGISTRY_NAME);
+//			LOGGER.info("Sending Configuration Message to %s with data:\n%s", deviceId, data);
+//			GCP_IoTHandler.setDeviceConfiguration(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
+//					GCP_OTA.REGISTRY_NAME, data, configVersion);
 
 			LOGGER.info("Writing to Firestore ");
 			GCP_FireStore.addDocument(deviceId, GCPBucketHandler.getFirmwareInfoBucket_Map(artifactName));
