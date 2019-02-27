@@ -144,11 +144,8 @@
 			<artifactId>google-api-services-cloudiot</artifactId>
 			<version>v1-rev20181120-1.27.0</version>
 		</dependency>
-		<!-- <dependency>
-			<groupId>com.google.oauth-client</groupId>
-			<artifactId>google-oauth-client</artifactId>
-			<version>1.23.0</version>
-		</dependency> -->
+		<!-- <dependency> <groupId>com.google.oauth-client</groupId> <artifactId>google-oauth-client</artifactId> 
+			<version>1.23.0</version> </dependency> -->
 		<dependency>
 			<groupId>com.google.api-client</groupId>
 			<artifactId>google-api-client</artifactId>
@@ -185,6 +182,11 @@
 			<groupId>com.google.cloud</groupId>
 			<artifactId>google-cloud-firestore</artifactId>
 			<version>0.70.0-beta</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.firebase</groupId>
+			<artifactId>firebase-admin</artifactId>
+			<version>6.7.0</version>
 		</dependency>
 		<!-- Test dependencies -->
 		<dependency>

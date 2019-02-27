@@ -8,9 +8,11 @@ install the following:
 - java openjdk8
 - docker
 - maven
+- create a service account
+- add the service account to the VM in the configuration 
 
 ## First Credentials for GCP
-
+- use the same service account
 - Create a json file [link](https://docs.cloudendure.com/Content/Generating_and_Using_Your_Credentials/Working_with_GCP_Credentials/Generating_the_Required_GCP_Credentials/Generating_the_Required_GCP_Credentials.htm)
 
 - Rename the downloaded file to `keys.json`
