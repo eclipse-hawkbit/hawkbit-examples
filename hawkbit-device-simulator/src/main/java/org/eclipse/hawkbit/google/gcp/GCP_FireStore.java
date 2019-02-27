@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -39,6 +40,22 @@ public class GCP_FireStore {
 		}
 	}
 	
+	
+	public static void addDocumentMapList(String deviceId, Map<String, List<Map<String, String>>> mapList) {
+		try {
+			DocumentReference docRef = db
+					.collection(GCP_OTA.FIRESTORE_DEVICES_COLLECTION)
+					.document(deviceId)
+					.collection(GCP_OTA.FIRESTORE_CONFIG_COLLECTION)
+					.document(deviceId);
+			ApiFuture<WriteResult> result = docRef.set(mapList);
+			System.out.println("Update time : " + result.get().getUpdateTime());
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	public static void addDocument(String deviceId, Map<String, Map<String, String>> map) {
 		try {

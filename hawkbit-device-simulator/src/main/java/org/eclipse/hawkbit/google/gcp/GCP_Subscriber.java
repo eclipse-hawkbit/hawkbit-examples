@@ -23,6 +23,7 @@ import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.PubsubMessage;
@@ -132,6 +133,44 @@ public class GCP_Subscriber {
 
 	}
 
+	
+	private static String getStringFromListMap(Map<String, List<Map<String, String>>> listMap) {
+		JsonObject fw_update = new JsonObject();
+		JsonArray fw_update_list = new JsonArray();
+		
+		listMap.get(GCP_OTA.FW_UPDATE).forEach(map -> {
+			JsonObject mapJsonObject = new JsonObject();
+			mapJsonObject.addProperty(GCP_OTA.OBJECT_NAME, map.get(GCP_OTA.OBJECT_NAME));
+			mapJsonObject.addProperty(GCP_OTA.URL, map.get(GCP_OTA.URL));
+			mapJsonObject.addProperty(GCP_OTA.MD5HASH, map.get(GCP_OTA.MD5HASH));
+			fw_update_list.add(mapJsonObject);
+		});
+		fw_update.add(GCP_OTA.FW_UPDATE,fw_update_list);
+		return gson.toJson(fw_update);
+	}
+	
+	
+	
+	private static void sendAsyncFwUpgradeList(String deviceId, List<DmfSoftwareModule> softwareModuleList) {
+		Map<String,List<Map<String,String>>> data = 
+				GCPBucketHandler.getFirmwareInfoBucket_MapList(softwareModuleList);
+		if(data != null) {
+//			long configVersion = GCP_IoTHandler.getLatestConfig(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
+//					GCP_OTA.REGISTRY_NAME);
+//			LOGGER.info("Sending Configuration Message to %s with data:\n%s", deviceId, data);
+//			GCP_IoTHandler.setDeviceConfiguration(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
+//					GCP_OTA.REGISTRY_NAME, getStringFromListMap(data), configVersion);
+
+			LOGGER.info("Writing to Firestore ");
+			GCP_FireStore.addDocumentMapList(deviceId
+					, GCPBucketHandler.getFirmwareInfoBucket_MapList(softwareModuleList));
+		}
+		else LOGGER.error("Artifacts is empty for device "+deviceId);
+	} 
+	
+	
+	
+	
 	private static void sendAsyncFwUpgrade(String deviceId, String artifactName) {
 		String data = GCPBucketHandler.getFirmwareInfoBucket(artifactName);
 		if(data != null) {
@@ -175,12 +214,18 @@ public class GCP_Subscriber {
 			if(!mapDevices.containsKey(device.getId())) {
 				LOGGER.info("ActionType "+actionType);
 
-				List<String> fwNameList = modules.stream().flatMap(mod -> mod.getArtifacts().stream())
-						.map(art -> art.getFilename())
-						.collect(Collectors.toList());
+				
 
-				fwNameList.forEach(fw -> sendAsyncFwUpgrade(device.getId(), fw));
-
+				//TODO:uncomment 
+				sendAsyncFwUpgradeList(device.getId(), modules);
+				
+				//TODO:comment below
+//				List<String> fwNameList = modules.stream().flatMap(mod -> mod.getArtifacts().stream())
+//						.map(art -> art.getFilename())
+//						.collect(Collectors.toList());
+//				fwNameList.forEach(fw -> sendAsyncFwUpgrade(device.getId(), fw));
+				//End of comment
+				
 				mapCallbacks.put(device.getId(), callback);
 				mapDevices.put(device.getId(), device);
 			} else {

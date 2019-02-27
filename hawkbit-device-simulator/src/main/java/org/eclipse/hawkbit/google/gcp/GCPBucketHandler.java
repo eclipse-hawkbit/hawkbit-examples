@@ -8,11 +8,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.eclipse.hawkbit.dmf.json.model.DmfSoftwareModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +43,7 @@ public class GCPBucketHandler {
 
 	private static Storage storage = null;
 	static Gson gson = new Gson();
-	
+
 	private static HttpTransport httpTransport;
 	private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
 
@@ -78,51 +81,72 @@ public class GCPBucketHandler {
 			uploadSimple(gcs, GCP_OTA.BUCKET_NAME, artifactName, data);
 		}
 	}
-	
+
 	public static String getFirmwareInfoBucket(String artifactName)
 	{
-		try {
-			StorageObject storageObject = GCPBucketHandler.getStorageObjectInfo(artifactName);
-			if(storageObject != null)
-			{
-				JsonObject jsonObject = new JsonObject();
-				LOGGER.debug(artifactName+" exists!");
-				jsonObject.addProperty("ObjectName", storageObject.getName());
-				jsonObject.addProperty("Url", storageObject.getMediaLink());
-				jsonObject.addProperty("Md5Hash", storageObject.getMd5Hash());
+		StorageObject storageObject = GCPBucketHandler.getStorageObjectInfo(artifactName);
+		if(storageObject != null)
+		{
+			JsonObject jsonObject = new JsonObject();
+			LOGGER.debug(artifactName+" exists!");
+			jsonObject.addProperty("ObjectName", storageObject.getName());
+			jsonObject.addProperty("Url", storageObject.getMediaLink());
+			jsonObject.addProperty("Md5Hash", storageObject.getMd5Hash());
 
-				JsonObject jsonConfig = new JsonObject();
-				jsonConfig.add("firmware-update", jsonObject);
-				return gson.toJson(jsonConfig);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
+			JsonObject jsonConfig = new JsonObject();
+			jsonConfig.add("firmware-update", jsonObject);
+			return gson.toJson(jsonConfig);
 		}
 		return null;
 	}
 
-	
+
 	public static Map<String,Map<String,String>> getFirmwareInfoBucket_Map(String artifactName)
 	{
-		try {
-			StorageObject storageObject = GCPBucketHandler.getStorageObjectInfo(artifactName);
-			if(storageObject != null)
-			{
-				Map<String,Map<String,String>> fw_update = new HashMap<>(1);
-				Map<String, String> mapContent = new HashMap<>(3);
-				LOGGER.debug(artifactName+" exists!");
-				mapContent.put("ObjectName", storageObject.getName());
-				mapContent.put("Url", storageObject.getMediaLink());
-				mapContent.put("Md5Hash", storageObject.getMd5Hash());
-				fw_update.put("firmware-update", mapContent);
-				return fw_update;
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
+		StorageObject storageObject = GCPBucketHandler.getStorageObjectInfo(artifactName);
+		if(storageObject != null)
+		{
+			Map<String,Map<String,String>> fw_update = new HashMap<>(1);
+			Map<String, String> mapContent = new HashMap<>(3);
+			LOGGER.debug(artifactName+" exists!");
+			mapContent.put(GCP_OTA.OBJECT_NAME, storageObject.getName());
+			mapContent.put(GCP_OTA.URL, storageObject.getMediaLink());
+			mapContent.put(GCP_OTA.MD5HASH, storageObject.getMd5Hash());
+			fw_update.put(GCP_OTA.FW_UPDATE, mapContent);
+			return fw_update;
 		}
 		return null;
 	}
-	
+
+
+	public static Map<String,List<Map<String,String>>> getFirmwareInfoBucket_MapList(List<DmfSoftwareModule> modules)
+	{
+		Map<String,List<Map<String,String>>> fw_update_Map = 
+				new HashMap<String, List<Map<String,String>>>(1);
+
+		
+		List<String> fwNameList = modules.stream().flatMap(mod -> mod.getArtifacts().stream())
+				.map(art -> art.getFilename())
+				.collect(Collectors.toList());			
+
+		List<Map<String,String>> list_fw_update = new ArrayList<>(fwNameList.size());
+		
+		fwNameList.forEach(artifactName -> {
+			StorageObject storageObject = GCPBucketHandler.getStorageObjectInfo(artifactName);
+			if(storageObject != null)
+			{
+				Map<String, String> mapContent = new HashMap<>(3);
+				LOGGER.debug(artifactName+" exists!");
+				mapContent.put(GCP_OTA.OBJECT_NAME, storageObject.getName());
+				mapContent.put(GCP_OTA.URL, storageObject.getMediaLink());
+				mapContent.put(GCP_OTA.MD5HASH, storageObject.getMd5Hash());
+				list_fw_update.add(mapContent);
+			}
+		});
+		fw_update_Map.put(GCP_OTA.FW_UPDATE, list_fw_update);
+		return fw_update_Map;
+	}
+
 	private static boolean checkIfExists(String artifactName) throws IOException {
 
 		Storage.Objects.List objectsList = storage.objects().list(GCP_OTA.BUCKET_NAME);
@@ -144,24 +168,27 @@ public class GCPBucketHandler {
 		return false;
 	}
 
-	public static StorageObject getStorageObjectInfo(String artifactName) throws IOException {
-		Storage.Objects.List objectsList = getStorage().objects().list(GCP_OTA.BUCKET_NAME);
-		Objects objects;
-		do {
-			objects = objectsList.execute();
-			List<StorageObject> items = objects.getItems();
-			if (items != null) {
-				for (StorageObject object : items) {
-					if(object.getName().equalsIgnoreCase(artifactName))
-					{
-						LOGGER.debug(artifactName+" exists!");
-						return object;
+	public static StorageObject getStorageObjectInfo(String artifactName) {
+		try {
+			Storage.Objects.List objectsList = getStorage().objects().list(GCP_OTA.BUCKET_NAME);
+			Objects objects;
+			do {
+				objects = objectsList.execute();
+				List<StorageObject> items = objects.getItems();
+				if (items != null) {
+					for (StorageObject object : items) {
+						if(object.getName().equalsIgnoreCase(artifactName))
+						{
+							LOGGER.debug(artifactName+" exists!");
+							return object;
+						}
 					}
 				}
-			}
-			objectsList.setPageToken(objects.getNextPageToken());
-		} while (objects.getNextPageToken() != null);
-		LOGGER.warn(artifactName+" not found");
+				objectsList.setPageToken(objects.getNextPageToken());
+			} while (objects.getNextPageToken() != null);
+			LOGGER.warn(artifactName+" not found");
+		} catch (Exception e) {
+		}
 		return null;
 	}
 
