@@ -31,6 +31,7 @@ public class GCP_FireStore {
 			FirestoreOptions firestoreOptions =
 					FirestoreOptions.newBuilder().setTimestampsInSnapshotsEnabled(true)
 					.setProjectId(GCP_OTA.PROJECT_ID).setCredentials(credentials)
+					 .setDatabaseId("https://ota-iot-231619.firebaseio.com")
 					.build();
 			db = firestoreOptions.getService();
 

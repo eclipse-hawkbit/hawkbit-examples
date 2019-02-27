@@ -144,8 +144,11 @@
 			<artifactId>google-api-services-cloudiot</artifactId>
 			<version>v1-rev20181120-1.27.0</version>
 		</dependency>
-		<!-- <dependency> <groupId>com.google.oauth-client</groupId> <artifactId>google-oauth-client</artifactId> 
-			<version>1.23.0</version> </dependency> -->
+		<dependency>
+			<groupId>com.google.oauth-client</groupId>
+			<artifactId>google-oauth-client</artifactId>
+			<version>1.23.0</version>
+		</dependency>
 		<dependency>
 			<groupId>com.google.api-client</groupId>
 			<artifactId>google-api-client</artifactId>
