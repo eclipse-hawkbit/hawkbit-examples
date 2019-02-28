@@ -60,9 +60,6 @@ public class GCP_Subscriber {
 			// Continue to listen to messages
 			while (true) {
 				PubsubMessage message = messages.take();
-				System.out.println("Message Id: " + message.getMessageId());
-				//{"deviceId":"CharbelDevice","fw-state":"installed"}
-				System.out.println("Data: " + message.getData().toStringUtf8());
 				if(!GCP_OTA.FW_VIA_COMMAND) {
 					updateHawkbitStatus(message);
 				}
@@ -82,27 +79,27 @@ public class GCP_Subscriber {
 		if(message.getData().toStringUtf8().contains(GCP_OTA.SUBSCRIPTION_FW_STATE)) {
 			JsonObject payloadJson = gson.fromJson(message.getData()
 					.toStringUtf8(), JsonObject.class);
-			if(payloadJson.has(GCP_OTA.SUBSCRIPTION_FW_STATE) && payloadJson.has(GCP_OTA.SUBSCRIPTION_FW_DEVICE_ID)) {
-				String deviceId = payloadJson.get(GCP_OTA.SUBSCRIPTION_FW_DEVICE_ID).getAsString();
+			if(payloadJson.has(GCP_OTA.SUBSCRIPTION_FW_STATE)) {
+				String deviceId =  message.getAttributesMap().get(GCP_OTA.DEVICE_ID);
 				String fw_state = payloadJson.get(GCP_OTA.SUBSCRIPTION_FW_STATE).getAsString();
 
 				if(deviceId != null && fw_state != null) {
 					UpdateStatus updateStatus = null;
 					System.out.println("====> New state received "+fw_state+ " from device "+deviceId);
 					switch (fw_state) {
-					case "msg-received" :
+					case GCP_OTA.FW_MSG_RECEIVED :
 						updateStatus = new UpdateStatus(ResponseStatus.RUNNING, "Message sent to initiate fw update!");
 						sendUpate(deviceId, updateStatus);
 						break;			
-					case "installing" :
-						updateStatus = new UpdateStatus(ResponseStatus.DOWNLOADED, "Payload installing");
-						sendUpate(deviceId, updateStatus);
-						break;
-					case "downloading" :
+					case GCP_OTA.FW_DOWNLOADING:
 						updateStatus = new UpdateStatus(ResponseStatus.DOWNLOADING, "Payload downloading");
 						sendUpate(deviceId, updateStatus);
 						break;
-					case "installed":
+					case GCP_OTA.FW_INSTALLING :
+						updateStatus = new UpdateStatus(ResponseStatus.DOWNLOADED, "Payload installing");
+						sendUpate(deviceId, updateStatus);
+						break;
+					case GCP_OTA.FW_INSTALLED:
 						updateStatus = new UpdateStatus(ResponseStatus.SUCCESSFUL, "Payload installed");
 						sendUpate(deviceId, updateStatus);
 
@@ -158,11 +155,11 @@ public class GCP_Subscriber {
 		Map<String,List<Map<String,String>>> data = 
 				GCPBucketHandler.getFirmwareInfoBucket_MapList(softwareModuleList);
 		if(data != null) {
-						long configVersion = GCP_IoTHandler.getLatestConfig(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
-								GCP_OTA.REGISTRY_NAME);
-						LOGGER.info("Sending Configuration Message to %s with data:\n%s", deviceId, data);
-						GCP_IoTHandler.setDeviceConfiguration(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
-								GCP_OTA.REGISTRY_NAME, getStringFromListMap(data), configVersion);
+			long configVersion = GCP_IoTHandler.getLatestConfig(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
+					GCP_OTA.REGISTRY_NAME);
+			LOGGER.info("Sending Configuration Message to %s with data:\n%s", deviceId, data);
+			GCP_IoTHandler.setDeviceConfiguration(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
+					GCP_OTA.REGISTRY_NAME, getStringFromListMap(data), configVersion);
 
 			LOGGER.info("Writing to Firestore ");
 			GCP_FireStore.addDocumentMapList(deviceId
@@ -177,11 +174,11 @@ public class GCP_Subscriber {
 	private static void sendAsyncFwUpgrade(String deviceId, String artifactName) {
 		String data = GCPBucketHandler.getFirmwareInfoBucket(artifactName);
 		if(data != null) {
-						long configVersion = GCP_IoTHandler.getLatestConfig(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
-								GCP_OTA.REGISTRY_NAME);
-						LOGGER.info("Sending Configuration Message to %s with data:\n%s", deviceId, data);
-						GCP_IoTHandler.setDeviceConfiguration(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
-								GCP_OTA.REGISTRY_NAME, data, configVersion);
+			long configVersion = GCP_IoTHandler.getLatestConfig(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
+					GCP_OTA.REGISTRY_NAME);
+			LOGGER.info("Sending Configuration Message to %s with data:\n%s", deviceId, data);
+			GCP_IoTHandler.setDeviceConfiguration(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
+					GCP_OTA.REGISTRY_NAME, data, configVersion);
 
 			LOGGER.info("Writing to Firestore ");
 			GCP_FireStore.addDocument(deviceId, GCPBucketHandler.getFirmwareInfoBucket_Map(artifactName));
@@ -222,12 +219,12 @@ public class GCP_Subscriber {
 				//TODO:uncomment 
 				sendAsyncFwUpgradeList(device.getId(), modules);
 
-				//TODO:comment below
+				//TODO:[Comment below]
 				//				List<String> fwNameList = modules.stream().flatMap(mod -> mod.getArtifacts().stream())
 				//						.map(art -> art.getFilename())
 				//						.collect(Collectors.toList());
 				//				fwNameList.forEach(fw -> sendAsyncFwUpgrade(device.getId(), fw));
-				//End of comment
+				//[End of comment]
 
 				mapCallbacks.put(device.getId(), callback);
 				mapDevices.put(device.getId(), device);
