@@ -4,12 +4,31 @@
 ## Spin a VM
 
 install the following:
-- git
-- java openjdk8
-- docker
-- maven
-- create a service account
-- add the service account to the VM in the configuration 
+### git:
+`sudo apt-get install git`
+
+### java 8
+
+- `sudo apt-get install openjdk-8-jdk`
+
+- `sudo update-alternatives --config java`
+
+### docker
+
+Please read the following if you want to know more about how to install it [here](https://docs.docker.com/install/linux/docker-ce/debian/)
+
+- `sudo apt-get install apt-transport-https ca-certificates curl gnupg2 software-properties-common`
+- `curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -`
+- `sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"`
+- `sudo apt-get update`
+- `sudo apt-get install docker-ce docker-ce-cli containerd.io`
+    
+### maven
+
+`sudo apt-get install maven`
+
+### create a service account
+### add the service account to the VM in the configuration 
 
 ## First Credentials for GCP
 - use the same service account
@@ -71,6 +90,10 @@ sudo docker swarm init
 sudo docker stack deploy -c docker-compose-stack.yml hawkbit
 ```
 
+
+## Firebase config
+Follow these steps to configurate firebase with the java sdk [steps](https://firebase.google.com/docs/admin/setup)
+Generate the file and place it in `src/main/resources` and name it `firebasekeys.json`
 
 ## MySQL Info
   MYSQL_DATABASE: "hawkbit"

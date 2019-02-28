@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.stream.Collectors;
 
 import org.eclipse.hawkbit.dmf.amqp.api.EventTopic;
 import org.eclipse.hawkbit.dmf.json.model.DmfSoftwareModule;
@@ -80,52 +79,56 @@ public class GCP_Subscriber {
 
 
 	public static void updateHawkbitStatus(PubsubMessage message){
-		JsonObject payloadJson = gson.fromJson(message.getData()
-				.toStringUtf8(), JsonObject.class);
-		if(payloadJson.has("fw-state") && payloadJson.has("deviceId")) {
-			String deviceId = payloadJson.get("deviceId").getAsString();
-			String fw_state = payloadJson.get("fw-state").getAsString();
+		if(message.getData().toStringUtf8().contains(GCP_OTA.SUBSCRIPTION_FW_STATE)) {
+			JsonObject payloadJson = gson.fromJson(message.getData()
+					.toStringUtf8(), JsonObject.class);
+			if(payloadJson.has(GCP_OTA.SUBSCRIPTION_FW_STATE) && payloadJson.has(GCP_OTA.SUBSCRIPTION_FW_DEVICE_ID)) {
+				String deviceId = payloadJson.get(GCP_OTA.SUBSCRIPTION_FW_DEVICE_ID).getAsString();
+				String fw_state = payloadJson.get(GCP_OTA.SUBSCRIPTION_FW_STATE).getAsString();
 
-			if(deviceId != null && fw_state != null) {
-				UpdateStatus updateStatus = null;
+				if(deviceId != null && fw_state != null) {
+					UpdateStatus updateStatus = null;
+					System.out.println("====> New state received "+fw_state+ " from device "+deviceId);
+					switch (fw_state) {
+					case "msg-received" :
+						updateStatus = new UpdateStatus(ResponseStatus.RUNNING, "Message sent to initiate fw update!");
+						sendUpate(deviceId, updateStatus);
+						break;			
+					case "installing" :
+						updateStatus = new UpdateStatus(ResponseStatus.DOWNLOADED, "Payload installing");
+						sendUpate(deviceId, updateStatus);
+						break;
+					case "downloading" :
+						updateStatus = new UpdateStatus(ResponseStatus.DOWNLOADING, "Payload downloading");
+						sendUpate(deviceId, updateStatus);
+						break;
+					case "installed":
+						updateStatus = new UpdateStatus(ResponseStatus.SUCCESSFUL, "Payload installed");
+						sendUpate(deviceId, updateStatus);
 
-				switch (fw_state) {
-				case "msg-received" :
-					updateStatus = new UpdateStatus(ResponseStatus.RUNNING, "Message sent to initiate fw update!");
-					sendUpate(deviceId, updateStatus);
-					break;			
-				case "installing" :
-					updateStatus = new UpdateStatus(ResponseStatus.DOWNLOADED, "Payload installing");
-					sendUpate(deviceId, updateStatus);
-					break;
-				case "downloading" :
-					updateStatus = new UpdateStatus(ResponseStatus.DOWNLOADING, "Payload downloading");
-					sendUpate(deviceId, updateStatus);
-					break;
-				case "installed":
-					updateStatus = new UpdateStatus(ResponseStatus.SUCCESSFUL, "Payload installed");
-					sendUpate(deviceId, updateStatus);
+						//remove device and callback
+						mapCallbacks.remove(deviceId);
+						mapDevices.remove(deviceId);
 
-					//remove device and callback
-					mapCallbacks.remove(deviceId);
-					mapDevices.remove(deviceId);
+						break;
+					default: 
+						LOGGER.error("Unknown fw-state: "+fw_state);
+						updateStatus = new UpdateStatus(ResponseStatus.ERROR, "Unknown State");
+						sendUpate(deviceId, updateStatus);
+						break;
+					}
 
-					break;
-				default: 
-					LOGGER.error("Unknown fw-state: "+fw_state);
-					updateStatus = new UpdateStatus(ResponseStatus.ERROR, "Unknown State");
-					sendUpate(deviceId, updateStatus);
-					break;
+				} else {
+					LOGGER.error("state: %s, deviceId %s", fw_state, deviceId);
+
+					//Device never connected
+					if(!GCP_IoTHandler.atLeastOnceConnected(deviceId)) {
+						LOGGER.error(deviceId+" : device was never connected");
+						sendUpate(deviceId, new UpdateStatus(ResponseStatus.ERROR, "Device was never connected"));
+					}
 				}
-
 			} else {
-				LOGGER.error("state: %s, deviceId %s", fw_state, deviceId);
-
-				//Device never connected
-				if(!GCP_IoTHandler.atLeastOnceConnected(deviceId)) {
-					LOGGER.error(deviceId+" : device was never connected");
-					sendUpate(deviceId, new UpdateStatus(ResponseStatus.ERROR, "Device was never connected"));
-				}
+				LOGGER.debug("Ignoring message");
 			}
 		} else {
 			LOGGER.debug("Ignoring message");
@@ -133,11 +136,11 @@ public class GCP_Subscriber {
 
 	}
 
-	
+
 	private static String getStringFromListMap(Map<String, List<Map<String, String>>> listMap) {
 		JsonObject fw_update = new JsonObject();
 		JsonArray fw_update_list = new JsonArray();
-		
+
 		listMap.get(GCP_OTA.FW_UPDATE).forEach(map -> {
 			JsonObject mapJsonObject = new JsonObject();
 			mapJsonObject.addProperty(GCP_OTA.OBJECT_NAME, map.get(GCP_OTA.OBJECT_NAME));
@@ -148,18 +151,18 @@ public class GCP_Subscriber {
 		fw_update.add(GCP_OTA.FW_UPDATE,fw_update_list);
 		return gson.toJson(fw_update);
 	}
-	
-	
-	
+
+
+
 	private static void sendAsyncFwUpgradeList(String deviceId, List<DmfSoftwareModule> softwareModuleList) {
 		Map<String,List<Map<String,String>>> data = 
 				GCPBucketHandler.getFirmwareInfoBucket_MapList(softwareModuleList);
 		if(data != null) {
-//			long configVersion = GCP_IoTHandler.getLatestConfig(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
-//					GCP_OTA.REGISTRY_NAME);
-//			LOGGER.info("Sending Configuration Message to %s with data:\n%s", deviceId, data);
-//			GCP_IoTHandler.setDeviceConfiguration(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
-//					GCP_OTA.REGISTRY_NAME, getStringFromListMap(data), configVersion);
+						long configVersion = GCP_IoTHandler.getLatestConfig(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
+								GCP_OTA.REGISTRY_NAME);
+						LOGGER.info("Sending Configuration Message to %s with data:\n%s", deviceId, data);
+						GCP_IoTHandler.setDeviceConfiguration(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
+								GCP_OTA.REGISTRY_NAME, getStringFromListMap(data), configVersion);
 
 			LOGGER.info("Writing to Firestore ");
 			GCP_FireStore.addDocumentMapList(deviceId
@@ -167,18 +170,18 @@ public class GCP_Subscriber {
 		}
 		else LOGGER.error("Artifacts is empty for device "+deviceId);
 	} 
-	
-	
-	
-	
+
+
+
+
 	private static void sendAsyncFwUpgrade(String deviceId, String artifactName) {
 		String data = GCPBucketHandler.getFirmwareInfoBucket(artifactName);
 		if(data != null) {
-//			long configVersion = GCP_IoTHandler.getLatestConfig(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
-//					GCP_OTA.REGISTRY_NAME);
-//			LOGGER.info("Sending Configuration Message to %s with data:\n%s", deviceId, data);
-//			GCP_IoTHandler.setDeviceConfiguration(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
-//					GCP_OTA.REGISTRY_NAME, data, configVersion);
+						long configVersion = GCP_IoTHandler.getLatestConfig(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
+								GCP_OTA.REGISTRY_NAME);
+						LOGGER.info("Sending Configuration Message to %s with data:\n%s", deviceId, data);
+						GCP_IoTHandler.setDeviceConfiguration(deviceId, GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
+								GCP_OTA.REGISTRY_NAME, data, configVersion);
 
 			LOGGER.info("Writing to Firestore ");
 			GCP_FireStore.addDocument(deviceId, GCPBucketHandler.getFirmwareInfoBucket_Map(artifactName));
@@ -214,18 +217,18 @@ public class GCP_Subscriber {
 			if(!mapDevices.containsKey(device.getId())) {
 				LOGGER.info("ActionType "+actionType);
 
-				
+
 
 				//TODO:uncomment 
 				sendAsyncFwUpgradeList(device.getId(), modules);
-				
+
 				//TODO:comment below
-//				List<String> fwNameList = modules.stream().flatMap(mod -> mod.getArtifacts().stream())
-//						.map(art -> art.getFilename())
-//						.collect(Collectors.toList());
-//				fwNameList.forEach(fw -> sendAsyncFwUpgrade(device.getId(), fw));
+				//				List<String> fwNameList = modules.stream().flatMap(mod -> mod.getArtifacts().stream())
+				//						.map(art -> art.getFilename())
+				//						.collect(Collectors.toList());
+				//				fwNameList.forEach(fw -> sendAsyncFwUpgrade(device.getId(), fw));
 				//End of comment
-				
+
 				mapCallbacks.put(device.getId(), callback);
 				mapDevices.put(device.getId(), device);
 			} else {
