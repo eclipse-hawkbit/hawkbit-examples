@@ -108,7 +108,6 @@ Generate the file and place it in `src/main/resources` and name it `firebasekeys
 mvn spring-boot:run
 ```
 or use the the [runSpring.sh](./runSpring.sh)
-```
 
 ## Create Software Distribution
 
