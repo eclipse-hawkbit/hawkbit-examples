@@ -1,12 +1,15 @@
 package org.eclipse.hawkbit.google.gcp;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import com.google.api.core.ApiFuture;
+import com.google.api.services.iam.v1.IamScopes;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
@@ -24,26 +27,24 @@ public class GCP_FireStore {
 	public static void init() {
 
 		try {
-			//			ClassLoader classLoader = GCPBucketHandler.class.getClassLoader();
-			//			String path = classLoader.getResource("firestoreKeys.json").getPath();
-			GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
+			ClassLoader classLoader = GCPBucketHandler.class.getClassLoader();
+			String path = classLoader.getResource("keys.json").getPath();
 
-			//			GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(path))
-			//					.createScoped(Collections.singleton(IamScopes.CLOUD_PLATFORM));
-			//		
-			
+			GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(path))
+					.createScoped(Collections.singleton(IamScopes.CLOUD_PLATFORM));
+
 			FirestoreOptions firestoreOptions =
-			        FirestoreOptions
-			        .getDefaultInstance()
-			        .toBuilder()
-			        .setCredentials(credentials)
-			            .setProjectId(GCP_OTA.PROJECT_ID)
-			            .build();
-			     db = firestoreOptions.getService();
-			
+					FirestoreOptions
+					.getDefaultInstance()
+					.toBuilder()
+					.setCredentials(credentials)
+					.setProjectId(GCP_OTA.PROJECT_ID)
+					.build();
+			db = firestoreOptions.getService();
 
-			
-			
+
+
+
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
