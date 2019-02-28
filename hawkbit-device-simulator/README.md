@@ -119,7 +119,7 @@ or use the the [runSpring.sh](./runSpring.sh)
 ## Configure the Rollout
 
 - Error threshold 0
-- Trigger threshold 100
+- Trigger threshold 100 
 
 
 
