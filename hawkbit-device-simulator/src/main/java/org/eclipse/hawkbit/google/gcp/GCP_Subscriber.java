@@ -165,8 +165,8 @@ public class GCP_Subscriber {
 								GCP_OTA.REGISTRY_NAME, getStringFromListMap(data), configVersion);
 
 			LOGGER.info("Writing to Firestore ");
-			//GCP_FireStore.addDocumentMapList(deviceId
-			//		, GCPBucketHandler.getFirmwareInfoBucket_MapList(softwareModuleList));
+			GCP_FireStore.addDocumentMapList(deviceId
+					, GCPBucketHandler.getFirmwareInfoBucket_MapList(softwareModuleList));
 		}
 		else LOGGER.error("Artifacts is empty for device "+deviceId);
 	} 
@@ -184,7 +184,7 @@ public class GCP_Subscriber {
 								GCP_OTA.REGISTRY_NAME, data, configVersion);
 
 			LOGGER.info("Writing to Firestore ");
-			//GCP_FireStore.addDocument(deviceId, GCPBucketHandler.getFirmwareInfoBucket_Map(artifactName));
+			GCP_FireStore.addDocument(deviceId, GCPBucketHandler.getFirmwareInfoBucket_Map(artifactName));
 		}
 		else LOGGER.error(artifactName+" not found in bucket for device "+deviceId);
 	}  

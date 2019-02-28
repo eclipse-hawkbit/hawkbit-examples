@@ -11,10 +11,9 @@ package org.eclipse.hawkbit.simulator;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-//import org.eclipse.hawkbit.google.gcp.GCP_FireStore;
+import org.eclipse.hawkbit.google.gcp.GCP_FireStore;
 import org.eclipse.hawkbit.google.gcp.GCP_Subscriber;
 import org.eclipse.hawkbit.simulator.amqp.AmqpProperties;
-//import org.eclipse.hawkbit.google.gcp.BucketHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +51,7 @@ public class SimulatorStartup implements ApplicationListener<ApplicationReadyEve
 		
  
 		LOGGER.debug("Init Firestore ... ");
-		//GCP_FireStore.init();
+		GCP_FireStore.init();
 		LOGGER.debug("Init Subscriber ... ");
 		GCP_Subscriber.init();
 
