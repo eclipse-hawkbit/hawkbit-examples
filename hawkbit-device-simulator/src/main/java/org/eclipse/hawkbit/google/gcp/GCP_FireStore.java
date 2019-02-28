@@ -33,7 +33,10 @@ public class GCP_FireStore {
 			//		
 			
 			FirestoreOptions firestoreOptions =
-			        FirestoreOptions.getDefaultInstance().toBuilder()
+			        FirestoreOptions
+			        .getDefaultInstance()
+			        .toBuilder()
+			        .setCredentials(credentials)
 			            .setProjectId(GCP_OTA.PROJECT_ID)
 			            .build();
 			     db = firestoreOptions.getService();
