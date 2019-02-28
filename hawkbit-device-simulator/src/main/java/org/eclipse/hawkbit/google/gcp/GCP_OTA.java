@@ -8,6 +8,11 @@ public class GCP_OTA {
 	public final static String REGISTRY_NAME = "OTA-DeviceRegistry";
 	public final static String BUCKET_NAME = "ota-iot-231619.appspot.com";
 	
+//	
+//	public final static String PROJECT_ID = "ikea-homesmart-workshop";
+//	public final static String CLOUD_REGION = "europe-west1";
+//	public final static String REGISTRY_NAME = "tradfri";
+//	public final static String BUCKET_NAME = "ota-iot-231619.appspot.com"; //TODO:
 	
 	public final static String SUBSCRIPTION_STATE_ID = "state";
 	public final static String SUBSCRIPTION_FW_STATE = "fw-state";
