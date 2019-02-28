@@ -24,8 +24,8 @@ public class GCP_FireStore {
 	public static void init() {
 
 		try {
-			ClassLoader classLoader = GCPBucketHandler.class.getClassLoader();
-			String path = classLoader.getResource("firestoreKeys.json").getPath();
+//			ClassLoader classLoader = GCPBucketHandler.class.getClassLoader();
+//			String path = classLoader.getResource("firestoreKeys.json").getPath();
 			GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
 
 //			GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(path))
