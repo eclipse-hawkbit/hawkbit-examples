@@ -10,6 +10,7 @@ import com.google.api.core.ApiFuture;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.FirestoreOptions;
 import com.google.cloud.firestore.SetOptions;
 import com.google.cloud.firestore.WriteResult;
 import com.google.firebase.FirebaseApp;
@@ -29,14 +30,15 @@ public class GCP_FireStore {
 
 			//			GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(path))
 			//					.createScoped(Collections.singleton(IamScopes.CLOUD_PLATFORM));
-			//			
-			FirebaseOptions options = new FirebaseOptions.Builder()
-					.setCredentials(credentials)
-					.setProjectId(GCP_OTA.PROJECT_ID)
-					.build();
-			FirebaseApp.initializeApp(options);
+			//		
+			
+			FirestoreOptions firestoreOptions =
+			        FirestoreOptions.getDefaultInstance().toBuilder()
+			            .setProjectId(GCP_OTA.PROJECT_ID)
+			            .build();
+			     db = firestoreOptions.getService();
+			
 
-			db = FirestoreClient.getFirestore();
 			
 			
 		} catch (FileNotFoundException e) {

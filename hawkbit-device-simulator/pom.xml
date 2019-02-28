@@ -181,11 +181,11 @@
 			<artifactId>google-api-services-storage</artifactId>
 			<version>v1-rev149-1.25.0</version>
 		</dependency>
-		<!-- <dependency>
+		<dependency>
 			<groupId>com.google.cloud</groupId>
 			<artifactId>google-cloud-firestore</artifactId>
-			<version>0.70.0-beta</version>
-		</dependency> -->
+			<version>0.81.0-beta</version>
+		</dependency>
 		<dependency>
 			<groupId>com.google.firebase</groupId>
 			<artifactId>firebase-admin</artifactId>
