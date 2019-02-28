@@ -25,12 +25,16 @@ public class GCP_FireStore {
 
 		try {
 			ClassLoader classLoader = GCPBucketHandler.class.getClassLoader();
-			String path = classLoader.getResource("keys.json").getPath();
-			GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(path))
-					.createScoped(Collections.singleton(IamScopes.CLOUD_PLATFORM));
+			String path = classLoader.getResource("firestoreKeys.json").getPath();
+			GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
+
+//			GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(path))
+//					.createScoped(Collections.singleton(IamScopes.CLOUD_PLATFORM));
+//			
 			FirestoreOptions firestoreOptions =
 					FirestoreOptions.newBuilder().setTimestampsInSnapshotsEnabled(true)
 					.setProjectId(GCP_OTA.PROJECT_ID).setCredentials(credentials)
+					//.setDatabaseId(databaseId)
 					.build();
 			db = firestoreOptions.getService();
 
