@@ -10,6 +10,8 @@ package org.eclipse.hawkbit.simulator;
 
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
 import org.eclipse.hawkbit.simulator.amqp.AmqpProperties;
+import org.eclipse.hawkbit.simulator.amqp.DmfSenderService;
+import org.eclipse.hawkbit.simulator.amqp.SimulatedUpdate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 
 /**
  * REST endpoint for controlling the device simulator.
@@ -33,12 +36,17 @@ public class SimulationController {
 
     private final SimulationProperties simulationProperties;
 
+    private final DmfSenderService spSenderService;
+
     @Autowired
-    public SimulationController(final DeviceSimulatorRepository repository, final SimulatedDeviceFactory deviceFactory, final AmqpProperties amqpProperties, final SimulationProperties simulationProperties) {
+    public SimulationController(final DeviceSimulatorRepository repository, final SimulatedDeviceFactory deviceFactory,
+                                final AmqpProperties amqpProperties, final SimulationProperties simulationProperties,
+                                final DmfSenderService spSenderService) {
         this.repository = repository;
         this.deviceFactory = deviceFactory;
         this.amqpProperties = amqpProperties;
         this.simulationProperties = simulationProperties;
+        this.spSenderService = spSenderService;
     }
 
     /**
@@ -174,6 +182,30 @@ public class SimulationController {
         repository.clear();
 
         return ResponseEntity.ok("All simulated devices have been removed.");
+    }
+
+    /**
+     * Report action as FINISHED
+     * Sends an UpdateActionStatus event with value FINISHED
+     *
+     * @return A response string that the action_finished event was sent
+     */
+    @GetMapping("/finishAction")
+    ResponseEntity<String> finishAction(@RequestParam(value = "actionId") Long actionId,
+        @RequestParam(value = "tenant", required = false) String tenant,
+        @RequestParam(value = "controllerId") String controllerId) {
+
+        String theTenant = tenant != null  && !tenant.isEmpty() ? tenant : simulationProperties.getDefaultTenant();
+        AbstractSimulatedDevice device = repository.get(theTenant, controllerId);
+
+        if (device == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        spSenderService.finishUpdateProcess(new SimulatedUpdate(device.getTenant(), device.getId(), actionId),
+                Collections.singletonList("Simulation Finished."));
+
+        return ResponseEntity.ok(String.format("Action with id: [%d] reported as FINISHED", actionId));
     }
 
     private boolean isDmfDisabled() {
