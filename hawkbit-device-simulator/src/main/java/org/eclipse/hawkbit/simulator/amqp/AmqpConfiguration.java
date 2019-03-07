@@ -23,7 +23,6 @@ import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
-import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -58,63 +57,55 @@ public class AmqpConfiguration {
         return new Jackson2JsonMessageConverter();
     }
 
-    @Configuration
-    @ConditionalOnProperty(prefix = AmqpProperties.CONFIGURATION_PREFIX, name = "init", matchIfMissing = true)
-    protected static class QueueAndExchangeInitializer {
-        /**
-         * Creates the receiver queue from update server for receiving message
-         * from update server.
-         *
-         * @return the queue
-         */
-        @Bean
-        Queue receiverConnectorQueueFromHawkBit(final AmqpProperties amqpProperties) {
-            return QueueBuilder.nonDurable(amqpProperties.getReceiverConnectorQueueFromSp()).autoDelete()
-                    .withArguments(getTTLMaxArgs()).build();
-        }
+    /**
+     * Creates the receiver queue from update server for receiving message from
+     * update server.
+     *
+     * @return the queue
+     */
+    @Bean
+    Queue receiverConnectorQueueFromHawkBit(final AmqpProperties amqpProperties) {
+        return QueueBuilder.nonDurable(amqpProperties.getReceiverConnectorQueueFromSp()).autoDelete()
+                .withArguments(getTTLMaxArgs()).build();
+    }
 
-        private static Map<String, Object> getTTLMaxArgs() {
-            final Map<String, Object> args = Maps.newHashMapWithExpectedSize(2);
-            args.put("x-message-ttl", Duration.ofDays(1).toMillis());
-            args.put("x-max-length", 100_000);
-            return args;
-        }
+    private static Map<String, Object> getTTLMaxArgs() {
+        final Map<String, Object> args = Maps.newHashMapWithExpectedSize(2);
+        args.put("x-message-ttl", Duration.ofDays(1).toMillis());
+        args.put("x-max-length", 100_000);
+        return args;
+    }
 
-        /**
-         * Creates the receiver exchange for sending messages to update server.
-         *
-         * @return the exchange
-         */
-        @Bean
-        FanoutExchange exchangeQueueToConnector(final AmqpProperties amqpProperties) {
-            return new FanoutExchange(amqpProperties.getSenderForSpExchange(), false, true);
-        }
+    /**
+     * Creates the receiver exchange for sending messages to update server.
+     *
+     * @return the exchange
+     */
+    @Bean
+    FanoutExchange exchangeQueueToConnector(final AmqpProperties amqpProperties) {
+        return new FanoutExchange(amqpProperties.getSenderForSpExchange(), false, true);
+    }
 
-        /**
-         * Create the Binding
-         * {@link AmqpConfiguration#receiverConnectorQueueFromHawkBit()} to
-         * {@link AmqpConfiguration#exchangeQueueToConnector()}.
-         *
-         * @return the binding and create the queue and exchange
-         */
-        @Bean
-        Binding bindReceiverQueueToSpExchange(final AmqpProperties amqpProperties) {
-            return BindingBuilder.bind(receiverConnectorQueueFromHawkBit(amqpProperties))
-                    .to(exchangeQueueToConnector(amqpProperties));
-        }
+    /**
+     * Create the Binding
+     * {@link AmqpConfiguration#receiverConnectorQueueFromHawkBit()} to
+     * {@link AmqpConfiguration#exchangeQueueToConnector()}.
+     *
+     * @return the binding and create the queue and exchange
+     */
+    @Bean
+    Binding bindReceiverQueueToSpExchange(final AmqpProperties amqpProperties) {
+        return BindingBuilder.bind(receiverConnectorQueueFromHawkBit(amqpProperties))
+                .to(exchangeQueueToConnector(amqpProperties));
     }
 
     @Configuration
+    @ConditionalOnProperty(prefix = AmqpProperties.CONFIGURATION_PREFIX, name = "customVhost")
     protected static class CachingConnectionFactoryInitializer {
 
-        private static final String ROOT_VHOST = "/";
-
         CachingConnectionFactoryInitializer(final CachingConnectionFactory connectionFactory,
-                final RabbitProperties rabbitProperties) {
-            if (connectionFactory.getVirtualHost().equals(ROOT_VHOST)
-                    && !rabbitProperties.getVirtualHost().equals(ROOT_VHOST)) {
-                connectionFactory.setVirtualHost(rabbitProperties.getVirtualHost());
-            }
+                final AmqpProperties amqpProperties) {
+            connectionFactory.setVirtualHost(amqpProperties.getCustomVhost());
         }
     }
 }
