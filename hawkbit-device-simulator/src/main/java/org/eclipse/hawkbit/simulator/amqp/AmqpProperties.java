@@ -51,6 +51,8 @@ public class AmqpProperties {
      */
     private int deadLetterTtl = 60_000;
 
+    private String customVhost;
+
     public boolean isCheckDmfHealth() {
         return checkDmfHealth;
     }
@@ -89,5 +91,13 @@ public class AmqpProperties {
 
     public void setEnabled(final boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public String getCustomVhost() {
+        return customVhost;
+    }
+
+    public void setCustomVhost(final String customVhost) {
+        this.customVhost = customVhost;
     }
 }

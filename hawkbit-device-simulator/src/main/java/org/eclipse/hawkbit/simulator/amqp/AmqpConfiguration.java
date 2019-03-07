@@ -23,7 +23,6 @@ import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
-import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -51,6 +50,11 @@ public class AmqpConfiguration {
     DmfSenderService dmfSenderService(final RabbitTemplate rabbitTemplate, final AmqpProperties amqpProperties,
             final SimulationProperties simulationProperties) {
         return new DmfSenderService(rabbitTemplate, amqpProperties, simulationProperties);
+    }
+
+    @Bean
+    public MessageConverter jsonMessageConverter() {
+        return new Jackson2JsonMessageConverter();
     }
 
     /**
@@ -96,17 +100,12 @@ public class AmqpConfiguration {
     }
 
     @Configuration
+    @ConditionalOnProperty(prefix = AmqpProperties.CONFIGURATION_PREFIX, name = "customVhost")
     protected static class CachingConnectionFactoryInitializer {
 
-        @Bean
-        public MessageConverter jsonMessageConverter() {
-            return new Jackson2JsonMessageConverter();
-        }
-
         CachingConnectionFactoryInitializer(final CachingConnectionFactory connectionFactory,
-                final RabbitProperties rabbitProperties) {
-
-            connectionFactory.setVirtualHost(rabbitProperties.getVirtualHost());
+                final AmqpProperties amqpProperties) {
+            connectionFactory.setVirtualHost(amqpProperties.getCustomVhost());
         }
     }
 }
