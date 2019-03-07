@@ -53,60 +53,68 @@ public class AmqpConfiguration {
         return new DmfSenderService(rabbitTemplate, amqpProperties, simulationProperties);
     }
 
-    /**
-     * Creates the receiver queue from update server for receiving message from
-     * update server.
-     *
-     * @return the queue
-     */
     @Bean
-    Queue receiverConnectorQueueFromHawkBit(final AmqpProperties amqpProperties) {
-        return QueueBuilder.nonDurable(amqpProperties.getReceiverConnectorQueueFromSp()).autoDelete()
-                .withArguments(getTTLMaxArgs()).build();
+    public MessageConverter jsonMessageConverter() {
+        return new Jackson2JsonMessageConverter();
     }
 
-    private static Map<String, Object> getTTLMaxArgs() {
-        final Map<String, Object> args = Maps.newHashMapWithExpectedSize(2);
-        args.put("x-message-ttl", Duration.ofDays(1).toMillis());
-        args.put("x-max-length", 100_000);
-        return args;
-    }
+    @Configuration
+    @ConditionalOnProperty(prefix = AmqpProperties.CONFIGURATION_PREFIX, name = "init", matchIfMissing = true)
+    protected static class QueueAndExchangeInitializer {
+        /**
+         * Creates the receiver queue from update server for receiving message
+         * from update server.
+         *
+         * @return the queue
+         */
+        @Bean
+        Queue receiverConnectorQueueFromHawkBit(final AmqpProperties amqpProperties) {
+            return QueueBuilder.nonDurable(amqpProperties.getReceiverConnectorQueueFromSp()).autoDelete()
+                    .withArguments(getTTLMaxArgs()).build();
+        }
 
-    /**
-     * Creates the receiver exchange for sending messages to update server.
-     *
-     * @return the exchange
-     */
-    @Bean
-    FanoutExchange exchangeQueueToConnector(final AmqpProperties amqpProperties) {
-        return new FanoutExchange(amqpProperties.getSenderForSpExchange(), false, true);
-    }
+        private static Map<String, Object> getTTLMaxArgs() {
+            final Map<String, Object> args = Maps.newHashMapWithExpectedSize(2);
+            args.put("x-message-ttl", Duration.ofDays(1).toMillis());
+            args.put("x-max-length", 100_000);
+            return args;
+        }
 
-    /**
-     * Create the Binding
-     * {@link AmqpConfiguration#receiverConnectorQueueFromHawkBit()} to
-     * {@link AmqpConfiguration#exchangeQueueToConnector()}.
-     *
-     * @return the binding and create the queue and exchange
-     */
-    @Bean
-    Binding bindReceiverQueueToSpExchange(final AmqpProperties amqpProperties) {
-        return BindingBuilder.bind(receiverConnectorQueueFromHawkBit(amqpProperties))
-                .to(exchangeQueueToConnector(amqpProperties));
+        /**
+         * Creates the receiver exchange for sending messages to update server.
+         *
+         * @return the exchange
+         */
+        @Bean
+        FanoutExchange exchangeQueueToConnector(final AmqpProperties amqpProperties) {
+            return new FanoutExchange(amqpProperties.getSenderForSpExchange(), false, true);
+        }
+
+        /**
+         * Create the Binding
+         * {@link AmqpConfiguration#receiverConnectorQueueFromHawkBit()} to
+         * {@link AmqpConfiguration#exchangeQueueToConnector()}.
+         *
+         * @return the binding and create the queue and exchange
+         */
+        @Bean
+        Binding bindReceiverQueueToSpExchange(final AmqpProperties amqpProperties) {
+            return BindingBuilder.bind(receiverConnectorQueueFromHawkBit(amqpProperties))
+                    .to(exchangeQueueToConnector(amqpProperties));
+        }
     }
 
     @Configuration
     protected static class CachingConnectionFactoryInitializer {
 
-        @Bean
-        public MessageConverter jsonMessageConverter() {
-            return new Jackson2JsonMessageConverter();
-        }
+        private static final String ROOT_VHOST = "/";
 
         CachingConnectionFactoryInitializer(final CachingConnectionFactory connectionFactory,
                 final RabbitProperties rabbitProperties) {
-
-            connectionFactory.setVirtualHost(rabbitProperties.getVirtualHost());
+            if (connectionFactory.getVirtualHost().equals(ROOT_VHOST)
+                    && !rabbitProperties.getVirtualHost().equals(ROOT_VHOST)) {
+                connectionFactory.setVirtualHost(rabbitProperties.getVirtualHost());
+            }
         }
     }
 }
