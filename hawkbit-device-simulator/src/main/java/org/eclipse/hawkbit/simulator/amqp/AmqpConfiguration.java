@@ -20,9 +20,9 @@ import org.springframework.amqp.core.FanoutExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
-import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -53,8 +53,18 @@ public class AmqpConfiguration {
     }
 
     @Bean
-    public MessageConverter jsonMessageConverter() {
-        return new Jackson2JsonMessageConverter();
+    public RabbitTemplate rabbitTemplate(final ConnectionFactory connectionFactory) {
+        final RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+
+        // It is necessary to define rabbitTemplate as a Bean and set
+        // Jackson2JsonMessageConverter explicitly here in order to convert only
+        // OUTCOMING messages to json. In case of INCOMING messages,
+        // Jackson2JsonMessageConverter can not handle messages with NULL
+        // payload (e.g. REQUEST_ATTRIBUTES_UPDATE), so the
+        // SimpleMessageConverter is used instead per default.
+        rabbitTemplate.setMessageConverter(new Jackson2JsonMessageConverter());
+
+        return rabbitTemplate;
     }
 
     /**
