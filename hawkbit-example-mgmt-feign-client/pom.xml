@@ -31,28 +31,16 @@
          <artifactId>hawkbit-mgmt-api</artifactId>
       </dependency>
       <dependency>
-         <groupId>com.google.guava</groupId>
-         <artifactId>guava</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>io.github.openfeign</groupId>
-         <artifactId>feign-core</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>io.github.openfeign</groupId>
-         <artifactId>feign-jackson</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>com.fasterxml.jackson.core</groupId>
-         <artifactId>jackson-databind</artifactId>
-      </dependency>
-      <dependency>
-         <artifactId>hibernate-validator</artifactId>
-         <groupId>org.hibernate</groupId>
+         <groupId>org.springframework.cloud</groupId>
+         <artifactId>spring-cloud-starter-openfeign</artifactId>
       </dependency>
       <dependency>
          <groupId>org.apache.tomcat.embed</groupId>
          <artifactId>tomcat-embed-el</artifactId>
       </dependency>
-   </dependencies>
+      <dependency>
+         <groupId>org.hibernate.validator</groupId>
+         <artifactId>hibernate-validator</artifactId>
+      </dependency>
+    </dependencies>
 </project>

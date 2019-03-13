@@ -10,6 +10,8 @@ package org.eclipse.hawkbit.simulator.amqp;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -22,7 +24,6 @@ import org.eclipse.hawkbit.dmf.json.model.DmfDownloadAndUpdateRequest;
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorRepository;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorUpdater;
-import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
@@ -47,7 +48,7 @@ public class DmfReceiverService extends MessageService {
 
     private final DeviceSimulatorRepository repository;
 
-    private final Set<String> openPings = new ConcurrentHashSet<>();
+    private final Set<String> openPings = Collections.synchronizedSet(new HashSet<>());
 
     /**
      * Constructor.
@@ -126,8 +127,7 @@ public class DmfReceiverService extends MessageService {
         }
 
         if (MessageType.PING_RESPONSE.equals(messageType)) {
-            final String correlationId = new String(message.getMessageProperties().getCorrelationId(),
-                    StandardCharsets.UTF_8);
+            final String correlationId = message.getMessageProperties().getCorrelationId();
             if (!openPings.remove(correlationId)) {
                 LOGGER.error("Unknown PING_RESPONSE received for correlationId: {}.", correlationId);
             }

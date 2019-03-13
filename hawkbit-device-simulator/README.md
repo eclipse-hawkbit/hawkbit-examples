@@ -19,9 +19,9 @@ run org.eclipse.hawkbit.simulator.DeviceSimulator
 
 ## Notes
 
-The simulator has user authentication enabled in **cloud profile**. Default credentials:
-*  username : admin
-*  passwd : admin
+The simulator has user authentication enabled by default. The default credentials are:
+* Username : admin
+* Password : admin
 
 This can be configured/disabled by spring boot properties
 

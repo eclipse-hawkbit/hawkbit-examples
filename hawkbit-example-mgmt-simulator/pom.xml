@@ -25,20 +25,11 @@
          <plugin>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-maven-plugin</artifactId>
-            <executions>
-               <execution>
-                  <goals>
-                     <goal>repackage</goal>
-                  </goals>
-                  <configuration>
-                     <outputDirectory>${baseDir}</outputDirectory>
-                     <classifier>exec</classifier>
-                     <addResources>false</addResources>
-                     <mainClass>org.eclipse.hawkbit.mgmt.client.Application</mainClass>
-                     <layout>JAR</layout>
-                  </configuration>
-               </execution>
-            </executions>
+            <configuration>
+               <mainClass>org.eclipse.hawkbit.mgmt.client.Application</mainClass>
+               <classifier>exec</classifier>
+               <layout>JAR</layout>
+            </configuration>
          </plugin>
       </plugins>
    </build>
@@ -59,11 +50,19 @@
       </dependency>
       <dependency>
          <groupId>org.springframework.cloud</groupId>
-         <artifactId>spring-cloud-commons</artifactId>
+         <artifactId>spring-cloud-context</artifactId>
       </dependency>
       <dependency>
          <groupId>org.springframework.cloud</groupId>
-         <artifactId>spring-cloud-context</artifactId>
+         <artifactId>spring-cloud-starter-openfeign</artifactId>
+      </dependency>      
+      <dependency>
+         <groupId>io.github.openfeign</groupId>
+         <artifactId>feign-jackson</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.google.guava</groupId>
+         <artifactId>guava</artifactId>
       </dependency>
    </dependencies>
 </project>

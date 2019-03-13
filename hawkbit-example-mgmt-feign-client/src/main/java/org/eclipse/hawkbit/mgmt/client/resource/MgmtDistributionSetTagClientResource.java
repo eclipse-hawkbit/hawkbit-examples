@@ -9,7 +9,7 @@
 package org.eclipse.hawkbit.mgmt.client.resource;
 
 import org.eclipse.hawkbit.mgmt.rest.api.MgmtDistributionSetTagRestApi;
-import org.springframework.cloud.netflix.feign.FeignClient;
+import org.springframework.cloud.openfeign.FeignClient;
 
 /**
  * Client binding for the DistributionSetTag resource of the management API.

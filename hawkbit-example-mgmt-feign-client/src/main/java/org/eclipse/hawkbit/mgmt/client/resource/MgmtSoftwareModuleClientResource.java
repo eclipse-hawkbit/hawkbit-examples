@@ -10,7 +10,7 @@ package org.eclipse.hawkbit.mgmt.client.resource;
 
 import org.eclipse.hawkbit.mgmt.json.model.artifact.MgmtArtifact;
 import org.eclipse.hawkbit.mgmt.rest.api.MgmtSoftwareModuleRestApi;
-import org.springframework.cloud.netflix.feign.FeignClient;
+import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;

@@ -18,7 +18,7 @@ import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
 import org.eclipse.hawkbit.simulator.amqp.DmfSenderService;
 import org.eclipse.hawkbit.simulator.http.GatewayTokenInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.netflix.feign.support.ResponseEntityDecoder;
+import org.springframework.cloud.openfeign.support.ResponseEntityDecoder;
 import org.springframework.hateoas.hal.Jackson2HalModule;
 import org.springframework.stereotype.Service;
 

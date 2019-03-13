@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 
+
 /**
  * An feign request interceptor to set the defined {@code Accept} and
  * {@code Content-Type} headers for each request to {@code application/json}.
