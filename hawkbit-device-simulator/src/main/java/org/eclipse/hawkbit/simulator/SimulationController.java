@@ -8,6 +8,11 @@
  */
 package org.eclipse.hawkbit.simulator;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Collections;
+import java.util.Optional;
+
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
 import org.eclipse.hawkbit.simulator.amqp.AmqpProperties;
 import org.eclipse.hawkbit.simulator.amqp.DmfSenderService;
@@ -17,10 +22,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Collections;
 
 /**
  * REST endpoint for controlling the device simulator.
@@ -36,17 +37,15 @@ public class SimulationController {
 
     private final SimulationProperties simulationProperties;
 
-    private final DmfSenderService spSenderService;
+    private Optional<DmfSenderService> spSenderService = Optional.empty();
 
     @Autowired
     public SimulationController(final DeviceSimulatorRepository repository, final SimulatedDeviceFactory deviceFactory,
-                                final AmqpProperties amqpProperties, final SimulationProperties simulationProperties,
-                                final DmfSenderService spSenderService) {
+            final AmqpProperties amqpProperties, final SimulationProperties simulationProperties) {
         this.repository = repository;
         this.deviceFactory = deviceFactory;
         this.amqpProperties = amqpProperties;
         this.simulationProperties = simulationProperties;
-        this.spSenderService = spSenderService;
     }
 
     /**
@@ -64,8 +63,7 @@ public class SimulationController {
      *            the URL endpoint to be used of the hawkbit-update-server for
      *            DDI devices
      * @param pollDelay
-     *            number of delay in seconds to delay polling of DDI
-     *            devices
+     *            number of delay in seconds to delay polling of DDI devices
      * @param gatewayToken
      *            the hawkbit-update-server gatewaytoken in case authentication
      *            is enforced in hawkbit
@@ -95,9 +93,7 @@ public class SimulationController {
         }
 
         if (protocol == Protocol.DMF_AMQP && isDmfDisabled()) {
-            return ResponseEntity.badRequest()
-                    .body("The AMQP interface has been disabled, to use DMF protocol you need to enable the AMQP interface via '"
-                            + AmqpProperties.CONFIGURATION_PREFIX + ".enabled=true'");
+            return createAmqpDisabledResponse();
         }
 
         for (int i = 0; i < amount; i++) {
@@ -110,11 +106,17 @@ public class SimulationController {
         return ResponseEntity.ok("Updated " + amount + " " + protocol + " connected targets!");
     }
 
+    private ResponseEntity<String> createAmqpDisabledResponse() {
+        return ResponseEntity.badRequest().body(
+                "The AMQP interface has been disabled, to use DMF protocol you need to enable the AMQP interface via '"
+                        + AmqpProperties.CONFIGURATION_PREFIX + ".enabled=true'");
+    }
+
     /**
      * Update an attribute of a device.
      *
      * NOTE: This represents not the expected client behaviour for DDI, since a
-     *       DDI client shall only update its attributes if requested by hawkBit.
+     * DDI client shall only update its attributes if requested by hawkBit.
      *
      * @param tenant
      *            The tenant the device belongs to
@@ -185,27 +187,36 @@ public class SimulationController {
     }
 
     /**
-     * Report action as FINISHED
-     * Sends an UpdateActionStatus event with value FINISHED
+     * Report action as FINISHED Sends an UpdateActionStatus event with value
+     * FINISHED
      *
      * @return A response string that the action_finished event was sent
      */
     @GetMapping("/finishAction")
-    ResponseEntity<String> finishAction(@RequestParam(value = "actionId") Long actionId,
-        @RequestParam(value = "tenant", required = false) String tenant,
-        @RequestParam(value = "controllerId") String controllerId) {
+    ResponseEntity<String> finishAction(@RequestParam(value = "actionId") final long actionId,
+            @RequestParam(value = "tenant", required = false) final String tenant,
+            @RequestParam(value = "controllerId") final String controllerId) {
 
-        String theTenant = tenant != null  && !tenant.isEmpty() ? tenant : simulationProperties.getDefaultTenant();
-        AbstractSimulatedDevice device = repository.get(theTenant, controllerId);
+        if (!spSenderService.isPresent()) {
+            return createAmqpDisabledResponse();
+        }
+
+        final String theTenant = tenant != null && !tenant.isEmpty() ? tenant : simulationProperties.getDefaultTenant();
+        final AbstractSimulatedDevice device = repository.get(theTenant, controllerId);
 
         if (device == null) {
             return ResponseEntity.notFound().build();
         }
 
-        spSenderService.finishUpdateProcess(new SimulatedUpdate(device.getTenant(), device.getId(), actionId),
+        spSenderService.get().finishUpdateProcess(new SimulatedUpdate(device.getTenant(), device.getId(), actionId),
                 Collections.singletonList("Simulation Finished."));
 
         return ResponseEntity.ok(String.format("Action with id: [%d] reported as FINISHED", actionId));
+    }
+
+    @Autowired(required = false)
+    public void setSpSenderService(final DmfSenderService spSenderService) {
+        this.spSenderService = Optional.of(spSenderService);
     }
 
     private boolean isDmfDisabled() {

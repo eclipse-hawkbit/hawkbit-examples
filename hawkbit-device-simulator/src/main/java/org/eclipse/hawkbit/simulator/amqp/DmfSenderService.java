@@ -76,9 +76,6 @@ public class DmfSenderService extends MessageService {
      *            the simulated update object
      * @param updateResultMessages
      *            a description according the update process
-     * @param actionType
-     *            indicating whether to download and install or skip
-     *            installation due to maintenance window.
      */
     public void finishUpdateProcess(final SimulatedUpdate update, final List<String> updateResultMessages) {
         final Message updateResultMessage = createUpdateResultMessage(update, DmfActionStatus.FINISHED,

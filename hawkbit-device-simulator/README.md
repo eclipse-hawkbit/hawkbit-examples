@@ -12,19 +12,6 @@ Or:
 run org.eclipse.hawkbit.simulator.DeviceSimulator
 ```
 
-## Deploy to cloud foundry environment
-
-- Go to ```target``` subfolder.
-- Run ```cf push```
-
-## Notes
-
-The simulator has user authentication enabled by default. The default credentials are:
-* Username : admin
-* Password : admin
-
-This can be configured/disabled by spring boot properties
-
 ## hawkBit APIs
 
 The simulator supports `DDI` as well as the `DMF` integration APIs.
