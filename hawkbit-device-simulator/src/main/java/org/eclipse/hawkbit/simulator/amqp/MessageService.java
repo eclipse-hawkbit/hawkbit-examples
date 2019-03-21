@@ -35,8 +35,6 @@ public class MessageService {
      *            the rabbit template
      * @param amqpProperties
      *            the amqp properties
-     * @param messageConverter
-     *            the message converter
      */
     public MessageService(final RabbitTemplate rabbitTemplate, final AmqpProperties amqpProperties) {
         this.rabbitTemplate = rabbitTemplate;
