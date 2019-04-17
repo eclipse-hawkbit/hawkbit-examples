@@ -40,8 +40,6 @@ public class DmfSenderService extends MessageService {
 
 	private final String spExchange;
 
-	private final SimulationProperties simulationProperties;
-
 	/**
 	 *
 	 * @param rabbitTemplate
@@ -55,7 +53,6 @@ public class DmfSenderService extends MessageService {
 			final SimulationProperties simulationProperties) {
 		super(rabbitTemplate, amqpProperties);
 		spExchange = AmqpSettings.DMF_EXCHANGE;
-		this.simulationProperties = simulationProperties;
 		System.out.println("[DmfSenderService] init");
 	}
 
