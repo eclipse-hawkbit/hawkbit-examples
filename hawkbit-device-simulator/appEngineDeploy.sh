@@ -1,1 +1,0 @@
-mvn appengine:deploy
