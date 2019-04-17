@@ -14,6 +14,20 @@
 	<name>hawkBit :: GCP :: Manager </name>
 	<description>Device Management Federation API with GCP</description>
 
+	<developers>
+		<developer>
+			<id>charbull</id>
+			<email>charbelk@google.com</email>
+			<organization>Google LLC</organization>
+			<organizationUrl>https://www.google.com</organizationUrl>
+			<roles>
+				<role>Lead</role>
+				<role>Committer</role>
+			</roles>
+		</developer>
+	</developers>
+
+
 	<build>
 		<plugins>
 			<plugin>
