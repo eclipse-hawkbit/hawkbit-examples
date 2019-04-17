@@ -9,35 +9,13 @@
 		<artifactId>hawkbit-examples-parent</artifactId>
 	</parent>
 
-	<groupId>hawkbit-gcp-integration</groupId>
-	<artifactId>hawkbit-gcp-manager</artifactId>
+	<groupId>hawkbit-gcp-iot-integration</groupId>
+	<artifactId>hawkbit-gcp-iot-manager</artifactId>
 	<name>hawkBit :: GCP :: Manager </name>
 	<description>Device Management Federation API with GCP</description>
 
-	<properties>
-		<docker.image.prefix>charbel</docker.image.prefix>
-	</properties>
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>com.spotify</groupId>
-				<artifactId>dockerfile-maven-plugin</artifactId>
-				<version>1.4.10</version>
-				<configuration>
-					<imageName>HawkBit-GCP</imageName>
-					<baseImage>java</baseImage>
-					<dockerDirectory>${project.build.directory}/docker</dockerDirectory>
-					<entryPoint>["java", "-jar", "/${project.build.finalName}.jar"]</entryPoint>
-					<repository>${docker.image.prefix}/${project.artifactId}</repository>
-					<resources>
-						<resource>
-							<targetPath>/</targetPath>
-							<directory>${project.build.directory}</directory>
-							<include>${project.build.finalName}.jar</include>
-						</resource>
-					</resources>
-				</configuration>
-			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -48,38 +26,8 @@
 						</goals>
 						<configuration>
 							<outputDirectory>${baseDir}</outputDirectory>
-							<mainClass>org.eclipse.hawkbit.simulator.DeviceSimulator</mainClass>
+							<mainClass>org.eclipse.hawkbit.handler.GcpModuleIntegrator</mainClass>
 							<layout>JAR</layout>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>com.google.cloud.tools</groupId>
-				<artifactId>appengine-maven-plugin</artifactId>
-				<version>1.3.2</version>
-				<configuration>
-					<version>1</version>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-dependency-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>unpack</id>
-						<phase>package</phase>
-						<goals>
-							<goal>unpack</goal>
-						</goals>
-						<configuration>
-							<artifactItems>
-								<artifactItem>
-									<groupId>${project.groupId}</groupId>
-									<artifactId>${project.artifactId}</artifactId>
-									<version>${project.version}</version>
-								</artifactItem>
-							</artifactItems>
 						</configuration>
 					</execution>
 				</executions>
@@ -94,7 +42,7 @@
 				<filtering>true</filtering>
 				<targetPath>${project.build.directory}</targetPath>
 				<includes>
-					<include>manifest.yml</include>
+					<include>keys.jsons</include>
 				</includes>
 			</resource>
 		</resources>

@@ -7,7 +7,8 @@
  * http://www.eclipse.org/legal/epl-v10.html
  */
 package org.eclipse.hawkbit.simulator;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -40,6 +41,8 @@ public class SimulationController {
 	private final AmqpProperties amqpProperties;
 
 	private final SimulationProperties simulationProperties;
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(SimulationController.class);
 
 	Gson gson = new Gson();
 
@@ -109,7 +112,7 @@ public class SimulationController {
 					GcpOTA.CLOUD_REGION, GcpOTA.REGISTRY_NAME);
 			for(Device gcp_device : allDevices_gcp)
 			{
-				System.out.println("[GCP Device] "+gcp_device.getId());
+				LOGGER.info("GCP Device: "+gcp_device.getId());
 				repository.add(deviceFactory.
 						createSimulatedDevice(gcp_device.getId(), 
 								simulationProperties.getDefaultTenant(),

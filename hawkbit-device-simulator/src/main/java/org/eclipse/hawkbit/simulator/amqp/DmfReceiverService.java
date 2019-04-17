@@ -80,7 +80,7 @@ public class DmfReceiverService extends MessageService {
 		this.spSenderService = spSenderService;
 		this.deviceUpdater = deviceUpdater;
 		this.repository = repository;
-		System.out.println("[DmfReceiverService] Init");
+		LOGGER.info("Init");
 	}
 
 	/**
@@ -90,7 +90,7 @@ public class DmfReceiverService extends MessageService {
 	 *            the message to get validated
 	 */
 	private void checkContentTypeJson(final Message message) {
-		System.out.println("[DmfReceiverService] checkJson "+message.getBody());
+		LOGGER.info(" checkJson "+message.getBody());
 		if (message.getBody().length == 0) {
 			return;
 		}
@@ -128,7 +128,7 @@ public class DmfReceiverService extends MessageService {
 
 			final MessageType messageType = MessageType.valueOf(type);
 
-			System.out.println("[DmfReceiverService] Message received :\n"+message.toString());
+			LOGGER.info(" Message received :\n"+message.toString());
 
 			if (MessageType.EVENT.equals(messageType)) {
 				checkContentTypeJson(message);
@@ -149,7 +149,7 @@ public class DmfReceiverService extends MessageService {
 				}
 
 				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("Got ping response from tenant {} with correlationId {} with timestamp {}", tenant,
+					LOGGER.info("Got ping response from tenant {} with correlationId {} with timestamp {}", tenant,
 							correlationId, new String(message.getBody(), StandardCharsets.UTF_8));
 				}
 
@@ -165,7 +165,7 @@ public class DmfReceiverService extends MessageService {
 
 	@Scheduled(fixedDelay = 5_000, initialDelay = 5_000)
 	void checkDmfHealth() {
-		System.out.println("[DmfReceiverService] Message CheckDmfHealth ");
+		LOGGER.info("Message CheckDmfHealth ");
 
 		if (!amqpProperties.isCheckDmfHealth()) {
 			return;
@@ -187,7 +187,7 @@ public class DmfReceiverService extends MessageService {
 
 	private void handleEventMessage(final Message message, final String thingId) {
 
-		System.out.println("[DmfReceiverService] handling event "+thingId);
+		LOGGER.info("handling event "+thingId);
 
 		final Object eventHeader = message.getMessageProperties().getHeaders().get(MessageHeaderKey.TOPIC);
 		if (eventHeader == null) {
@@ -197,20 +197,20 @@ public class DmfReceiverService extends MessageService {
 		// Exception squid:S2259 - Checked before
 		@SuppressWarnings({ "squid:S2259" })
 		final EventTopic eventTopic = EventTopic.valueOf(eventHeader.toString());
-		System.out.println("[DmfReceiverService] EventTopic "+eventTopic);
+		LOGGER.info("EventTopic "+eventTopic);
 
 		switch (eventTopic) {
 		case DOWNLOAD_AND_INSTALL:
 		case DOWNLOAD:
-			System.out.println("[DmfReceiverService] Download with message:\n"+message.toString());
+			LOGGER.info("Download with message:\n"+message.toString());
 			handleUpdateProcess(message, thingId, eventTopic);
 			break;
 		case CANCEL_DOWNLOAD:
-			System.out.println("[DmfReceiverService] Cancel Download with message:\n"+message.toString());
+			LOGGER.info("Cancel Download with message:\n"+message.toString());
 			handleCancelDownloadAction(message, thingId);
 			break;
 		case REQUEST_ATTRIBUTES_UPDATE:
-			System.out.println("[DmfReceiverService] Attributes update with message:\n"+message.toString());
+			LOGGER.info("Attributes update with message:\n"+message.toString());
 			handleAttributeUpdateRequest(message, thingId);
 			break;
 		default:
@@ -223,7 +223,7 @@ public class DmfReceiverService extends MessageService {
 		final MessageProperties messageProperties = message.getMessageProperties();
 		final Map<String, Object> headers = messageProperties.getHeaders();
 		final String tenant = (String) headers.get(MessageHeaderKey.TENANT);
-		System.out.println("[DmfReceiverService] handleAttributeUpdateRequest event: "+thingId+ " with message: "+message.toString());
+		LOGGER.info("handleAttributeUpdateRequest event: "+thingId+ " with message: "+message.toString());
 		spSenderService.updateAttributesOfThing(tenant, thingId);
 	}
 
@@ -246,7 +246,7 @@ public class DmfReceiverService extends MessageService {
 	}
 
 	private void handleUpdateProcess(final Message message, final String thingId, final EventTopic actionType) {
-		System.out.println("[DmfReceiverService] handling update "+thingId);
+		LOGGER.info(" handling update "+thingId);
 
 		final MessageProperties messageProperties = message.getMessageProperties();
 		final Map<String, Object> headers = messageProperties.getHeaders();
@@ -268,6 +268,7 @@ public class DmfReceiverService extends MessageService {
 					artifact -> 
 					{
 						try {
+							LOGGER.info("Handling artifact : "+artifact.getFilename());
 							GcpBucketHandler.uploadFirmwareToBucket(artifact.getUrls().get("HTTP") , artifact.getFilename(), targetSecurityToken);
 						} catch (FileNotFoundException e) {
 							e.printStackTrace();
@@ -285,7 +286,7 @@ public class DmfReceiverService extends MessageService {
 	}
 
 	private void sendFeedback(final Long actionId, final AbstractSimulatedDevice device) {
-		System.out.println("[DmfReceiverService] sendFeedback event "+device.getId());
+		LOGGER.info(" sendFeedback event "+device.getId());
 
 		switch (device.getUpdateStatus().getResponseStatus()) {
 		case SUCCESSFUL:

@@ -1,8 +1,5 @@
 package org.eclipse.hawkbit.google.gcp;
 
-
-
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,8 +8,8 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 import org.eclipse.hawkbit.dmf.amqp.api.EventTopic;
 import org.eclipse.hawkbit.dmf.json.model.DmfSoftwareModule;
-import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorUpdater.UpdaterCallback;
+import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice;
 import org.eclipse.hawkbit.simulator.UpdateStatus;
 import org.eclipse.hawkbit.simulator.UpdateStatus.ResponseStatus;
 import org.slf4j.Logger;
@@ -53,9 +50,10 @@ public class GcpSubscriber {
 				GcpOTA.PROJECT_ID, GcpOTA.SUBSCRIPTION_STATE_ID);
 		Subscriber subscriber = null;
 		try {
+			
 			// create a subscriber bound to the asynchronous message receiver
 			subscriber =
-					Subscriber.newBuilder(subscriptionName, new StateMessageReceiver()).build();
+					Subscriber.newBuilder(subscriptionName, new StateMessageReceiver()).setCredentialsProvider(GcpCredentials.getCredentialProvider()).build();
 			subscriber.startAsync().awaitRunning();
 			// Continue to listen to messages
 			while (true) {
@@ -85,7 +83,7 @@ public class GcpSubscriber {
 
 				if(deviceId != null && fw_state != null) {
 					UpdateStatus updateStatus = null;
-					System.out.println("====> New state received "+fw_state+ " from device "+deviceId);
+					LOGGER.info("====> New state received "+fw_state+ " from device "+deviceId);
 					switch (fw_state) {
 					case GcpOTA.FW_MSG_RECEIVED :
 						updateStatus = new UpdateStatus(ResponseStatus.RUNNING, "Message sent to initiate fw update!");
@@ -125,10 +123,10 @@ public class GcpSubscriber {
 					}
 				}
 			} else {
-				LOGGER.debug("Ignoring message");
+				LOGGER.info("Ignoring message");
 			}
 		} else {
-			LOGGER.debug("Ignoring message");
+			LOGGER.info("Ignoring message");
 		}
 
 	}
@@ -171,6 +169,7 @@ public class GcpSubscriber {
 
 
 
+	@SuppressWarnings("unused")
 	private static void sendAsyncFwUpgrade(String deviceId, String artifactName) {
 		String data = GcpBucketHandler.getFirmwareInfoBucket(artifactName);
 		if(data != null) {
@@ -214,17 +213,7 @@ public class GcpSubscriber {
 			if(!mapDevices.containsKey(device.getId())) {
 				LOGGER.info("ActionType "+actionType);
 
-
-
-				//TODO:uncomment 
 				sendAsyncFwUpgradeList(device.getId(), modules);
-
-				//TODO:[Comment below]
-				//				List<String> fwNameList = modules.stream().flatMap(mod -> mod.getArtifacts().stream())
-				//						.map(art -> art.getFilename())
-				//						.collect(Collectors.toList());
-				//				fwNameList.forEach(fw -> sendAsyncFwUpgrade(device.getId(), fw));
-				//[End of comment]
 
 				mapCallbacks.put(device.getId(), callback);
 				mapDevices.put(device.getId(), device);

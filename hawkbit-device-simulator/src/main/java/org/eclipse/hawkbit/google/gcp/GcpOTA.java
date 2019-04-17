@@ -2,16 +2,16 @@ package org.eclipse.hawkbit.google.gcp;
 
 public class GcpOTA {
 
-	//TODO: Configurations to take outside of here same for keys.json
-	public final static String PROJECT_ID = "ota-iot-231619";
-	public final static String CLOUD_REGION = "us-central1";
-	public final static String REGISTRY_NAME = "OTA-DeviceRegistry";
-	public final static String BUCKET_NAME = "ota-iot-231619.appspot.com";
+//	public static String PROJECT_ID = "ota-iot-231619";
+//	public static String CLOUD_REGION = "us-central1";
+//	public static String REGISTRY_NAME = "OTA-DeviceRegistry";
+//	public static String BUCKET_NAME = "ota-iot-231619.appspot.com";
+
+	public static String PROJECT_ID = "";
+	public static String CLOUD_REGION = "";
+	public static String REGISTRY_NAME = "";
+	public static String BUCKET_NAME = "";
 	
-//	public final static String PROJECT_ID = "ikea-homesmart-workshop";
-//	public final static String CLOUD_REGION = "europe-west1";
-//	public final static String REGISTRY_NAME = "tradfri";
-//	public final static String BUCKET_NAME = "ikea-homesmart-workshop.appspot.com"; //TODO:
 	
 	public final static String FW_MSG_RECEIVED = "msg-received";
 	public final static String FW_INSTALLING = "installing";

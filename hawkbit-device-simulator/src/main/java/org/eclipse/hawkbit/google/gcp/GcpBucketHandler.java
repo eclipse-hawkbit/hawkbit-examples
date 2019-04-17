@@ -7,10 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLDecoder;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,9 +53,7 @@ public class GcpBucketHandler {
 		try {
 			if(storage == null)
 			{
-				ClassLoader classLoader = GcpBucketHandler.class.getClassLoader();
-				String path = classLoader.getResource("keys.json").getPath();
-				GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(path))
+				GoogleCredential credential = GcpCredentials.getCredential()
 						.createScoped(Collections.singleton(IamScopes.CLOUD_PLATFORM));
 
 				httpTransport = GoogleNetHttpTransport.newTrustedTransport();
@@ -76,29 +70,13 @@ public class GcpBucketHandler {
 	}
 
 	public static void uploadFirmwareToBucket(String fileUrl, String artifactName, String targetToken) throws FileNotFoundException, IOException, GeneralSecurityException {
-		Storage gcs = getStorage();
-		String data = null;
-		String decodedURL = URLDecoder.decode(fileUrl, "UTF-8");
-		URL url = new URL(decodedURL);
-		URI uri;
-		try {
-			uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(), url.getQuery(), url.getRef());
-			String decodedURLAsString = uri.toASCIIString();
-			data = HawkBitSoftwareModuleHandler.downloadFileData(decodedURLAsString, targetToken);
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
 
+		Storage gcs = getStorage();
+		String data = HawkBitSoftwareModuleHandler.downloadFileData(fileUrl, targetToken);
 		if(!checkIfExists(artifactName))
 		{
-			if(data != null) {
-				LOGGER.info("Uploading to GCS artifact: "+artifactName);
-				uploadSimple(gcs, GcpOTA.BUCKET_NAME, artifactName, data);
-			} else {
-				LOGGER.error("Unable to download the artifact: "+artifactName+" from HawkBit Server");
-			}
-		} else {
-			LOGGER.debug("Artifact already exists in the bucket");
+			LOGGER.info("Uploading to GCS artifact: "+artifactName);
+			uploadSimple(gcs, GcpOTA.BUCKET_NAME, artifactName, data);
 		}
 	}
 
@@ -108,7 +86,7 @@ public class GcpBucketHandler {
 		if(storageObject != null)
 		{
 			JsonObject jsonObject = new JsonObject();
-			LOGGER.debug(artifactName+" exists!");
+			LOGGER.info(artifactName+" exists!");
 			jsonObject.addProperty("ObjectName", storageObject.getName());
 			jsonObject.addProperty("Url", storageObject.getMediaLink());
 			jsonObject.addProperty("Md5Hash", storageObject.getMd5Hash());
@@ -128,7 +106,7 @@ public class GcpBucketHandler {
 		{
 			Map<String,Map<String,String>> fw_update = new HashMap<>(1);
 			Map<String, String> mapContent = new HashMap<>(3);
-			LOGGER.debug(artifactName+" exists!");
+			LOGGER.info(artifactName+" exists!");
 			mapContent.put(GcpOTA.OBJECT_NAME, storageObject.getName());
 			mapContent.put(GcpOTA.URL, storageObject.getMediaLink());
 			mapContent.put(GcpOTA.MD5HASH, storageObject.getMd5Hash());
@@ -144,19 +122,19 @@ public class GcpBucketHandler {
 		Map<String,List<Map<String,String>>> fw_update_Map = 
 				new HashMap<String, List<Map<String,String>>>(1);
 
-
+		
 		List<String> fwNameList = modules.stream().flatMap(mod -> mod.getArtifacts().stream())
 				.map(art -> art.getFilename())
 				.collect(Collectors.toList());			
 
 		List<Map<String,String>> list_fw_update = new ArrayList<>(fwNameList.size());
-
+		
 		fwNameList.forEach(artifactName -> {
 			StorageObject storageObject = GcpBucketHandler.getStorageObjectInfo(artifactName);
 			if(storageObject != null)
 			{
 				Map<String, String> mapContent = new HashMap<>(3);
-				LOGGER.debug(artifactName+" exists!");
+				LOGGER.info(artifactName+" exists!");
 				mapContent.put(GcpOTA.OBJECT_NAME, storageObject.getName());
 				mapContent.put(GcpOTA.URL, storageObject.getMediaLink());
 				mapContent.put(GcpOTA.MD5HASH, storageObject.getMd5Hash());
@@ -178,7 +156,7 @@ public class GcpBucketHandler {
 				for (StorageObject object : items) {
 					if(object.getName().equalsIgnoreCase(artifactName))
 					{
-						LOGGER.debug(artifactName+" already exists!");
+						LOGGER.info(artifactName+" already exists!");
 						return true;
 					}
 				}
@@ -199,7 +177,7 @@ public class GcpBucketHandler {
 					for (StorageObject object : items) {
 						if(object.getName().equalsIgnoreCase(artifactName))
 						{
-							LOGGER.debug(artifactName+" exists!");
+							LOGGER.info(artifactName+" exists!");
 							return object;
 						}
 					}

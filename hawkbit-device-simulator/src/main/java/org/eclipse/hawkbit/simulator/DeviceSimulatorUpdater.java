@@ -156,7 +156,7 @@ public class DeviceSimulatorUpdater {
 				}
 
 				if (actionType == EventTopic.DOWNLOAD_AND_INSTALL) {
-					System.out.println("[DeviceSimulator] Download & Install");
+					LOGGER.info("Download & Install");
 					device.setUpdateStatus(new UpdateStatus(ResponseStatus.SUCCESSFUL, "Simulation complete!"));
 					callback.sendFeedback(device);
 					device.clean();
@@ -168,7 +168,7 @@ public class DeviceSimulatorUpdater {
 
 		private void syncDownloadGCP(String deviceId, String data) 
 		{
-			System.out.println("==========> Attempting download to the device \n"+data);
+			LOGGER.info("Attempting download to the device \n"+data);
 			GcpIoTHandler.sendCommand(device.getId(), GcpOTA.PROJECT_ID, GcpOTA.CLOUD_REGION,
 					GcpOTA.REGISTRY_NAME, "This is a payload from HawkBit:\n"+data);
 		}
@@ -184,8 +184,7 @@ public class DeviceSimulatorUpdater {
 
 			final List<UpdateStatus> status = new ArrayList<>();
 
-			LOGGER.info("Simulate downloads for {}", device.getId());
-			System.out.printf("Simulate downloads for {}", device.getId());
+			LOGGER.info("Simulate downloads for "+device.getId());
 
 
 			modules.forEach(module -> {
@@ -220,7 +219,7 @@ public class DeviceSimulatorUpdater {
 		private static void handleArtifact(final String targetToken, final String gatewayToken,
 				final List<UpdateStatus> status, final DmfArtifact artifact) {
 
-			System.out.println("[DeviceSimulator] handleArtifact "+artifact.getSize());
+			LOGGER.info(" handleArtifact "+artifact.getSize());
 			if (artifact.getUrls().containsKey("HTTPS")) {
 				status.add(downloadUrl(artifact.getUrls().get("HTTPS"), gatewayToken, targetToken,
 						artifact.getHashes().getSha1(), artifact.getSize()));
@@ -232,7 +231,7 @@ public class DeviceSimulatorUpdater {
 
 		private static UpdateStatus downloadUrl(final String url, final String gatewayToken, final String targetToken,
 				final String sha1Hash, final long size) {
-			System.out.println("[DeviceSimulator] downloadingUrl "+url);
+			LOGGER.info(" downloadingUrl "+url);
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("Downloading {} with token {}, expected sha1 hash {} and size {}", url,
 						hideTokenDetails(targetToken), sha1Hash, size);
@@ -295,7 +294,6 @@ public class DeviceSimulatorUpdater {
 			//			}
 
 			final String message = "Downloaded " + url + " (" + payload.getBytes().length + " bytes)";
-			System.out.println("[DeviceSimulator] "+message);
 			LOGGER.debug(message);
 			return new UpdateStatus(ResponseStatus.SUCCESSFUL, message);
 		}
@@ -322,7 +320,7 @@ public class DeviceSimulatorUpdater {
 			try {
 				InputStream is = response.getEntity().getContent();
 				payload = new String(ByteStreams.toByteArray(is),Charsets.UTF_8);
-				System.out.println("Payload ==========> "+payload);	
+				LOGGER.info("Payload: "+payload);	
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

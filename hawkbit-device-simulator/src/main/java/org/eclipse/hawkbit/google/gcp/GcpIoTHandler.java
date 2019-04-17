@@ -1,11 +1,7 @@
 package org.eclipse.hawkbit.google.gcp;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -23,49 +19,37 @@ import com.google.api.services.cloudiot.v1.CloudIot;
 import com.google.api.services.cloudiot.v1.CloudIotScopes;
 import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.api.services.cloudiot.v1.model.DeviceConfig;
-import com.google.api.services.cloudiot.v1.model.DeviceCredential;
 import com.google.api.services.cloudiot.v1.model.DeviceRegistry;
 import com.google.api.services.cloudiot.v1.model.DeviceState;
-import com.google.api.services.cloudiot.v1.model.EventNotificationConfig;
 import com.google.api.services.cloudiot.v1.model.ListDeviceStatesResponse;
 import com.google.api.services.cloudiot.v1.model.ModifyCloudToDeviceConfigRequest;
-import com.google.api.services.cloudiot.v1.model.PublicKeyCredential;
 import com.google.api.services.cloudiot.v1.model.SendCommandToDeviceRequest;
 import com.google.api.services.cloudiot.v1.model.SendCommandToDeviceResponse;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 
-//TODO: how to make this multi-registries?
-//allowing getting config and setting config for all
-//also firestore might break since devices id are unique per registry
+
 public class GcpIoTHandler {
-
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(GcpIoTHandler.class);
 
-	public static GoogleCredential getCredentialsFromFile(){
+	public static GoogleCredential getCredentialsFromFile()
+	{
 		GoogleCredential credential = null;
-		try {
-			ClassLoader classLoader = GcpIoTHandler.class.getClassLoader();
-			String path = classLoader.getResource("keys.json").getPath();
-			credential = GoogleCredential.fromStream(new FileInputStream(path))
-					.createScoped(CloudIotScopes.all());
-		} catch (IOException e) {
-			System.out.println("Please make sure to put your keys.json in the project");
-		}
+		credential = GcpCredentials.getCredential()
+				.createScoped(CloudIotScopes.all());
 		return credential;
 	}
 
 
-	public static List<Device> getAllDevices(String projectId, String cloudRegion) throws GeneralSecurityException, IOException{
-		List<Device> allDevices_per_project = new ArrayList<Device>();
-		List<DeviceRegistry> gcp_registries = GcpIoTHandler.listRegistries(GcpOTA.PROJECT_ID, GcpOTA.CLOUD_REGION);
-		for(DeviceRegistry gcp_registry : gcp_registries)
-		{
-			allDevices_per_project.addAll(listDevices(projectId, cloudRegion, gcp_registry.getId()));
-		}
-		return allDevices_per_project;
-	}
+//	public static List<Device> getAllDevices(String projectId, String cloudRegion, String registryId) throws GeneralSecurityException, IOException
+//	{
+//		List<Device> allDevices_per_project = new ArrayList<Device>();
+//		List<DeviceRegistry> gcp_registries = GcpIoTHandler.listRegistries(GcpOTA.PROJECT_ID, GcpOTA.CLOUD_REGION);
+//		for(DeviceRegistry gcp_registry : gcp_registries)
+//		{
+//			allDevices_per_project.addAll(listDevices(projectId, cloudRegion, gcp_registry.getId()));
+//		}
+//		return allDevices_per_project;
+//	}
 
 	public static List<Device> listDevices(String projectId, String cloudRegion, String registryName)
 			throws GeneralSecurityException, IOException {
@@ -100,6 +84,7 @@ public class GcpIoTHandler {
 				System.out.println();
 			}
 		} else {
+			LOGGER.warn("Registry has no devices.");
 			System.out.println("Registry has no devices.");
 		}
 		return devices;
@@ -115,45 +100,6 @@ public class GcpIoTHandler {
 			e.printStackTrace();
 		}
 		return false;
-	}
-
-
-	/**
-	 * Retrieves Device Metadata
-	 * @return Map of metadata
-	 * */
-	public static Map<String, String> getDeviceMetadata(String deviceId) {
-		JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-		HttpRequestInitializer init = new RetryHttpInitializerWrapper(getCredentialsFromFile());
-		CloudIot service;
-		try {
-			service = new CloudIot.Builder(GoogleNetHttpTransport.newTrustedTransport(), jsonFactory, init)
-					.build();
-
-			final String deviceUniqueId =
-					String.format(
-							"projects/%s/locations/%s/registries/%s/devices/%s", 
-							GcpOTA.PROJECT_ID,
-							GcpOTA.CLOUD_REGION,
-							GcpOTA.REGISTRY_NAME,
-							deviceId);
-
-			return 	service
-					.projects()
-					.locations()
-					.registries()
-					.devices()
-					.get(deviceUniqueId)
-					.execute().getMetadata();
-		} catch (GeneralSecurityException e) {
-			e.printStackTrace();
-		} catch(GoogleJsonResponseException e) {
-			e.printStackTrace();
-			LOGGER.error("Couldn't find the device: "+deviceId+" in the registry");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return null;
 	}
 
 
@@ -195,6 +141,49 @@ public class GcpIoTHandler {
 
 
 
+	/**
+	 * Retrieves Device Metadata
+	 * @return Map of metadata
+	 * */
+	public static Map<String, String> getDeviceMetadata(String deviceId) {
+		JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+		HttpRequestInitializer init = new RetryHttpInitializerWrapper(getCredentialsFromFile());
+		CloudIot service;
+		try {
+			service = new CloudIot.Builder(GoogleNetHttpTransport.newTrustedTransport(), jsonFactory, init)
+					.build();
+
+			final String deviceUniqueId =
+					String.format(
+							"projects/%s/locations/%s/registries/%s/devices/%s", 
+							GcpOTA.PROJECT_ID,
+							GcpOTA.CLOUD_REGION,
+							GcpOTA.REGISTRY_NAME,
+							deviceId);
+
+			return 	service
+					.projects()
+					.locations()
+					.registries()
+					.devices()
+					.get(deviceUniqueId)
+					.execute().getMetadata();
+		} catch (GeneralSecurityException e) {
+			e.printStackTrace();
+		} catch(GoogleJsonResponseException e) {
+			e.printStackTrace();
+			LOGGER.error("Couldn't find the device: "+deviceId+" in the registry");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	
+
+	
+	
+
 	/** Lists all of the registries associated with the given project. */
 	public static List<DeviceRegistry> listRegistries(String projectId, String cloudRegion)
 			throws GeneralSecurityException, IOException {
@@ -216,17 +205,17 @@ public class GcpIoTHandler {
 				.getDeviceRegistries();
 
 		if (registries != null) {
-			System.out.println("Found " + registries.size() + " registries");
+			LOGGER.info("Found " + registries.size() + " registries");
 			for (DeviceRegistry r: registries) {
-				System.out.println("Id: " + r.getId());
-				System.out.println("Name: " + r.getName());
+				LOGGER.info("Id: " + r.getId());
+				LOGGER.info("Name: " + r.getName());
 				if (r.getMqttConfig() != null) {
-					System.out.println("Config: " + r.getMqttConfig().toPrettyString());
+					LOGGER.info("Config: " + r.getMqttConfig().toPrettyString());
 				}
 				System.out.println();
 			}
 		} else {
-			System.out.println("Project has no registries.");
+			LOGGER.warn("Project has no registries.");
 		}
 		return registries;
 
@@ -245,7 +234,7 @@ public class GcpIoTHandler {
 			final String devicePath = String.format("projects/%s/locations/%s/registries/%s/devices/%s",
 					projectId, cloudRegion, registryName, deviceId);
 
-			System.out.println("Listing device configs for " + devicePath);
+			LOGGER.info("Listing device configs for " + devicePath);
 			List<DeviceConfig> deviceConfigs =
 					service
 					.projects()
@@ -258,9 +247,8 @@ public class GcpIoTHandler {
 					.getDeviceConfigs();
 
 			for (DeviceConfig config : deviceConfigs) {
-				System.out.println("Config version: " + config.getVersion());
-				System.out.println("Contents: " + config.getBinaryData());
-				System.out.println();
+				LOGGER.info("\nConfig version: " + config.getVersion());
+				LOGGER.info("Contents: " + config.getBinaryData());
 			}
 
 		} catch (Exception e) {
@@ -283,7 +271,7 @@ public class GcpIoTHandler {
 			final String devicePath = String.format("projects/%s/locations/%s/registries/%s/devices/%s",
 					projectId, cloudRegion, registryName, deviceId);
 
-			System.out.println("Listing device configs for " + devicePath);
+			LOGGER.info("Listing device configs for " + devicePath);
 			List<DeviceConfig> deviceConfigs =
 					service
 					.projects()
@@ -297,8 +285,8 @@ public class GcpIoTHandler {
 
 
 			for (DeviceConfig config : deviceConfigs) {
-				System.out.println("Config version: " + config.getVersion());
-				System.out.println("Contents: " + config.getBinaryData());
+				LOGGER.info("\nConfig version: " + config.getVersion());
+				LOGGER.info("Contents: " + config.getBinaryData());
 				if(configVersion < config.getVersion())
 				{
 					configVersion = config.getVersion();
@@ -342,7 +330,7 @@ public class GcpIoTHandler {
 					.devices()
 					.modifyCloudToDeviceConfig(devicePath, req).execute();
 
-			System.out.println("Updated: " + config.getVersion());
+			LOGGER.info("Updated: " + config.getVersion());
 		} catch (GeneralSecurityException | IOException e) {
 			e.printStackTrace();
 		}
@@ -364,7 +352,7 @@ public class GcpIoTHandler {
 			final String devicePath = String.format("projects/%s/locations/%s/registries/%s/devices/%s",
 					projectId, cloudRegion, registryName, deviceId);
 
-			System.out.println("Retrieving device states " + devicePath);
+			LOGGER.info("Retrieving device states " + devicePath);
 
 			ListDeviceStatesResponse resp  = service
 					.projects()
@@ -402,7 +390,7 @@ public class GcpIoTHandler {
 			Base64.Encoder encoder = Base64.getEncoder();
 			String encPayload = encoder.encodeToString(data.getBytes("UTF-8"));
 			req.setBinaryData(encPayload);
-			System.out.printf("Sending command to %s\n", devicePath);
+			LOGGER.info("Sending command to %s\n", devicePath);
 			SendCommandToDeviceResponse res =
 					service
 					.projects()
@@ -412,7 +400,7 @@ public class GcpIoTHandler {
 					.sendCommandToDevice(devicePath, req)
 					.execute();
 
-			System.out.println("Command response: " + res.toString());
+			LOGGER.info("Command response: " + res.toString());
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -435,47 +423,4 @@ public class GcpIoTHandler {
 
 		return service.projects().locations().registries().get(registryPath).execute();
 	}
-
-	public static Device createDeviceWithRs256(
-			String deviceId,
-			String certificateFilePath,
-			String projectId,
-			String cloudRegion,
-			String registryName)
-					throws GeneralSecurityException, IOException {
-		JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-		HttpRequestInitializer init = new RetryHttpInitializerWrapper(getCredentialsFromFile());
-		final CloudIot service =
-				new CloudIot.Builder(GoogleNetHttpTransport.newTrustedTransport(), jsonFactory, init)
-				.build();
-
-		final String registryPath =
-				String.format(
-						"projects/%s/locations/%s/registries/%s", projectId, cloudRegion, registryName);
-
-		PublicKeyCredential publicKeyCredential = new PublicKeyCredential();
-		String key = Files.asCharSource(new File(certificateFilePath), Charsets.UTF_8).read();
-		publicKeyCredential.setKey(key);
-		publicKeyCredential.setFormat("RSA_X509_PEM");
-
-		DeviceCredential devCredential = new DeviceCredential();
-		devCredential.setPublicKey(publicKeyCredential);
-
-		System.out.println("Creating device with id: " + deviceId);
-		Device device = new Device();
-		device.setId(deviceId);
-		device.setCredentials(Arrays.asList(devCredential));
-		Device createdDevice =
-				service
-				.projects()
-				.locations()
-				.registries()
-				.devices()
-				.create(registryPath, device)
-				.execute();
-
-		System.out.println("Created device: " + createdDevice.toPrettyString());
-		return createdDevice;
-	}
-
 }
