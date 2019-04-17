@@ -58,8 +58,6 @@
 			<artifactId>hawkbit-example-ddi-feign-client</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<!-- <dependency> <groupId>org.eclipse.hawkbit</groupId> <artifactId>hawkbit-example-core-feign-client</artifactId> 
-			<version>${project.version}</version> </dependency> -->
 		<dependency>
 			<groupId>org.springframework.amqp</groupId>
 			<artifactId>spring-rabbit</artifactId>

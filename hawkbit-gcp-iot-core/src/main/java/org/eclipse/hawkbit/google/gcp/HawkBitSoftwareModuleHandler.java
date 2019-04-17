@@ -1,3 +1,12 @@
+/**
+ * Copyright 2019 Google LLC
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ */
+
 package org.eclipse.hawkbit.google.gcp;
 
 import java.io.IOException;
@@ -21,11 +30,6 @@ import org.springframework.util.StringUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 
-//TODO:
-/**
- *  Use the Hawkbit Management Client to download 
- *  software modules and put them on the bucket
- * */
 public class HawkBitSoftwareModuleHandler {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(HawkBitSoftwareModuleHandler.class);
