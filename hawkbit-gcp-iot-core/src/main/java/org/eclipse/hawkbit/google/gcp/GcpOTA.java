@@ -2,11 +2,6 @@ package org.eclipse.hawkbit.google.gcp;
 
 public class GcpOTA {
 
-//	public static String PROJECT_ID = "ota-iot-231619";
-//	public static String CLOUD_REGION = "us-central1";
-//	public static String REGISTRY_NAME = "OTA-DeviceRegistry";
-//	public static String BUCKET_NAME = "ota-iot-231619.appspot.com";
-
 	public static String PROJECT_ID = "";
 	public static String CLOUD_REGION = "";
 	public static String REGISTRY_NAME = "";
