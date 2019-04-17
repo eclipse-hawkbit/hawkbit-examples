@@ -26,9 +26,9 @@ import com.google.common.io.ByteStreams;
  *  Use the Hawkbit Management Client to download 
  *  software modules and put them on the bucket
  * */
-public class HawkbitSoftwareModuleHandler {
+public class HawkBitSoftwareModuleHandler {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(HawkbitSoftwareModuleHandler.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(HawkBitSoftwareModuleHandler.class);
 
 
 	private static CloseableHttpClient createHttpClientThatAcceptsAllServerCerts()

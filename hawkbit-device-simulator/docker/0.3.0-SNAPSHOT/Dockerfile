@@ -1,16 +1,10 @@
-FROM openjdk:8u171-jre-alpine
+FROM openjdk:8-jre
+FROM jetty
 
-ENV HAWKBIT_SIM_VERSION=0.3.0-SNAPSHOT \
-    HAWKBIT_SIM_HOME=/opt/hawkbit-simulator
+MAINTAINER Charbel Kaed <charbelk@google.com>
 
-# Http port
 EXPOSE 8083
 
-RUN set -x \
-    && mkdir -p $HAWKBIT_SIM_HOME \
-    && cd $HAWKBIT_SIM_HOME \
-    && apk add --no-cache libressl wget \
-    && wget -O hawkbit-simluator.jar --no-verbose "http://repo.eclipse.org/service/local/artifact/maven/redirect?r=hawkbit-snapshots&g=org.eclipse.hawkbit&a=hawkbit-device-simulator&v=${HAWKBIT_SIM_VERSION}"
+ADD target/hawkbit-gcp-iot-manager-0.3.0-SNAPSHOT.jar /opt/hawkbit-gcp-iot-manager-0.3.0-SNAPSHOT.jar
 
-WORKDIR $HAWKBIT_SIM_HOME
-ENTRYPOINT ["java","-jar","hawkbit-simluator.jar"]
+ENTRYPOINT ["java","-jar","/opt/hawkbit-gcp-iot-manager-0.3.0-SNAPSHOT.jar"]

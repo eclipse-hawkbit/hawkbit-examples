@@ -76,7 +76,6 @@ public class SimulatedDeviceFactory {
             final int pollDelaySec, final URL baseEndpoint, final String gatewayToken, final boolean pollImmediatly) {
         switch (protocol) {
         case DMF_AMQP:
-        	System.out.println("Creating DMF device "+id);
             return createDmfDevice(id, tenant, pollDelaySec, pollImmediatly);
         case DDI_HTTP:
             return createDdiDevice(id, tenant, pollDelaySec, baseEndpoint, gatewayToken);

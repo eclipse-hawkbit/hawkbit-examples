@@ -11,8 +11,8 @@ package org.eclipse.hawkbit.simulator;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.eclipse.hawkbit.google.gcp.GCP_FireStore;
-import org.eclipse.hawkbit.google.gcp.GCP_Subscriber;
+import org.eclipse.hawkbit.google.gcp.GcpFireStore;
+import org.eclipse.hawkbit.google.gcp.GcpSubscriber;
 import org.eclipse.hawkbit.simulator.amqp.AmqpProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,9 +51,9 @@ public class SimulatorStartup implements ApplicationListener<ApplicationReadyEve
 		
  
 		LOGGER.debug("Init Firestore ... ");
-		GCP_FireStore.init();
+		GcpFireStore.init();
 		LOGGER.debug("Init Subscriber ... ");
-		GCP_Subscriber.init();
+		GcpSubscriber.init();
 
 		//TODO: Nice to have: at startup read the Hawkbit artifacts and upload them to the bucket
 		simulationProperties.getAutostarts().forEach(autostart -> {

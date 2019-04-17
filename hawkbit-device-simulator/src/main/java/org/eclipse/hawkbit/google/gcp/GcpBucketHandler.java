@@ -7,6 +7,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,9 +41,9 @@ import com.google.gson.JsonObject;
 
 
 
-public class GCPBucketHandler {
+public class GcpBucketHandler {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(GCPBucketHandler.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(GcpBucketHandler.class);
 
 	private static Storage storage = null;
 	static Gson gson = new Gson();
@@ -53,7 +57,7 @@ public class GCPBucketHandler {
 		try {
 			if(storage == null)
 			{
-				ClassLoader classLoader = GCPBucketHandler.class.getClassLoader();
+				ClassLoader classLoader = GcpBucketHandler.class.getClassLoader();
 				String path = classLoader.getResource("keys.json").getPath();
 				GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(path))
 						.createScoped(Collections.singleton(IamScopes.CLOUD_PLATFORM));
@@ -72,19 +76,35 @@ public class GCPBucketHandler {
 	}
 
 	public static void uploadFirmwareToBucket(String fileUrl, String artifactName, String targetToken) throws FileNotFoundException, IOException, GeneralSecurityException {
-
 		Storage gcs = getStorage();
-		String data = HawkbitSoftwareModuleHandler.downloadFileData(fileUrl, targetToken);
+		String data = null;
+		String decodedURL = URLDecoder.decode(fileUrl, "UTF-8");
+		URL url = new URL(decodedURL);
+		URI uri;
+		try {
+			uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(), url.getQuery(), url.getRef());
+			String decodedURLAsString = uri.toASCIIString();
+			data = HawkBitSoftwareModuleHandler.downloadFileData(decodedURLAsString, targetToken);
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+
 		if(!checkIfExists(artifactName))
 		{
-			LOGGER.info("Uploading to GCS artifact: "+artifactName);
-			uploadSimple(gcs, GCP_OTA.BUCKET_NAME, artifactName, data);
+			if(data != null) {
+				LOGGER.info("Uploading to GCS artifact: "+artifactName);
+				uploadSimple(gcs, GcpOTA.BUCKET_NAME, artifactName, data);
+			} else {
+				LOGGER.error("Unable to download the artifact: "+artifactName+" from HawkBit Server");
+			}
+		} else {
+			LOGGER.debug("Artifact already exists in the bucket");
 		}
 	}
 
 	public static String getFirmwareInfoBucket(String artifactName)
 	{
-		StorageObject storageObject = GCPBucketHandler.getStorageObjectInfo(artifactName);
+		StorageObject storageObject = GcpBucketHandler.getStorageObjectInfo(artifactName);
 		if(storageObject != null)
 		{
 			JsonObject jsonObject = new JsonObject();
@@ -103,16 +123,16 @@ public class GCPBucketHandler {
 
 	public static Map<String,Map<String,String>> getFirmwareInfoBucket_Map(String artifactName)
 	{
-		StorageObject storageObject = GCPBucketHandler.getStorageObjectInfo(artifactName);
+		StorageObject storageObject = GcpBucketHandler.getStorageObjectInfo(artifactName);
 		if(storageObject != null)
 		{
 			Map<String,Map<String,String>> fw_update = new HashMap<>(1);
 			Map<String, String> mapContent = new HashMap<>(3);
 			LOGGER.debug(artifactName+" exists!");
-			mapContent.put(GCP_OTA.OBJECT_NAME, storageObject.getName());
-			mapContent.put(GCP_OTA.URL, storageObject.getMediaLink());
-			mapContent.put(GCP_OTA.MD5HASH, storageObject.getMd5Hash());
-			fw_update.put(GCP_OTA.FW_UPDATE, mapContent);
+			mapContent.put(GcpOTA.OBJECT_NAME, storageObject.getName());
+			mapContent.put(GcpOTA.URL, storageObject.getMediaLink());
+			mapContent.put(GcpOTA.MD5HASH, storageObject.getMd5Hash());
+			fw_update.put(GcpOTA.FW_UPDATE, mapContent);
 			return fw_update;
 		}
 		return null;
@@ -124,32 +144,32 @@ public class GCPBucketHandler {
 		Map<String,List<Map<String,String>>> fw_update_Map = 
 				new HashMap<String, List<Map<String,String>>>(1);
 
-		
+
 		List<String> fwNameList = modules.stream().flatMap(mod -> mod.getArtifacts().stream())
 				.map(art -> art.getFilename())
 				.collect(Collectors.toList());			
 
 		List<Map<String,String>> list_fw_update = new ArrayList<>(fwNameList.size());
-		
+
 		fwNameList.forEach(artifactName -> {
-			StorageObject storageObject = GCPBucketHandler.getStorageObjectInfo(artifactName);
+			StorageObject storageObject = GcpBucketHandler.getStorageObjectInfo(artifactName);
 			if(storageObject != null)
 			{
 				Map<String, String> mapContent = new HashMap<>(3);
 				LOGGER.debug(artifactName+" exists!");
-				mapContent.put(GCP_OTA.OBJECT_NAME, storageObject.getName());
-				mapContent.put(GCP_OTA.URL, storageObject.getMediaLink());
-				mapContent.put(GCP_OTA.MD5HASH, storageObject.getMd5Hash());
+				mapContent.put(GcpOTA.OBJECT_NAME, storageObject.getName());
+				mapContent.put(GcpOTA.URL, storageObject.getMediaLink());
+				mapContent.put(GcpOTA.MD5HASH, storageObject.getMd5Hash());
 				list_fw_update.add(mapContent);
 			}
 		});
-		fw_update_Map.put(GCP_OTA.FW_UPDATE, list_fw_update);
+		fw_update_Map.put(GcpOTA.FW_UPDATE, list_fw_update);
 		return fw_update_Map;
 	}
 
 	private static boolean checkIfExists(String artifactName) throws IOException {
 
-		Storage.Objects.List objectsList = storage.objects().list(GCP_OTA.BUCKET_NAME);
+		Storage.Objects.List objectsList = storage.objects().list(GcpOTA.BUCKET_NAME);
 		Objects objects;
 		do {
 			objects = objectsList.execute();
@@ -170,7 +190,7 @@ public class GCPBucketHandler {
 
 	public static StorageObject getStorageObjectInfo(String artifactName) {
 		try {
-			Storage.Objects.List objectsList = getStorage().objects().list(GCP_OTA.BUCKET_NAME);
+			Storage.Objects.List objectsList = getStorage().objects().list(GcpOTA.BUCKET_NAME);
 			Objects objects;
 			do {
 				objects = objectsList.execute();
@@ -194,7 +214,7 @@ public class GCPBucketHandler {
 
 
 	private static void listBuckets() throws FileNotFoundException, IOException, GeneralSecurityException {
-		ClassLoader classLoader = GCPBucketHandler.class.getClassLoader();
+		ClassLoader classLoader = GcpBucketHandler.class.getClassLoader();
 		String path = classLoader.getResource("keys.json").getPath();
 		GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(path))
 				.createScoped(Collections.singleton(IamScopes.CLOUD_PLATFORM));
@@ -208,7 +228,7 @@ public class GCPBucketHandler {
 				credential
 				).build();
 
-		Storage.Buckets.List bucketsList = storage.buckets().list(GCP_OTA.PROJECT_ID);
+		Storage.Buckets.List bucketsList = storage.buckets().list(GcpOTA.PROJECT_ID);
 		Buckets buckets;
 		do {
 			buckets = bucketsList.execute();
@@ -221,7 +241,7 @@ public class GCPBucketHandler {
 			bucketsList.setPageToken(buckets.getNextPageToken());
 		} while (buckets.getNextPageToken() != null);
 
-		Storage.Objects.List objectsList = storage.objects().list(GCP_OTA.BUCKET_NAME);
+		Storage.Objects.List objectsList = storage.objects().list(GcpOTA.BUCKET_NAME);
 		Objects objects;
 		do {
 			objects = objectsList.execute();

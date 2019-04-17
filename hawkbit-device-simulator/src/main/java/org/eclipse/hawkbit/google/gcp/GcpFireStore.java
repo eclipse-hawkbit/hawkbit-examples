@@ -20,14 +20,14 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
 
-public class GCP_FireStore {
+public class GcpFireStore {
 
 	private static Firestore db;
 
 	public static void init() {
 
 		try {
-			ClassLoader classLoader = GCPBucketHandler.class.getClassLoader();
+			ClassLoader classLoader = GcpBucketHandler.class.getClassLoader();
 			String path = classLoader.getResource("keys.json").getPath();
 
 			GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(path))
@@ -40,7 +40,7 @@ public class GCP_FireStore {
 					.getDefaultInstance()
 					.toBuilder()
 					.setCredentials(credentials)
-					.setProjectId(GCP_OTA.PROJECT_ID)
+					.setProjectId(GcpOTA.PROJECT_ID)
 					.build();
 			db = firestoreOptions.getService();
 
@@ -58,9 +58,9 @@ public class GCP_FireStore {
 	public static void addDocumentMapList(String deviceId, Map<String, List<Map<String, String>>> mapList) {
 		try {
 			DocumentReference docRef = db
-					.collection(GCP_OTA.FIRESTORE_DEVICES_COLLECTION)
+					.collection(GcpOTA.FIRESTORE_DEVICES_COLLECTION)
 					.document(deviceId)
-					.collection(GCP_OTA.FIRESTORE_CONFIG_COLLECTION)
+					.collection(GcpOTA.FIRESTORE_CONFIG_COLLECTION)
 					.document(deviceId);
 			ApiFuture<WriteResult> result = docRef.set(mapList, SetOptions.merge());
 			System.out.println("Update time : " + result.get().getUpdateTime());
@@ -74,9 +74,9 @@ public class GCP_FireStore {
 	public static void addDocument(String deviceId, Map<String, Map<String, String>> map) {
 		try {
 			DocumentReference docRef = db
-					.collection(GCP_OTA.FIRESTORE_DEVICES_COLLECTION)
+					.collection(GcpOTA.FIRESTORE_DEVICES_COLLECTION)
 					.document(deviceId)
-					.collection(GCP_OTA.FIRESTORE_CONFIG_COLLECTION)
+					.collection(GcpOTA.FIRESTORE_CONFIG_COLLECTION)
 					.document(deviceId);
 			ApiFuture<WriteResult> result = docRef.set(map);
 			System.out.println("Update time : " + result.get().getUpdateTime());

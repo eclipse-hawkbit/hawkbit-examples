@@ -23,7 +23,7 @@ import org.eclipse.hawkbit.dmf.amqp.api.MessageHeaderKey;
 import org.eclipse.hawkbit.dmf.amqp.api.MessageType;
 import org.eclipse.hawkbit.dmf.json.model.DmfActionStatus;
 import org.eclipse.hawkbit.dmf.json.model.DmfDownloadAndUpdateRequest;
-import org.eclipse.hawkbit.google.gcp.GCPBucketHandler;
+import org.eclipse.hawkbit.google.gcp.GcpBucketHandler;
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorRepository;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorUpdater;
@@ -268,8 +268,7 @@ public class DmfReceiverService extends MessageService {
 					artifact -> 
 					{
 						try {
-							System.out.println("Handling artifact : "+artifact.getFilename());
-							GCPBucketHandler.uploadFirmwareToBucket(artifact.getUrls().get("HTTP") , artifact.getFilename(), targetSecurityToken);
+							GcpBucketHandler.uploadFirmwareToBucket(artifact.getUrls().get("HTTP") , artifact.getFilename(), targetSecurityToken);
 						} catch (FileNotFoundException e) {
 							e.printStackTrace();
 						} catch (IOException e) {

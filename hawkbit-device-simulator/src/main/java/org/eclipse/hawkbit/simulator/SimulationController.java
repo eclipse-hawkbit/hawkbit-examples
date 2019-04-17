@@ -14,8 +14,8 @@ import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.util.List;
 
-import org.eclipse.hawkbit.google.gcp.GCP_IoTHandler;
-import org.eclipse.hawkbit.google.gcp.GCP_OTA;
+import org.eclipse.hawkbit.google.gcp.GcpIoTHandler;
+import org.eclipse.hawkbit.google.gcp.GcpOTA;
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
 import org.eclipse.hawkbit.simulator.amqp.AmqpProperties;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -105,7 +105,8 @@ public class SimulationController {
 
 
 		try {
-			List<Device> allDevices_gcp = GCP_IoTHandler.getAllDevices(GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION);
+			List<Device> allDevices_gcp = GcpIoTHandler.listDevices(GcpOTA.PROJECT_ID,
+					GcpOTA.CLOUD_REGION, GcpOTA.REGISTRY_NAME);
 			for(Device gcp_device : allDevices_gcp)
 			{
 				System.out.println("[GCP Device] "+gcp_device.getId());

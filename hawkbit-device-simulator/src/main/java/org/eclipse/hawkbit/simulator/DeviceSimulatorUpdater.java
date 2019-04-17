@@ -33,9 +33,9 @@ import org.apache.http.ssl.SSLContextBuilder;
 import org.eclipse.hawkbit.dmf.amqp.api.EventTopic;
 import org.eclipse.hawkbit.dmf.json.model.DmfArtifact;
 import org.eclipse.hawkbit.dmf.json.model.DmfSoftwareModule;
-import org.eclipse.hawkbit.google.gcp.GCP_IoTHandler;
-import org.eclipse.hawkbit.google.gcp.GCP_OTA;
-import org.eclipse.hawkbit.google.gcp.GCP_Subscriber;
+import org.eclipse.hawkbit.google.gcp.GcpIoTHandler;
+import org.eclipse.hawkbit.google.gcp.GcpOTA;
+import org.eclipse.hawkbit.google.gcp.GcpSubscriber;
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
 import org.eclipse.hawkbit.simulator.UpdateStatus.ResponseStatus;
 import org.slf4j.Logger;
@@ -102,13 +102,13 @@ public class DeviceSimulatorUpdater {
 
 		device.setTargetSecurityToken(targetSecurityToken);
 
-		if(GCP_OTA.FW_VIA_COMMAND) {
+		if(GcpOTA.FW_VIA_COMMAND) {
 			threadPool.schedule(new DeviceSimulatorUpdateThread(device, callback, modules, actionType, gatewayToken), 2_000,
 					TimeUnit.MILLISECONDS);
 		}
 		else //use the subscription on state
 		{
-			GCP_Subscriber.updateDevice(device, callback, modules, actionType);
+			GcpSubscriber.updateDevice(device, callback, modules, actionType);
 		}
 	}
 
@@ -141,7 +141,7 @@ public class DeviceSimulatorUpdater {
 		public void run() {
 
 
-			if(GCP_OTA.FW_VIA_COMMAND)
+			if(GcpOTA.FW_VIA_COMMAND)
 			{
 				device.setUpdateStatus(new UpdateStatus(ResponseStatus.RUNNING, "Simulation begins!"));
 				callback.sendFeedback(device);
@@ -169,8 +169,8 @@ public class DeviceSimulatorUpdater {
 		private void syncDownloadGCP(String deviceId, String data) 
 		{
 			System.out.println("==========> Attempting download to the device \n"+data);
-			GCP_IoTHandler.sendCommand(device.getId(), GCP_OTA.PROJECT_ID, GCP_OTA.CLOUD_REGION,
-					GCP_OTA.REGISTRY_NAME, "This is a payload from HawkBit:\n"+data);
+			GcpIoTHandler.sendCommand(device.getId(), GcpOTA.PROJECT_ID, GcpOTA.CLOUD_REGION,
+					GcpOTA.REGISTRY_NAME, "This is a payload from HawkBit:\n"+data);
 		}
 
 		private UpdateStatus simulateDownloads() {

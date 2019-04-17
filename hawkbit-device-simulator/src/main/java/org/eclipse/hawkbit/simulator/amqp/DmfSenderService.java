@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.eclipse.hawkbit.dmf.amqp.api.AmqpSettings;
 import org.eclipse.hawkbit.dmf.amqp.api.EventTopic;
@@ -22,6 +21,7 @@ import org.eclipse.hawkbit.dmf.json.model.DmfActionStatus;
 import org.eclipse.hawkbit.dmf.json.model.DmfActionUpdateStatus;
 import org.eclipse.hawkbit.dmf.json.model.DmfAttributeUpdate;
 import org.eclipse.hawkbit.dmf.json.model.DmfUpdateMode;
+import org.eclipse.hawkbit.google.gcp.GcpIoTHandler;
 import org.eclipse.hawkbit.simulator.SimulationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,10 +84,10 @@ public class DmfSenderService extends MessageService {
 	 *            installation due to maintenance window.
 	 */
 	public void finishUpdateProcess(final SimulatedUpdate update, final List<String> updateResultMessages) { 
-	System.out.println("[DmfSenderService] Update Process");
-	final Message updateResultMessage = createUpdateResultMessage(update, DmfActionStatus.FINISHED,
-			updateResultMessages);
-	sendMessage(spExchange, updateResultMessage);
+		System.out.println("[DmfSenderService] Update Process");
+		final Message updateResultMessage = createUpdateResultMessage(update, DmfActionStatus.FINISHED,
+				updateResultMessages);
+		sendMessage(spExchange, updateResultMessage);
 	}
 
 	/**
@@ -114,7 +114,7 @@ public class DmfSenderService extends MessageService {
 	 *            the amqp message which will be send if its not null
 	 */
 	public void sendMessage(final String address, final Message message) {
-		
+
 
 		if (message == null) {
 			System.out.println("[DmfSenderService] received a null message");
@@ -171,7 +171,7 @@ public class DmfSenderService extends MessageService {
 	 *            the ID of the action for the error message
 	 */
 	public void sendErrorMessage(final String tenant, final List<String> updateResultMessages, final Long actionId) {
-		
+
 
 		final Message message = createActionStatusMessage(tenant, DmfActionStatus.ERROR, updateResultMessages,
 				actionId);
@@ -243,11 +243,12 @@ public class DmfSenderService extends MessageService {
 	 */
 	public void updateAttributesOfThing(final String tenant, final String targetId) {
 		System.out.printf("Create update attributes message and send to update server for Thing \"{%s}\"", targetId);
-		sendMessage(spExchange, updateAttributes(tenant, targetId, DmfUpdateMode.MERGE,
-				simulationProperties.getAttributes().stream().collect(Collectors
-						.toMap(SimulationProperties.Attribute::getKey, SimulationProperties.Attribute::getValue))));
-
-		LOGGER.info("Create update attributes message and send to update server for Thing \"{%s}\"", targetId);
+		Map<String, String> metadata = GcpIoTHandler.getDeviceMetadata(targetId);
+		sendMessage(spExchange, 
+				updateAttributes(tenant, 
+						targetId, 
+						DmfUpdateMode.MERGE, 
+						metadata));
 	}
 
 	/**
@@ -301,7 +302,6 @@ public class DmfSenderService extends MessageService {
 	private Message updateAttributes(final String tenant, final String targetId, final DmfUpdateMode mode,
 			final Map<String, String> attributes) {
 		System.out.println("[DmfSenderService] AttributeUpdateMessage");
-
 		final MessageProperties messagePropertiesForSP = createAttributeUpdateMessage(tenant, targetId);
 		final DmfAttributeUpdate attributeUpdate = new DmfAttributeUpdate();
 		attributeUpdate.setMode(mode);
@@ -312,7 +312,7 @@ public class DmfSenderService extends MessageService {
 		return m;
 	}
 
-	
+
 
 	/**
 	 * Send a created message to SP.

@@ -41,6 +41,9 @@ Please read the following if you want to know more about how to install it [here
 
 - Add it to `src/main/resources`
 
+## Device Registry
+
+For now, this handler supports only one registry
 
 ## GCP Config
 
