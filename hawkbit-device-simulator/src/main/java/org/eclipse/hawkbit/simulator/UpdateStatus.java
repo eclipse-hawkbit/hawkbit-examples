@@ -44,12 +44,12 @@ public class UpdateStatus {
     }
 
     /**
-     * Constructor including status message.
+     * Constructor including status messages.
      * 
      * @param responseStatus
      *            of the update
-     * @param messages
-     *            of the update status
+     * @param statusMessages
+     *            list of status messages
      */
     public UpdateStatus(final ResponseStatus responseStatus, final List<String> statusMessages) {
         this(responseStatus);

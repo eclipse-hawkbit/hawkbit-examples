@@ -114,7 +114,7 @@ public class SimulationProperties {
         /**
          * Amount of simulated devices.
          */
-        private int amount = 0;
+        private int amount = 20;
 
         /**
          * Tenant name for the simulation.

@@ -11,7 +11,6 @@ package org.eclipse.hawkbit.simulator;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-import org.eclipse.hawkbit.google.gcp.GcpProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -53,7 +52,6 @@ public class DeviceSimulator {
     // Exception squid:S2095 - Spring boot standard behavior
     @SuppressWarnings({ "squid:S2095" })
     public static void main(final String[] args) {
-    	GcpProperties.parseCLI(args);
         SpringApplication.run(DeviceSimulator.class, args);
     }
 }
