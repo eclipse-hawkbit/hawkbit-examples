@@ -49,6 +49,14 @@ public class SimulationController {
     }
 
     /**
+     * Simple endpoint indicating that simulator is running.
+     */
+    @GetMapping("/")
+    ResponseEntity<String> status() {
+        return ResponseEntity.ok("Simulator running");
+    }
+
+    /**
      * The start resource to start a device creation.
      * 
      * @param name
