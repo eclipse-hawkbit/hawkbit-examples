@@ -9,9 +9,11 @@
 package org.eclipse.hawkbit.simulator.amqp;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -19,8 +21,10 @@ import java.util.UUID;
 import org.eclipse.hawkbit.dmf.amqp.api.EventTopic;
 import org.eclipse.hawkbit.dmf.amqp.api.MessageHeaderKey;
 import org.eclipse.hawkbit.dmf.amqp.api.MessageType;
+import org.eclipse.hawkbit.dmf.json.model.DmfActionRequest;
 import org.eclipse.hawkbit.dmf.json.model.DmfActionStatus;
 import org.eclipse.hawkbit.dmf.json.model.DmfDownloadAndUpdateRequest;
+import org.eclipse.hawkbit.dmf.json.model.DmfMultiActionRequest;
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorRepository;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorUpdater;
@@ -49,6 +53,8 @@ public class DmfReceiverService extends MessageService {
     private final DeviceSimulatorRepository repository;
 
     private final Set<String> openPings = Collections.synchronizedSet(new HashSet<>());
+
+    private final Map<String, List<Long>> openActionsOfTenant = Collections.synchronizedMap(new HashMap<>());
 
     /**
      * Constructor.
@@ -182,37 +188,108 @@ public class DmfReceiverService extends MessageService {
         case REQUEST_ATTRIBUTES_UPDATE:
             handleAttributeUpdateRequest(message, thingId);
             break;
+        case MULTI_ACTION:
+            handleMultiActionRequest(message, thingId);
+            break;
         default:
             LOGGER.info("No valid event property.");
             break;
         }
     }
 
-    private void handleAttributeUpdateRequest(final Message message, final String thingId) {
-        final MessageProperties messageProperties = message.getMessageProperties();
-        final Map<String, Object> headers = messageProperties.getHeaders();
-        final String tenant = (String) headers.get(MessageHeaderKey.TENANT);
+    private void handleMultiActionRequest(final Message message, final String thingId) {
 
+        final DmfMultiActionRequest multiActionRequest = convertMessage(message, DmfMultiActionRequest.class);
+        final String tenant = getTenant(message);
+
+        final DmfMultiActionRequest.DmfMultiActionElement actionElement =
+                multiActionRequest.getElements().get(0);
+
+        processAction(thingId, tenant, actionElement);
+    }
+
+    private void processAction(final String thingId, final String tenant,
+            final DmfMultiActionRequest.DmfMultiActionElement actionElement) {
+        final EventTopic eventTopic = actionElement.getTopic();
+        final DmfActionRequest action = actionElement.getAction();
+
+        if (actionAlreadyRunning(tenant, action.getActionId())) {
+            return;
+        }
+
+        storeNewActionForTenant(tenant, action.getActionId());
+
+        switch (eventTopic) {
+            case DOWNLOAD :
+            case DOWNLOAD_AND_INSTALL :
+                LOGGER.info("[{}] MULTI_ACTION {}", thingId, action.getActionId());
+                if (action instanceof DmfDownloadAndUpdateRequest) {
+                    final DmfDownloadAndUpdateRequest updateRequest = (DmfDownloadAndUpdateRequest) action;
+                    processUpdate(thingId, eventTopic, tenant, updateRequest);
+                }
+                break;
+            case CANCEL_DOWNLOAD :
+                processCancelDownloadAction(thingId, tenant, action.getActionId());
+                break;
+            default :
+                LOGGER.info("No valid event property in MULTI_ACTION.");
+                break;
+        }
+    }
+
+
+    private void storeNewActionForTenant(final String tenant, final Long actionId) {
+        final List<Long> openActions = openActionsOfTenant.getOrDefault(tenant, new ArrayList<>());
+        openActions.add(actionId);
+        openActionsOfTenant.put(tenant, openActions);
+    }
+    
+    private void closeActionForTenant(final String tenant, final Long actionId) {
+        final List<Long> openActions = openActionsOfTenant.get(tenant);
+        openActions.remove(actionId);
+        openActionsOfTenant.put(tenant, openActions);
+    }
+
+    private boolean actionAlreadyRunning(final String tenant, final Long actionId) {
+        final List<Long> openActions = openActionsOfTenant.getOrDefault(tenant, Collections.emptyList());
+        return openActions.stream().anyMatch(id -> actionId.longValue() == id);
+    }
+
+    private void handleAttributeUpdateRequest(final Message message, final String thingId) {
+        final String tenant = getTenant(message);
         spSenderService.updateAttributesOfThing(tenant, thingId);
     }
 
-    private void handleCancelDownloadAction(final Message message, final String thingId) {
+    private String getTenant(final Message message) {
         final MessageProperties messageProperties = message.getMessageProperties();
         final Map<String, Object> headers = messageProperties.getHeaders();
-        final String tenant = (String) headers.get(MessageHeaderKey.TENANT);
-        final Long actionId = convertMessage(message, Long.class);
-
-        final SimulatedUpdate update = new SimulatedUpdate(tenant, thingId, actionId);
-        spSenderService.finishUpdateProcess(update, Arrays.asList("Simulation canceled"));
+        return (String) headers.get(MessageHeaderKey.TENANT);
     }
 
+    private void handleCancelDownloadAction(final Message message, final String thingId) {
+        final String tenant = getTenant(message);
+        final Long actionId = convertMessage(message, Long.class);
+
+        processCancelDownloadAction(thingId, tenant, actionId);
+    }
+
+    private void processCancelDownloadAction(final String thingId, final String tenant, final Long actionId) {
+        final SimulatedUpdate update = new SimulatedUpdate(tenant, thingId, actionId);
+        spSenderService.finishUpdateProcess(update, Collections.singletonList("Simulation canceled"));
+    }
+
+
     private void handleUpdateProcess(final Message message, final String thingId, final EventTopic actionType) {
-        final MessageProperties messageProperties = message.getMessageProperties();
-        final Map<String, Object> headers = messageProperties.getHeaders();
-        final String tenant = (String) headers.get(MessageHeaderKey.TENANT);
+        final String tenant = getTenant(message);
 
         final DmfDownloadAndUpdateRequest downloadAndUpdateRequest = convertMessage(message,
                 DmfDownloadAndUpdateRequest.class);
+
+        processUpdate(thingId, actionType, tenant, downloadAndUpdateRequest);
+    }
+
+    private void processUpdate(final String thingId, final EventTopic actionType, final String tenant,
+            final DmfDownloadAndUpdateRequest downloadAndUpdateRequest) {
         final Long actionId = downloadAndUpdateRequest.getActionId();
         final String targetSecurityToken = downloadAndUpdateRequest.getTargetSecurityToken();
 
@@ -225,11 +302,13 @@ public class DmfReceiverService extends MessageService {
         case SUCCESSFUL:
             spSenderService.finishUpdateProcess(new SimulatedUpdate(device.getTenant(), device.getId(), actionId),
                     device.getUpdateStatus().getStatusMessages());
+            closeActionForTenant(device.getId(), actionId);
             break;
         case ERROR:
             spSenderService.finishUpdateProcessWithError(
                     new SimulatedUpdate(device.getTenant(), device.getId(), actionId),
                     device.getUpdateStatus().getStatusMessages());
+            closeActionForTenant(device.getId(), actionId);
             break;
         case DOWNLOADING:
             spSenderService.sendActionStatusMessage(device.getTenant(), DmfActionStatus.DOWNLOAD,
