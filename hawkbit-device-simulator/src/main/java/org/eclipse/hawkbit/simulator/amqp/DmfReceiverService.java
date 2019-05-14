@@ -202,10 +202,10 @@ public class DmfReceiverService extends MessageService {
         final DmfMultiActionRequest.DmfMultiActionElement actionElement =
                 multiActionRequest.getElements().get(0);
 
-        processAction(thingId, tenant, actionElement);
+        processMultiActionElement(thingId, tenant, actionElement);
     }
 
-    private void processAction(final String thingId, final String tenant,
+    private void processMultiActionElement(final String thingId, final String tenant,
             final DmfMultiActionRequest.DmfMultiActionElement actionElement) {
         final EventTopic eventTopic = actionElement.getTopic();
         final DmfActionRequest action = actionElement.getAction();
@@ -222,12 +222,15 @@ public class DmfReceiverService extends MessageService {
             case DOWNLOAD_AND_INSTALL :
                 if (action instanceof DmfDownloadAndUpdateRequest) {
                     processUpdate(thingId, eventTopic, tenant, (DmfDownloadAndUpdateRequest) action);
+                } else {
+                    LOGGER.warn("Unexpected message format of MULTI_ACTION element.");
                 }
                 break;
             case CANCEL_DOWNLOAD :
                 processCancelDownloadAction(thingId, tenant, action.getActionId());
                 break;
             default :
+                openActions.remove(actionId);
                 LOGGER.info("No valid event property in MULTI_ACTION.");
                 break;
         }
@@ -254,6 +257,7 @@ public class DmfReceiverService extends MessageService {
     private void processCancelDownloadAction(final String thingId, final String tenant, final Long actionId) {
         final SimulatedUpdate update = new SimulatedUpdate(tenant, thingId, actionId);
         spSenderService.finishUpdateProcess(update, Collections.singletonList("Simulation canceled"));
+        openActions.remove(actionId);
     }
 
 
@@ -295,7 +299,6 @@ public class DmfReceiverService extends MessageService {
         case DOWNLOADED:
             spSenderService.sendActionStatusMessage(device.getTenant(), DmfActionStatus.DOWNLOADED,
                     device.getUpdateStatus().getStatusMessages(), actionId);
-            // TODO: Close Download-Only actions
             break;
         case RUNNING:
             spSenderService.sendActionStatusMessage(device.getTenant(), DmfActionStatus.RUNNING,
