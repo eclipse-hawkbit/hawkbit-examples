@@ -9,11 +9,8 @@
 package org.eclipse.hawkbit.simulator.amqp;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -54,7 +51,7 @@ public class DmfReceiverService extends MessageService {
 
     private final Set<String> openPings = Collections.synchronizedSet(new HashSet<>());
 
-    private final Map<String, List<Long>> openActionsOfTenant = Collections.synchronizedMap(new HashMap<>());
+    private final Set<Long> openActions = Collections.synchronizedSet(new HashSet<>());
 
     /**
      * Constructor.
@@ -212,20 +209,19 @@ public class DmfReceiverService extends MessageService {
             final DmfMultiActionRequest.DmfMultiActionElement actionElement) {
         final EventTopic eventTopic = actionElement.getTopic();
         final DmfActionRequest action = actionElement.getAction();
+        final long actionId = action.getActionId();
 
-        if (actionAlreadyRunning(tenant, action.getActionId())) {
+        if(openActions.stream().anyMatch(id -> id == actionId)) {
             return;
         }
 
-        storeNewActionForTenant(tenant, action.getActionId());
+        openActions.add(actionId);
 
         switch (eventTopic) {
             case DOWNLOAD :
             case DOWNLOAD_AND_INSTALL :
-                LOGGER.info("[{}] MULTI_ACTION {}", thingId, action.getActionId());
                 if (action instanceof DmfDownloadAndUpdateRequest) {
-                    final DmfDownloadAndUpdateRequest updateRequest = (DmfDownloadAndUpdateRequest) action;
-                    processUpdate(thingId, eventTopic, tenant, updateRequest);
+                    processUpdate(thingId, eventTopic, tenant, (DmfDownloadAndUpdateRequest) action);
                 }
                 break;
             case CANCEL_DOWNLOAD :
@@ -235,24 +231,6 @@ public class DmfReceiverService extends MessageService {
                 LOGGER.info("No valid event property in MULTI_ACTION.");
                 break;
         }
-    }
-
-
-    private void storeNewActionForTenant(final String tenant, final Long actionId) {
-        final List<Long> openActions = openActionsOfTenant.getOrDefault(tenant, new ArrayList<>());
-        openActions.add(actionId);
-        openActionsOfTenant.put(tenant, openActions);
-    }
-    
-    private void closeActionForTenant(final String tenant, final Long actionId) {
-        final List<Long> openActions = openActionsOfTenant.get(tenant);
-        openActions.remove(actionId);
-        openActionsOfTenant.put(tenant, openActions);
-    }
-
-    private boolean actionAlreadyRunning(final String tenant, final Long actionId) {
-        final List<Long> openActions = openActionsOfTenant.getOrDefault(tenant, Collections.emptyList());
-        return openActions.stream().anyMatch(id -> actionId.longValue() == id);
     }
 
     private void handleAttributeUpdateRequest(final Message message, final String thingId) {
@@ -302,13 +280,13 @@ public class DmfReceiverService extends MessageService {
         case SUCCESSFUL:
             spSenderService.finishUpdateProcess(new SimulatedUpdate(device.getTenant(), device.getId(), actionId),
                     device.getUpdateStatus().getStatusMessages());
-            closeActionForTenant(device.getId(), actionId);
+            openActions.remove(actionId);
             break;
         case ERROR:
             spSenderService.finishUpdateProcessWithError(
                     new SimulatedUpdate(device.getTenant(), device.getId(), actionId),
                     device.getUpdateStatus().getStatusMessages());
-            closeActionForTenant(device.getId(), actionId);
+            openActions.remove(actionId);
             break;
         case DOWNLOADING:
             spSenderService.sendActionStatusMessage(device.getTenant(), DmfActionStatus.DOWNLOAD,
@@ -317,6 +295,7 @@ public class DmfReceiverService extends MessageService {
         case DOWNLOADED:
             spSenderService.sendActionStatusMessage(device.getTenant(), DmfActionStatus.DOWNLOADED,
                     device.getUpdateStatus().getStatusMessages(), actionId);
+            // TODO: Close Download-Only actions
             break;
         case RUNNING:
             spSenderService.sendActionStatusMessage(device.getTenant(), DmfActionStatus.RUNNING,
