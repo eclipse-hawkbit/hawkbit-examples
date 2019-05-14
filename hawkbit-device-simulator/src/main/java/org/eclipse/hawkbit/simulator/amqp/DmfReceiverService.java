@@ -238,7 +238,7 @@ public class DmfReceiverService extends MessageService {
         spSenderService.updateAttributesOfThing(tenant, thingId);
     }
 
-    private String getTenant(final Message message) {
+    private static String getTenant(final Message message) {
         final MessageProperties messageProperties = message.getMessageProperties();
         final Map<String, Object> headers = messageProperties.getHeaders();
         return (String) headers.get(MessageHeaderKey.TENANT);
