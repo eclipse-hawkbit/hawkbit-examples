@@ -211,7 +211,7 @@ public class DmfReceiverService extends MessageService {
         final DmfActionRequest action = actionElement.getAction();
         final long actionId = action.getActionId();
 
-        if(openActions.stream().anyMatch(id -> id == actionId)) {
+        if(openActions.contains(actionId)) {
             return;
         }
 
