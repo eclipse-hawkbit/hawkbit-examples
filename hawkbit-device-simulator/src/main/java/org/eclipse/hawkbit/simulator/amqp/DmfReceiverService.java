@@ -189,7 +189,7 @@ public class DmfReceiverService extends MessageService {
             handleMultiActionRequest(message, thingId);
             break;
         default:
-            LOGGER.info("No valid event property.");
+            LOGGER.info("No valid event property: {}", eventTopic);
             break;
         }
     }
@@ -222,8 +222,6 @@ public class DmfReceiverService extends MessageService {
             case DOWNLOAD_AND_INSTALL :
                 if (action instanceof DmfDownloadAndUpdateRequest) {
                     processUpdate(thingId, eventTopic, tenant, (DmfDownloadAndUpdateRequest) action);
-                } else {
-                    LOGGER.warn("Unexpected message format of MULTI_ACTION element.");
                 }
                 break;
             case CANCEL_DOWNLOAD :

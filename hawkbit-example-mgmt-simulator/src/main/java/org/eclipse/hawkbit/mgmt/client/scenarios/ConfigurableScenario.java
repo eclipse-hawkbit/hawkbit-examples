@@ -375,8 +375,14 @@ public class ConfigurableScenario {
 
         distributionSetTagResource.assignDistributionSets(tag.getTagId(),
                 sets.stream()
-                        .map(set -> new MgmtAssignedDistributionSetRequestBody().setDistributionSetId(set.getDsId()))
+                        .map(ConfigurableScenario::toMgmtDistributionSetRequest)
                         .collect(Collectors.toList()));
+    }
+
+    private static MgmtAssignedDistributionSetRequestBody toMgmtDistributionSetRequest(final MgmtDistributionSet set) {
+        final MgmtAssignedDistributionSetRequestBody request = new MgmtAssignedDistributionSetRequestBody();
+        request.setDistributionSetId(set.getDsId());
+        return request;
     }
 
     private void assignSoftwareModulesTo(final Scenario scenario, final List<MgmtDistributionSet> sets) {
