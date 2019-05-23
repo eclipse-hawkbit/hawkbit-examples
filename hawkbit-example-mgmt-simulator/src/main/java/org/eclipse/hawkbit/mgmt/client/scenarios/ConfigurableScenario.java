@@ -358,7 +358,8 @@ public class ConfigurableScenario {
                 .createDistributionSets(new DistributionSetBuilder().name(scenario.getDsName()).type("os_app")
                         .version("1.0.").buildAsList(calculateOffset(page),
                                 (page + 1) * PAGE_SIZE > scenario.getDistributionSets()
-                                        ? (scenario.getDistributionSets() - calculateOffset(page)) : PAGE_SIZE))
+                                        ? (scenario.getDistributionSets() - calculateOffset(page))
+                                        : PAGE_SIZE))
                 .getBody();
 
         assignSoftwareModulesTo(scenario, sets);
@@ -373,10 +374,11 @@ public class ConfigurableScenario {
                         new TagBuilder().name("Page " + page).description("DS tag for DS page" + page).build())
                 .getBody().get(0);
 
-        distributionSetTagResource.assignDistributionSets(tag.getTagId(),
-                sets.stream()
-                        .map(ConfigurableScenario::toMgmtDistributionSetRequest)
-                        .collect(Collectors.toList()));
+        distributionSetTagResource.assignDistributionSets(tag.getTagId(), sets.stream().map(set -> {
+            final MgmtAssignedDistributionSetRequestBody body = new MgmtAssignedDistributionSetRequestBody();
+            body.setDistributionSetId(set.getDsId());
+            return body;
+        }).collect(Collectors.toList()));
     }
 
     private static MgmtAssignedDistributionSetRequestBody toMgmtDistributionSetRequest(final MgmtDistributionSet set) {
@@ -440,12 +442,10 @@ public class ConfigurableScenario {
     }
 
     private List<MgmtTarget> createTargets(final Scenario scenario, final int page) {
-        return targetResource
-                .createTargets(
-                        new TargetBuilder().controllerId(scenario.getTargetName()).address(scenario.getTargetAddress())
-                                .buildAsList(calculateOffset(page),
-                                        (page + 1) * PAGE_SIZE > scenario.getTargets()
-                                                ? (scenario.getTargets() - calculateOffset(page)) : PAGE_SIZE))
+        return targetResource.createTargets(new TargetBuilder().controllerId(scenario.getTargetName())
+                .address(scenario.getTargetAddress()).buildAsList(calculateOffset(page),
+                        (page + 1) * PAGE_SIZE > scenario.getTargets() ? (scenario.getTargets() - calculateOffset(page))
+                                : PAGE_SIZE))
                 .getBody();
     }
 
