@@ -381,12 +381,6 @@ public class ConfigurableScenario {
         }).collect(Collectors.toList()));
     }
 
-    private static MgmtAssignedDistributionSetRequestBody toMgmtDistributionSetRequest(final MgmtDistributionSet set) {
-        final MgmtAssignedDistributionSetRequestBody request = new MgmtAssignedDistributionSetRequestBody();
-        request.setDistributionSetId(set.getDsId());
-        return request;
-    }
-
     private void assignSoftwareModulesTo(final Scenario scenario, final List<MgmtDistributionSet> sets) {
         final byte[] artifact = generateArtifact(scenario);
         sets.forEach(dsSet -> {

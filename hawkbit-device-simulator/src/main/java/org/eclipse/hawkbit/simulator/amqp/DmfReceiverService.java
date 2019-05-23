@@ -295,6 +295,8 @@ public class DmfReceiverService extends MessageService {
                     device.getUpdateStatus().getStatusMessages(), actionId);
             break;
         case DOWNLOADED:
+            // DOWNLOAD_ONLY actions could be closed here. However, since we do not check the action
+            // we leave it open.
             spSenderService.sendActionStatusMessage(device.getTenant(), DmfActionStatus.DOWNLOADED,
                     device.getUpdateStatus().getStatusMessages(), actionId);
             break;
