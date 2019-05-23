@@ -35,8 +35,9 @@ public class ClientConfigurationProperties {
     /**
      * Update server password.
      */
-    private String password = "admin"; // NOSONAR this password is only used for
-                                       // examples
+    @SuppressWarnings("squid:S2068")
+    // this password is only used for examples
+    private String password = "admin";
 
     private final List<Scenario> scenarios = new ArrayList<>();
 

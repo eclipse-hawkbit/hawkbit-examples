@@ -52,7 +52,7 @@ public class SimulationController {
      * Simple endpoint indicating that simulator is running.
      */
     @GetMapping("/")
-    ResponseEntity<String> status() {
+    public ResponseEntity<String> status() {
         return ResponseEntity.ok("Simulator running");
     }
 
@@ -79,7 +79,7 @@ public class SimulationController {
      * @throws MalformedURLException
      */
     @GetMapping("/start")
-    ResponseEntity<String> start(@RequestParam(value = "name", defaultValue = "simulated") final String name,
+    public ResponseEntity<String> start(@RequestParam(value = "name", defaultValue = "simulated") final String name,
             @RequestParam(value = "amount", defaultValue = "20") final int amount,
             @RequestParam(value = "tenant", required = false) final String tenant,
             @RequestParam(value = "api", defaultValue = "dmf") final String api,
@@ -139,7 +139,7 @@ public class SimulationController {
      * @return HTTP OK (200) if the update has been triggered.
      */
     @GetMapping("/attributes")
-    ResponseEntity<String> update(@RequestParam(value = "tenant", required = false) final String tenant,
+    public ResponseEntity<String> update(@RequestParam(value = "tenant", required = false) final String tenant,
             @RequestParam(value = "controllerid") final String controllerId,
             @RequestParam(value = "mode", defaultValue = "merge") final String mode,
             @RequestParam(value = "key") final String key,
@@ -168,7 +168,7 @@ public class SimulationController {
      *         if not found.
      */
     @GetMapping("/remove")
-    ResponseEntity<String> remove(@RequestParam(value = "tenant", required = false) final String tenant,
+    public ResponseEntity<String> remove(@RequestParam(value = "tenant", required = false) final String tenant,
             @RequestParam(value = "controllerid") final String controllerId) {
 
         final AbstractSimulatedDevice controller = repository
@@ -187,7 +187,7 @@ public class SimulationController {
      * @return A response string that the simulator has been reset
      */
     @GetMapping("/reset")
-    ResponseEntity<String> reset() {
+    public ResponseEntity<String> reset() {
 
         repository.clear();
 
@@ -201,7 +201,7 @@ public class SimulationController {
      * @return A response string that the action_finished event was sent
      */
     @GetMapping("/finishAction")
-    ResponseEntity<String> finishAction(@RequestParam(value = "actionId") final long actionId,
+    public ResponseEntity<String> finishAction(@RequestParam(value = "actionId") final long actionId,
             @RequestParam(value = "tenant", required = false) final String tenant,
             @RequestParam(value = "controllerId") final String controllerId) {
 
