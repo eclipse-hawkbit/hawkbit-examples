@@ -79,10 +79,8 @@ public class FeignMultipartEncoder implements Encoder {
             throw new EncodeException("Cannot encode request.", ex);
         }
         final HttpHeaders headers = dummyRequest.getHeaders();
-        if (headers != null) {
-            for (final Entry<String, List<String>> entry : headers.entrySet()) {
-                template.header(entry.getKey(), entry.getValue());
-            }
+        for (final Entry<String, List<String>> entry : headers.entrySet()) {
+            template.header(entry.getKey(), entry.getValue());
         }
         /*
          * we should use a template output stream... this will cause issues if
