@@ -117,19 +117,19 @@ public class DmfReceiverService extends MessageService {
             @Header(MessageHeaderKey.TENANT) final String tenant) {
         final MessageType messageType = MessageType.valueOf(type);
 
-        if (MessageType.EVENT.equals(messageType)) {
+        if (MessageType.EVENT == messageType) {
             checkContentTypeJson(message);
             handleEventMessage(message, thingId);
             return;
         }
 
-        if (MessageType.THING_DELETED.equals(messageType)) {
+        if (MessageType.THING_DELETED == messageType) {
             checkContentTypeJson(message);
             repository.remove(tenant, thingId);
             return;
         }
 
-        if (MessageType.PING_RESPONSE.equals(messageType)) {
+        if (MessageType.PING_RESPONSE == messageType) {
             final String correlationId = message.getMessageProperties().getCorrelationId();
             if (!openPings.remove(correlationId)) {
                 LOGGER.error("Unknown PING_RESPONSE received for correlationId: {}.", correlationId);
@@ -199,8 +199,7 @@ public class DmfReceiverService extends MessageService {
         final DmfMultiActionRequest multiActionRequest = convertMessage(message, DmfMultiActionRequest.class);
         final String tenant = getTenant(message);
 
-        final DmfMultiActionRequest.DmfMultiActionElement actionElement =
-                multiActionRequest.getElements().get(0);
+        final DmfMultiActionRequest.DmfMultiActionElement actionElement = multiActionRequest.getElements().get(0);
 
         processMultiActionElement(thingId, tenant, actionElement);
     }
@@ -211,26 +210,26 @@ public class DmfReceiverService extends MessageService {
         final DmfActionRequest action = actionElement.getAction();
         final long actionId = action.getActionId();
 
-        if(openActions.contains(actionId)) {
+        if (openActions.contains(actionId)) {
             return;
         }
 
         openActions.add(actionId);
 
         switch (eventTopic) {
-            case DOWNLOAD :
-            case DOWNLOAD_AND_INSTALL :
-                if (action instanceof DmfDownloadAndUpdateRequest) {
-                    processUpdate(thingId, eventTopic, tenant, (DmfDownloadAndUpdateRequest) action);
-                }
-                break;
-            case CANCEL_DOWNLOAD :
-                processCancelDownloadAction(thingId, tenant, action.getActionId());
-                break;
-            default :
-                openActions.remove(actionId);
-                LOGGER.info("No valid event property in MULTI_ACTION.");
-                break;
+        case DOWNLOAD:
+        case DOWNLOAD_AND_INSTALL:
+            if (action instanceof DmfDownloadAndUpdateRequest) {
+                processUpdate(thingId, eventTopic, tenant, (DmfDownloadAndUpdateRequest) action);
+            }
+            break;
+        case CANCEL_DOWNLOAD:
+            processCancelDownloadAction(thingId, tenant, action.getActionId());
+            break;
+        default:
+            openActions.remove(actionId);
+            LOGGER.info("No valid event property in MULTI_ACTION.");
+            break;
         }
     }
 

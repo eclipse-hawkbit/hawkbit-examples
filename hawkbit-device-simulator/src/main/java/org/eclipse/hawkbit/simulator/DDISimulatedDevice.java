@@ -97,7 +97,7 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
                 return;
             }
 
-            if (!HttpStatus.OK.equals(poll.getStatusCode())) {
+            if (HttpStatus.OK != poll.getStatusCode()) {
                 return;
             }
 
@@ -111,7 +111,7 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
                 final ResponseEntity<DdiDeploymentBase> action = controllerResource
                         .getControllerBasedeploymentAction(getTenant(), getId(), actionId, -1, null);
 
-                if (!HttpStatus.OK.equals(action.getStatusCode())) {
+                if (HttpStatus.OK != action.getStatusCode()) {
                     return;
                 }
 
@@ -183,7 +183,7 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
         deviceUpdater.startUpdate(getTenant(), getId(),
                 modules.stream().map(DDISimulatedDevice::convertChunk).collect(Collectors.toList()), null, gatewayToken,
                 sendFeedback(actionId),
-                HandlingType.SKIP.equals(updateType) ? EventTopic.DOWNLOAD : EventTopic.DOWNLOAD_AND_INSTALL);
+                HandlingType.SKIP == updateType ? EventTopic.DOWNLOAD : EventTopic.DOWNLOAD_AND_INSTALL);
     }
 
     private UpdaterCallback sendFeedback(final long actionId) {

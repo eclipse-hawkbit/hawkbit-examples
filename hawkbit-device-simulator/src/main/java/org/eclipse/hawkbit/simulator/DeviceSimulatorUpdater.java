@@ -182,7 +182,7 @@ public class DeviceSimulatorUpdater {
                 return false;
             }
 
-            return ResponseStatus.ERROR.equals(status.getResponseStatus());
+            return ResponseStatus.ERROR == status.getResponseStatus();
         }
 
         private static void handleArtifact(final String targetToken, final String gatewayToken,
