@@ -37,6 +37,7 @@ import org.eclipse.hawkbit.simulator.UpdateStatus.ResponseStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -62,6 +63,9 @@ public class DeviceSimulatorUpdater {
 
     @Autowired
     private DeviceSimulatorRepository repository;
+
+    @Value("${hawkbit.device.simulator.authTokenInDownloadUrl.enabled:true}")
+    private static boolean authTokenInDownloadUrlEnabled;
 
     /**
      * Starting an simulated update process of an simulated device.
@@ -160,8 +164,13 @@ public class DeviceSimulatorUpdater {
 
             LOGGER.info("Simulate downloads for {}", device.getId());
 
-            modules.forEach(module -> module.getArtifacts().forEach(
-                    artifact -> handleArtifact(device.getTargetSecurityToken(), gatewayToken, status, artifact)));
+            modules.forEach(module -> module.getArtifacts().forEach(artifact -> {
+                if (authTokenInDownloadUrlEnabled) {
+                    handleArtifact(device.getTargetSecurityToken(), gatewayToken, status, artifact);
+                } else {
+                    handleArtifact(null, null, status, artifact);
+                }
+            }));
 
             final UpdateStatus result = new UpdateStatus(ResponseStatus.DOWNLOADED);
             result.getStatusMessages().add("Simulator: Download complete!");
