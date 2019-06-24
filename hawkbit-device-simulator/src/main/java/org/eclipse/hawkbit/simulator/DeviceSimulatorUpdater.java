@@ -65,7 +65,7 @@ public class DeviceSimulatorUpdater {
     private DeviceSimulatorRepository repository;
 
     @Value("${hawkbit.device.simulator.authTokenInDownloadUrl.enabled:true}")
-    private static boolean authTokenInDownloadUrlEnabled;
+    private boolean authTokenInDownloadUrlEnabled;
 
     /**
      * Starting an simulated update process of an simulated device.
@@ -102,8 +102,8 @@ public class DeviceSimulatorUpdater {
 
         device.setTargetSecurityToken(targetSecurityToken);
 
-        threadPool.schedule(new DeviceSimulatorUpdateThread(device, callback, modules, actionType, gatewayToken), 2_000,
-                TimeUnit.MILLISECONDS);
+        threadPool.schedule(new DeviceSimulatorUpdateThread(device, callback, modules, actionType, gatewayToken,
+                authTokenInDownloadUrlEnabled), 2_000, TimeUnit.MILLISECONDS);
     }
 
     private static final class DeviceSimulatorUpdateThread implements Runnable {
@@ -120,14 +120,17 @@ public class DeviceSimulatorUpdater {
         private final UpdaterCallback callback;
         private final List<DmfSoftwareModule> modules;
         private final String gatewayToken;
+        private final boolean authTokenInDownloadUrlEnabled;
 
         private DeviceSimulatorUpdateThread(final AbstractSimulatedDevice device, final UpdaterCallback callback,
-                final List<DmfSoftwareModule> modules, final EventTopic actionType, final String gatewayToken) {
+                final List<DmfSoftwareModule> modules, final EventTopic actionType, final String gatewayToken,
+                final boolean authTokenInDownloadUrlEnabled) {
             this.device = device;
             this.callback = callback;
             this.modules = modules;
             this.actionType = actionType;
             this.gatewayToken = gatewayToken;
+            this.authTokenInDownloadUrlEnabled = authTokenInDownloadUrlEnabled;
         }
 
         @Override
