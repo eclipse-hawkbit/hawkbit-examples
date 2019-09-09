@@ -55,7 +55,7 @@ public class WebSecurityConfiguration {
 
         private AuthProperties authProperties;
 
-        public AuthenticatedWebSecurityConfig(AuthProperties authProperties){
+        protected AuthenticatedWebSecurityConfig(AuthProperties authProperties){
             this.authProperties = authProperties;
         }
 
@@ -80,7 +80,7 @@ public class WebSecurityConfiguration {
         }
 
         @Bean
-        public PasswordEncoder passwordEncoder() {
+        protected PasswordEncoder passwordEncoder() {
             return new BCryptPasswordEncoder();
         }
     }

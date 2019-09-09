@@ -19,7 +19,7 @@ import org.springframework.test.context.TestPropertySource;
 
 
 @TestPropertySource(properties = { AuthProperties.CONFIGURATION_PREFIX + ".enabled = " + "true" })
-class AuthenticatedWebSecurityTest extends WebSecurityTest{
+class AuthenticatedWebSecurityTest extends DdiWebSecurityTest {
 
     @Autowired
     private AuthProperties authProperties;

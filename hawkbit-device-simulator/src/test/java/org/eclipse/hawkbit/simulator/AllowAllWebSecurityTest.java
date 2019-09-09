@@ -17,7 +17,7 @@ import org.springframework.test.context.TestPropertySource;
 
 
 @TestPropertySource(properties = { AuthProperties.CONFIGURATION_PREFIX + ".enabled = " + "false" })
-class AllowAllWebSecurityTest extends WebSecurityTest{
+class AllowAllWebSecurityTest extends DdiWebSecurityTest {
 
     @Test
     void shouldGetOkForBaseUrl() throws Exception {

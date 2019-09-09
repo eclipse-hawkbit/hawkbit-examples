@@ -8,20 +8,23 @@
  */
 package org.eclipse.hawkbit.simulator;
 
+import org.eclipse.hawkbit.simulator.amqp.AmqpProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 
 @AutoConfigureMockMvc
 @SpringBootTest
-public abstract class WebSecurityTest {
+@TestPropertySource(properties = { AmqpProperties.CONFIGURATION_PREFIX + ".enabled = " + "false" })
+public abstract class DdiWebSecurityTest {
 
     @Autowired
     protected MockMvc mockMvc;
 
     static final String SIMULATOR_BASE_URL = "/";
-    static final String SIMULATOR_BASE_URL_START = SIMULATOR_BASE_URL + "start";
+    static final String SIMULATOR_BASE_URL_START = SIMULATOR_BASE_URL + "start?amount=5&api=ddi";
 
 }
