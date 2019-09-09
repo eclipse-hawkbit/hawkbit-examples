@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019 Bosch Software Innovations GmbH and others.
- * <p>
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,37 +12,44 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 
+import io.qameta.allure.Description;
 import org.eclipse.hawkbit.simulator.http.AuthProperties;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
-
-@TestPropertySource(properties = { AuthProperties.CONFIGURATION_PREFIX + ".enabled = " + "true" })
-class AuthenticatedWebSecurityTest extends DdiWebSecurityTest {
+@TestPropertySource(properties = {
+        AuthProperties.CONFIGURATION_PREFIX + ".enabled = " + "true",
+        AuthProperties.CONFIGURATION_PREFIX + ".user = " + "testuser",
+        AuthProperties.CONFIGURATION_PREFIX + ".password = " + "testpassword"})
+public class AuthenticatedWebSecurityTest extends DdiWebSecurityTest {
 
     @Autowired
     private AuthProperties authProperties;
 
     @Test
-    void shouldGetUnauthorizedForBaseUrl() throws Exception {
+    @Description("Verifies status when accessing base url - results in 401")
+    public void shouldGetUnauthorizedForBaseUrl() throws Exception {
         mockMvc.perform(get(SIMULATOR_BASE_URL)).andExpect(status().isUnauthorized());
     }
 
     @Test
-    void shouldGetUnauthorizedForStart() throws Exception {
+    @Description("Verifies status when creating simulated devices - results in 401")
+    public void shouldGetUnauthorizedForStart() throws Exception {
         mockMvc.perform(get(SIMULATOR_BASE_URL_START)).andExpect(status().isUnauthorized());
     }
 
     @Test
-    void shouldGetOkForAuthenticatedUser() throws Exception {
+    @Description("Verifies status when creating simulated devices as authorized user - results in 200")
+    public void shouldGetOkForAuthenticatedUser() throws Exception {
         mockMvc.perform(get(SIMULATOR_BASE_URL_START)
                 .with(httpBasic(authProperties.getUser(), authProperties.getPassword())))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void shouldGetUnauthorizedForNotExistingUser() throws Exception {
+    @Description("Verifies status when creating simulated devices with wrong credentials - results in 401")
+    public void shouldGetUnauthorizedForNotExistingUser() throws Exception {
         mockMvc.perform(get(SIMULATOR_BASE_URL_START)
                 .with(httpBasic(authProperties.getUser() + "random", authProperties.getPassword())))
                 .andExpect(status().isUnauthorized());
