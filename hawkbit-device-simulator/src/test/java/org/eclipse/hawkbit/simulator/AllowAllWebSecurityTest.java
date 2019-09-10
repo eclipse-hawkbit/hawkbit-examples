@@ -12,11 +12,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import io.qameta.allure.Description;
-import org.eclipse.hawkbit.simulator.http.AuthProperties;
+import org.eclipse.hawkbit.simulator.http.BasicAuthProperties;
 import org.junit.Test;
 import org.springframework.test.context.TestPropertySource;
 
-@TestPropertySource(properties = {AuthProperties.CONFIGURATION_PREFIX + ".enabled = " + "false"})
+@TestPropertySource(properties = {BasicAuthProperties.CONFIGURATION_PREFIX + ".enabled = " + "false"})
 public class AllowAllWebSecurityTest extends DdiWebSecurityTest {
 
     @Test

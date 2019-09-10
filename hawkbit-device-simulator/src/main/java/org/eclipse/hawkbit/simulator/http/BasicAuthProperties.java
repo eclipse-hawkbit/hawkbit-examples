@@ -14,8 +14,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Basic authentication properties.
  *
  */
-@ConfigurationProperties(prefix = "hawkbit.device.simulator.auth")
-public class AuthProperties {
+@ConfigurationProperties(prefix = BasicAuthProperties.CONFIGURATION_PREFIX)
+public class BasicAuthProperties {
 
     /**
      * The prefix for this configuration.

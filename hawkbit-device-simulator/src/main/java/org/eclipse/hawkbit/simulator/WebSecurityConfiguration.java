@@ -8,7 +8,7 @@
  */
 package org.eclipse.hawkbit.simulator;
 
-import org.eclipse.hawkbit.simulator.http.AuthProperties;
+import org.eclipse.hawkbit.simulator.http.BasicAuthProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -38,7 +38,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
      */
     @Override
     protected void configure(final HttpSecurity httpSec) throws Exception {
-        httpSec.csrf().disable().authorizeRequests().antMatchers("/**").permitAll().anyRequest().authenticated();
+        httpSec.csrf().disable().authorizeRequests().antMatchers("/**").permitAll();
     }
 
 
@@ -47,21 +47,21 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
      */
     @Configuration
     @Order(Ordered.HIGHEST_PRECEDENCE)
-    @EnableConfigurationProperties({AuthProperties.class})
-    @ConditionalOnProperty(prefix = AuthProperties.CONFIGURATION_PREFIX, name = ENABLED, havingValue = "true")
+    @EnableConfigurationProperties({BasicAuthProperties.class})
+    @ConditionalOnProperty(prefix = BasicAuthProperties.CONFIGURATION_PREFIX, name = ENABLED, havingValue = "true")
     public static class AuthenticatedWebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-        private AuthProperties authProperties;
+        private BasicAuthProperties basicAuthProperties;
 
-        protected AuthenticatedWebSecurityConfig(AuthProperties authProperties) {
-            this.authProperties = authProperties;
+        protected AuthenticatedWebSecurityConfig(BasicAuthProperties basicAuthProperties) {
+            this.basicAuthProperties = basicAuthProperties;
         }
 
         @Override
         protected void configure(final AuthenticationManagerBuilder auth) throws Exception {
             auth.inMemoryAuthentication()
-                    .withUser(authProperties.getUser())
-                    .password(passwordEncoder().encode(authProperties.getPassword()))
+                    .withUser(basicAuthProperties.getUser())
+                    .password(passwordEncoder().encode(basicAuthProperties.getPassword()))
                     .roles("ADMIN");
         }
 
