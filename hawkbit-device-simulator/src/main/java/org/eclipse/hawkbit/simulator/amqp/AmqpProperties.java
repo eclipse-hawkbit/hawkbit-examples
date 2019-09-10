@@ -26,6 +26,11 @@ public class AmqpProperties {
     public static final String CONFIGURATION_PREFIX = "hawkbit.device.simulator.amqp";
 
     /**
+     * The property string of ~.amqp.enabled
+     */
+    public static final String CONFIGURATION_ENABLED_PROPERTY = CONFIGURATION_PREFIX + ".enabled";
+
+    /**
      * Indicates if the AMQP interface is enabled for the device simulator.
      */
     private boolean enabled;
