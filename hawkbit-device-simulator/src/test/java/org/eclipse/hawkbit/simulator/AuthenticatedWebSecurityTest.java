@@ -18,7 +18,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
-@TestPropertySource(properties = {BasicAuthProperties.CONFIGURATION_PREFIX + ".enabled = " + "true"})
+@TestPropertySource(properties = {BasicAuthProperties.CONFIGURATION_ENABLED_PROPERTY + " = true"})
 public class AuthenticatedWebSecurityTest extends DdiWebSecurityTest {
 
     @Autowired

@@ -16,7 +16,7 @@ import org.eclipse.hawkbit.simulator.http.BasicAuthProperties;
 import org.junit.Test;
 import org.springframework.test.context.TestPropertySource;
 
-@TestPropertySource(properties = {BasicAuthProperties.CONFIGURATION_PREFIX + ".enabled = " + "false"})
+@TestPropertySource(properties = {BasicAuthProperties.CONFIGURATION_ENABLED_PROPERTY + " = false"})
 public class AllowAllWebSecurityTest extends DdiWebSecurityTest {
 
     @Test

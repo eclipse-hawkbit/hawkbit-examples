@@ -30,8 +30,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @EnableWebSecurity
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-    private static final String ENABLED = "enabled";
-
     /**
      * Spring security configuration to grant access for all incoming requests.
      * Default configuration, if ~.auth.enabled is false or not set
@@ -41,14 +39,13 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
         httpSec.csrf().disable().authorizeRequests().antMatchers("/**").permitAll();
     }
 
-
     /**
      * Spring security configuration to grant access for the configured in-memory user.
      */
     @Configuration
     @Order(Ordered.HIGHEST_PRECEDENCE)
     @EnableConfigurationProperties({BasicAuthProperties.class})
-    @ConditionalOnProperty(prefix = BasicAuthProperties.CONFIGURATION_PREFIX, name = ENABLED, havingValue = "true")
+    @ConditionalOnProperty(name = BasicAuthProperties.CONFIGURATION_ENABLED_PROPERTY, havingValue = "true")
     public static class AuthenticatedWebSecurityConfig extends WebSecurityConfigurerAdapter {
 
         private BasicAuthProperties basicAuthProperties;

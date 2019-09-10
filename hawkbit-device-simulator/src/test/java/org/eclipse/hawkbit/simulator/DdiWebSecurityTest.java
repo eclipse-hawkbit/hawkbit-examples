@@ -24,7 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
 @SpringBootTest
-@TestPropertySource(properties = {AmqpProperties.CONFIGURATION_PREFIX + ".enabled = " + "false"})
+@TestPropertySource(properties = {AmqpProperties.CONFIGURATION_PREFIX + ".enabled = false"})
 public abstract class DdiWebSecurityTest {
 
     @Autowired

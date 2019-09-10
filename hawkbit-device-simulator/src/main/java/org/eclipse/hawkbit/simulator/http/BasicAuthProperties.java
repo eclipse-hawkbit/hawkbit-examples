@@ -23,6 +23,11 @@ public class BasicAuthProperties {
     public static final String CONFIGURATION_PREFIX = "hawkbit.device.simulator.auth";
 
     /**
+     * The property string of ~.auth.enabled
+     */
+    public static final String CONFIGURATION_ENABLED_PROPERTY = CONFIGURATION_PREFIX + ".enabled";
+
+    /**
      * Indicates if basic auth is enabled for the device simulator.
      */
     private boolean enabled;
