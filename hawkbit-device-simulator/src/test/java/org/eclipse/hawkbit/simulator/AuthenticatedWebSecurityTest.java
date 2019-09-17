@@ -29,9 +29,9 @@ public class AuthenticatedWebSecurityTest extends DdiWebSecurityTest {
     private BasicAuthProperties basicAuthProperties;
 
     @Test
-    @Description("Verifies status when accessing base url - results in 401")
-    public void shouldGetUnauthorizedForBaseUrl() throws Exception {
-        mockMvc.perform(get(SIMULATOR_BASE_URL)).andExpect(status().isUnauthorized());
+    @Description("Verifies status when accessing base url - results in 200")
+    public void shouldGetOkForBaseUrl() throws Exception {
+        mockMvc.perform(get(SIMULATOR_BASE_URL)).andExpect(status().isOk());
     }
 
     @Test
