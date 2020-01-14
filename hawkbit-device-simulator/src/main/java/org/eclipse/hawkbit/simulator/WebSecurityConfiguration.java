@@ -28,6 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  * Depending on the ~.auth.enabled property either basic authentication is enabled or access is granted for all requests.
  */
 @EnableWebSecurity
+@Order(SecurityProperties.BASIC_AUTH_ORDER + 1)
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     /**
