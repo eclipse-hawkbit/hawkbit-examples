@@ -10,10 +10,10 @@ package org.eclipse.hawkbit.simulator;
 
 import org.eclipse.hawkbit.simulator.http.BasicAuthProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -28,6 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  * Depending on the ~.auth.enabled property either basic authentication is enabled or access is granted for all requests.
  */
 @EnableWebSecurity
+@Order(SecurityProperties.BASIC_AUTH_ORDER + 1)
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     /**
@@ -43,7 +44,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
      * Spring security configuration to grant access for the configured in-memory user.
      */
     @Configuration
-    @Order(Ordered.HIGHEST_PRECEDENCE)
+    @Order(SecurityProperties.BASIC_AUTH_ORDER)
     @EnableConfigurationProperties({BasicAuthProperties.class})
     @ConditionalOnProperty(name = BasicAuthProperties.CONFIGURATION_ENABLED_PROPERTY, havingValue = "true")
     public static class AuthenticatedWebSecurityConfig extends WebSecurityConfigurerAdapter {
