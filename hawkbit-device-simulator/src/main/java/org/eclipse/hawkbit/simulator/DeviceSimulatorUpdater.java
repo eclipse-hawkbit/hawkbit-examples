@@ -37,7 +37,6 @@ import org.eclipse.hawkbit.simulator.UpdateStatus.ResponseStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -64,8 +63,8 @@ public class DeviceSimulatorUpdater {
     @Autowired
     private DeviceSimulatorRepository repository;
 
-    @Value("${hawkbit.device.simulator.authTokenInDownloadUrl.enabled:true}")
-    private boolean authTokenInDownloadUrlEnabled;
+    @Autowired
+    private SimulationProperties simulationProperties;
 
     /**
      * Starting an simulated update process of an simulated device.
@@ -103,7 +102,7 @@ public class DeviceSimulatorUpdater {
         device.setTargetSecurityToken(targetSecurityToken);
 
         threadPool.schedule(new DeviceSimulatorUpdateThread(device, callback, modules, actionType, gatewayToken,
-                authTokenInDownloadUrlEnabled), 2_000, TimeUnit.MILLISECONDS);
+                simulationProperties.isAddAuthTokenInDownloadUrl()), 2_000, TimeUnit.MILLISECONDS);
     }
 
     private static final class DeviceSimulatorUpdateThread implements Runnable {

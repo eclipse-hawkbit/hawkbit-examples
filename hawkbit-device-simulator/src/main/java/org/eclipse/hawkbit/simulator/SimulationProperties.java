@@ -37,6 +37,13 @@ public class SimulationProperties {
     private String defaultTenant = "DEFAULT";
 
     /**
+     * Set to <code>true</code> if the the target or gateway auth token should
+     * be added to the download url as an authorization header. Activated by
+     * default but may be worth to disable if not needed.
+     */
+    private boolean addAuthTokenInDownloadUrl = true;
+
+    /**
      * List of tenants where the simulator should auto start simulations after
      * startup.
      */
@@ -50,6 +57,14 @@ public class SimulationProperties {
 
     public void setDefaultTenant(final String defaultTenant) {
         this.defaultTenant = defaultTenant;
+    }
+
+    public boolean isAddAuthTokenInDownloadUrl() {
+        return addAuthTokenInDownloadUrl;
+    }
+
+    public void setAddAuthTokenInDownloadUrl(final boolean addAuthTokenInDownloadUrl) {
+        this.addAuthTokenInDownloadUrl = addAuthTokenInDownloadUrl;
     }
 
     public List<Attribute> getAttributes() {
