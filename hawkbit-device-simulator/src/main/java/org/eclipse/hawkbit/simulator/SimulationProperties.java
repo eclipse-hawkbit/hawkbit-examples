@@ -37,11 +37,11 @@ public class SimulationProperties {
     private String defaultTenant = "DEFAULT";
 
     /**
-     * Set to <code>true</code> if the the target or gateway auth token should
-     * be added to the download url as an authorization header. Activated by
+     * Set to <code>true</code> if the target or gateway auth token should be
+     * added to the download request as an authorization header. Activated by
      * default but may be worth to disable if not needed.
      */
-    private boolean addAuthTokenInDownloadUrl = true;
+    private boolean downloadAuthenticationEnabled = true;
 
     /**
      * List of tenants where the simulator should auto start simulations after
@@ -59,12 +59,12 @@ public class SimulationProperties {
         this.defaultTenant = defaultTenant;
     }
 
-    public boolean isAddAuthTokenInDownloadUrl() {
-        return addAuthTokenInDownloadUrl;
+    public boolean isDownloadAuthenticationEnabled() {
+        return downloadAuthenticationEnabled;
     }
 
-    public void setAddAuthTokenInDownloadUrl(final boolean addAuthTokenInDownloadUrl) {
-        this.addAuthTokenInDownloadUrl = addAuthTokenInDownloadUrl;
+    public void setDownloadAuthenticationEnabled(final boolean downloadAuthenticationEnabled) {
+        this.downloadAuthenticationEnabled = downloadAuthenticationEnabled;
     }
 
     public List<Attribute> getAttributes() {

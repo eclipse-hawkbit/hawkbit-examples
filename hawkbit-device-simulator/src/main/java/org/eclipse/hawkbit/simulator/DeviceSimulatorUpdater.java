@@ -102,7 +102,7 @@ public class DeviceSimulatorUpdater {
         device.setTargetSecurityToken(targetSecurityToken);
 
         threadPool.schedule(new DeviceSimulatorUpdateThread(device, callback, modules, actionType, gatewayToken,
-                simulationProperties.isAddAuthTokenInDownloadUrl()), 2_000, TimeUnit.MILLISECONDS);
+                simulationProperties.isDownloadAuthenticationEnabled()), 2_000, TimeUnit.MILLISECONDS);
     }
 
     private static final class DeviceSimulatorUpdateThread implements Runnable {
@@ -119,17 +119,17 @@ public class DeviceSimulatorUpdater {
         private final UpdaterCallback callback;
         private final List<DmfSoftwareModule> modules;
         private final String gatewayToken;
-        private final boolean authTokenInDownloadUrlEnabled;
+        private final boolean downloadAuthenticationEnabled;
 
         private DeviceSimulatorUpdateThread(final AbstractSimulatedDevice device, final UpdaterCallback callback,
                 final List<DmfSoftwareModule> modules, final EventTopic actionType, final String gatewayToken,
-                final boolean authTokenInDownloadUrlEnabled) {
+                final boolean downloadAuthenticationEnabled) {
             this.device = device;
             this.callback = callback;
             this.modules = modules;
             this.actionType = actionType;
             this.gatewayToken = gatewayToken;
-            this.authTokenInDownloadUrlEnabled = authTokenInDownloadUrlEnabled;
+            this.downloadAuthenticationEnabled = downloadAuthenticationEnabled;
         }
 
         @Override
@@ -167,7 +167,7 @@ public class DeviceSimulatorUpdater {
             LOGGER.info("Simulate downloads for {}", device.getId());
 
             modules.forEach(module -> module.getArtifacts().forEach(artifact -> {
-                if (authTokenInDownloadUrlEnabled) {
+                if (downloadAuthenticationEnabled) {
                     handleArtifact(device.getTargetSecurityToken(), gatewayToken, status, artifact);
                 } else {
                     handleArtifact(null, null, status, artifact);
