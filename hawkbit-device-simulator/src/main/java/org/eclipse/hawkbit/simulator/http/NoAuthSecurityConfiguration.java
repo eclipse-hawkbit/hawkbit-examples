@@ -18,7 +18,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
  * Depending on the ~.auth.enabled property access is granted for all requests.
  */
 @EnableWebSecurity
-@ConditionalOnProperty(name = BasicAuthProperties.CONFIGURATION_ENABLED_PROPERTY, havingValue = "false")
+@ConditionalOnProperty(name = BasicAuthProperties.CONFIGURATION_ENABLED_PROPERTY, havingValue = "false", matchIfMissing = true)
 public class NoAuthSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     /**
