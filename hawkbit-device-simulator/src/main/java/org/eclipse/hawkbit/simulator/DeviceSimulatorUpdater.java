@@ -63,6 +63,9 @@ public class DeviceSimulatorUpdater {
     @Autowired
     private DeviceSimulatorRepository repository;
 
+    @Autowired
+    private SimulationProperties simulationProperties;
+
     /**
      * Starting an simulated update process of an simulated device.
      *
@@ -98,8 +101,8 @@ public class DeviceSimulatorUpdater {
 
         device.setTargetSecurityToken(targetSecurityToken);
 
-        threadPool.schedule(new DeviceSimulatorUpdateThread(device, callback, modules, actionType, gatewayToken), 2_000,
-                TimeUnit.MILLISECONDS);
+        threadPool.schedule(new DeviceSimulatorUpdateThread(device, callback, modules, actionType, gatewayToken,
+                simulationProperties.isDownloadAuthenticationEnabled()), 2_000, TimeUnit.MILLISECONDS);
     }
 
     private static final class DeviceSimulatorUpdateThread implements Runnable {
@@ -116,14 +119,17 @@ public class DeviceSimulatorUpdater {
         private final UpdaterCallback callback;
         private final List<DmfSoftwareModule> modules;
         private final String gatewayToken;
+        private final boolean downloadAuthenticationEnabled;
 
         private DeviceSimulatorUpdateThread(final AbstractSimulatedDevice device, final UpdaterCallback callback,
-                final List<DmfSoftwareModule> modules, final EventTopic actionType, final String gatewayToken) {
+                final List<DmfSoftwareModule> modules, final EventTopic actionType, final String gatewayToken,
+                final boolean downloadAuthenticationEnabled) {
             this.device = device;
             this.callback = callback;
             this.modules = modules;
             this.actionType = actionType;
             this.gatewayToken = gatewayToken;
+            this.downloadAuthenticationEnabled = downloadAuthenticationEnabled;
         }
 
         @Override
@@ -160,8 +166,13 @@ public class DeviceSimulatorUpdater {
 
             LOGGER.info("Simulate downloads for {}", device.getId());
 
-            modules.forEach(module -> module.getArtifacts().forEach(
-                    artifact -> handleArtifact(device.getTargetSecurityToken(), gatewayToken, status, artifact)));
+            modules.forEach(module -> module.getArtifacts().forEach(artifact -> {
+                if (downloadAuthenticationEnabled) {
+                    handleArtifact(device.getTargetSecurityToken(), gatewayToken, status, artifact);
+                } else {
+                    handleArtifact(null, null, status, artifact);
+                }
+            }));
 
             final UpdateStatus result = new UpdateStatus(ResponseStatus.DOWNLOADED);
             result.getStatusMessages().add("Simulator: Download complete!");
