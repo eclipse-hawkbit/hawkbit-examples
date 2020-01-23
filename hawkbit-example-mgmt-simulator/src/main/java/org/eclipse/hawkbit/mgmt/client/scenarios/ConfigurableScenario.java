@@ -16,6 +16,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.google.common.collect.Lists;
+
 import org.eclipse.hawkbit.mgmt.client.ClientConfigurationProperties;
 import org.eclipse.hawkbit.mgmt.client.ClientConfigurationProperties.Scenario;
 import org.eclipse.hawkbit.mgmt.client.resource.MgmtDistributionSetClientResource;
@@ -43,8 +45,6 @@ import org.eclipse.hawkbit.mgmt.json.model.target.MgmtTarget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-
-import com.google.common.collect.Lists;
 
 /**
  * 
@@ -408,7 +408,7 @@ public class ConfigurableScenario {
             modules.forEach(module -> {
                 final ArtifactFile file = new ArtifactFile("dummyfile.dummy" + count, null, "multipart/form-data",
                         artifact);
-                uploadSoftwareModule.uploadArtifact(module.getModuleId(), file, null, null, null);
+                uploadSoftwareModule.uploadArtifact(module.getModuleId(), file, null, null, null, null);
             });
         }
 

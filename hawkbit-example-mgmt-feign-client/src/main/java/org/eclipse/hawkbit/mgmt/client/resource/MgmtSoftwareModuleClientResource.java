@@ -32,5 +32,6 @@ public interface MgmtSoftwareModuleClientResource extends MgmtSoftwareModuleRest
             @Param("file") final MultipartFile file,
             @RequestParam(value = "filename", required = false) final String optionalFileName,
             @RequestParam(value = "md5sum", required = false) final String md5Sum,
-            @RequestParam(value = "sha1sum", required = false) final String sha1Sum);
+            @RequestParam(value = "sha1sum", required = false) final String sha1Sum,
+            @RequestParam(value = "sha256sum", required = false) final String sha256sum);
 }

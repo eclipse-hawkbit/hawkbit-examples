@@ -15,7 +15,7 @@
    <parent>
       <groupId>org.eclipse.hawkbit</groupId>
       <artifactId>hawkbit-parent</artifactId>
-      <version>0.3.0M5</version>
+      <version>0.3.0M6</version>
    </parent>
 
    <artifactId>hawkbit-examples-parent</artifactId>
@@ -46,9 +46,10 @@
    </modules>
 
    <properties>
-      <feign.extension.version>10.1.0</feign.extension.version>
-      <hawkbit.version>0.3.0M5</hawkbit.version>
 
+      <hawkbit.version>0.3.0M6</hawkbit.version>
+      <feign.extension.version>10.1.0</feign.extension.version>
+      
       <!-- Release - START -->
       <release.scm.connection>scm:git:git@github.com:eclipse/hawkbit-examples.git</release.scm.connection>
       <release.scm.developerConnection>scm:git:https://github.com/eclipse/hawkbit-examples.git</release.scm.developerConnection>
