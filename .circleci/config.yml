@@ -24,9 +24,9 @@ jobs:
 
     - restore_cache:
         key: circleci-hawkbit-examples-{{ checksum "pom.xml" }}
-  - run:
-      name: foo
-      command: echo $DOCKERHUB_USER
+    - run:
+       name: foo
+       command: echo $DOCKERHUB_USER
 
     - run:
        name: Install dependencies without testing
