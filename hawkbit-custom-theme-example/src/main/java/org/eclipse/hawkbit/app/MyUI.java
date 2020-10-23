@@ -8,17 +8,6 @@ package org.eclipse.hawkbit.app;
  * http://www.eclipse.org/legal/epl-v10.html
  */
 
-import org.eclipse.hawkbit.ui.AbstractHawkbitUI;
-import org.eclipse.hawkbit.ui.ErrorView;
-import org.eclipse.hawkbit.ui.UiProperties;
-import org.eclipse.hawkbit.ui.components.NotificationUnreadButton;
-import org.eclipse.hawkbit.ui.menu.DashboardMenu;
-import org.eclipse.hawkbit.ui.push.EventPushStrategy;
-import org.eclipse.hawkbit.ui.utils.VaadinMessageSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.vaadin.spring.events.EventBus.UIEventBus;
-
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
@@ -26,6 +15,18 @@ import com.vaadin.shared.communication.PushMode;
 import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.spring.navigator.SpringViewProvider;
+
+import org.eclipse.hawkbit.ui.AbstractHawkbitUI;
+import org.eclipse.hawkbit.ui.ErrorView;
+import org.eclipse.hawkbit.ui.UiProperties;
+import org.eclipse.hawkbit.ui.components.NotificationUnreadButton;
+import org.eclipse.hawkbit.ui.menu.DashboardMenu;
+import org.eclipse.hawkbit.ui.push.EventPushStrategy;
+import org.eclipse.hawkbit.ui.push.UIEventProvider;
+import org.eclipse.hawkbit.ui.utils.VaadinMessageSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.vaadin.spring.events.EventBus.UIEventBus;
 
 /**
  * Example hawkBit UI implementation.
@@ -45,11 +46,11 @@ public class MyUI extends AbstractHawkbitUI {
     private static final long serialVersionUID = 1L;
 
     @Autowired
-    MyUI(final EventPushStrategy pushStrategy, final UIEventBus eventBus, final SpringViewProvider viewProvider,
-            final ApplicationContext context, final DashboardMenu dashboardMenu, final ErrorView errorview,
-            final NotificationUnreadButton notificationUnreadButton, final UiProperties uiProperties,
-            final VaadinMessageSource i18n) {
-        super(pushStrategy, eventBus, viewProvider, context, dashboardMenu, errorview, notificationUnreadButton,
-                uiProperties, i18n);
+    MyUI(final EventPushStrategy pushStrategy, final UIEventBus eventBus, final UIEventProvider eventProvider,
+            final SpringViewProvider viewProvider, final ApplicationContext context, final DashboardMenu dashboardMenu,
+            final ErrorView errorview, final NotificationUnreadButton notificationUnreadButton,
+            final UiProperties uiProperties, final VaadinMessageSource i18n) {
+        super(pushStrategy, eventBus, eventProvider, viewProvider, context, dashboardMenu, errorview,
+                notificationUnreadButton, uiProperties, i18n);
     }
 }

@@ -141,11 +141,7 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
             break;
         }
 
-        final DdiStatus status = new DdiStatus(ExecutionStatus.CLOSED, new DdiResult(FinalResult.SUCCESS, null), null);
-
-        final DdiConfigData configData = new DdiConfigData(null, null, status, Collections.singletonMap(key, value),
-                updateMode);
-
+        final DdiConfigData configData = new DdiConfigData(Collections.singletonMap(key, value), updateMode);
         controllerResource.putConfigData(configData, super.getTenant(), super.getId());
     }
 
