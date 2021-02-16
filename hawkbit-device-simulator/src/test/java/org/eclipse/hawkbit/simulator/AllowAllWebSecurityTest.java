@@ -15,7 +15,7 @@ import io.qameta.allure.Description;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 import org.eclipse.hawkbit.simulator.http.BasicAuthProperties;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.test.context.TestPropertySource;
 
 @Feature("Component Tests - Hawkbit Device Simulator")
