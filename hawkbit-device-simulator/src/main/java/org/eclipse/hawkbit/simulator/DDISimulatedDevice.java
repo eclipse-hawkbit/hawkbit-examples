@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.eclipse.hawkbit.ddi.json.model.DdiActionFeedback;
@@ -34,6 +35,7 @@ import org.eclipse.hawkbit.dmf.json.model.DmfSoftwareModule;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorUpdater.UpdaterCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.hateoas.Link;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -101,11 +103,14 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
                 return;
             }
 
-            final String href = poll.getBody().getLink("deploymentBase").getHref();
-            if (href == null) {
+            final Optional<Link> deploymentBaseLink = poll.getBody().getLink("deploymentBase");
+
+            if(!deploymentBaseLink.isPresent()) {
+                //no update available
                 return;
             }
 
+            final String href = deploymentBaseLink.get().getHref();
             final long actionId = Long.parseLong(href.substring(href.lastIndexOf('/') + 1, href.indexOf('?')));
             if (currentActionId == null || currentActionId == actionId) {
                 final ResponseEntity<DdiDeploymentBase> action = controllerResource
@@ -141,9 +146,7 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
             break;
         }
 
-        final DdiStatus status = new DdiStatus(ExecutionStatus.CLOSED, new DdiResult(FinalResult.SUCCESS, null), null);
-
-        final DdiConfigData configData = new DdiConfigData(null, null, status, Collections.singletonMap(key, value),
+        final DdiConfigData configData = new DdiConfigData(Collections.singletonMap(key, value),
                 updateMode);
 
         controllerResource.putConfigData(configData, super.getTenant(), super.getId());
@@ -163,16 +166,10 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
         converted.setSize(ddi.getSize());
         converted.setFilename(ddi.getFilename());
         converted.setHashes(new DmfArtifactHash(ddi.getHashes().getSha1(), (ddi.getHashes().getMd5())));
+
         final Map<String, String> urls = new HashMap<>();
-
-        if (ddi.getLink("download") != null) {
-            urls.put("HTTPS", ddi.getLink("download").getHref());
-        }
-
-        if (ddi.getLink("download-http") != null) {
-            urls.put("HTTP", ddi.getLink("download-http").getHref());
-        }
-
+        ddi.getLink("download").ifPresent(link -> urls.put("HTTPS", link.getHref()));
+        ddi.getLink("download-http").ifPresent(link -> urls.put("HTTP", link.getHref()));
         converted.setUrls(urls);
 
         return converted;
