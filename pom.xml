@@ -47,7 +47,7 @@
 
    <properties>
 
-      <hawkbit.version>0.3.0M7</hawkbit.version>
+      <hawkbit.version>0.3.0-SNAPSHOT</hawkbit.version>
       <feign.extension.version>10.1.0</feign.extension.version>
       
       <!-- Release - START -->
