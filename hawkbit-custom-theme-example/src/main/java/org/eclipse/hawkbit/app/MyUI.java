@@ -38,7 +38,7 @@ import com.vaadin.spring.navigator.SpringViewProvider;
  *
  */
 @SpringUI
-@Push(value = PushMode.AUTOMATIC, transport = Transport.WEBSOCKET)
+@Push(value = PushMode.AUTOMATIC, transport = Transport.WEBSOCKET_XHR)
 @Title("hawkBit Theme example")
 @Theme(value = "exampletheme")
 public class MyUI extends AbstractHawkbitUI {
