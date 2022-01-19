@@ -8,10 +8,12 @@
  */
 package org.eclipse.hawkbit.simulator;
 
+import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -20,6 +22,7 @@ import org.eclipse.hawkbit.ddi.json.model.DdiArtifact;
 import org.eclipse.hawkbit.ddi.json.model.DdiChunk;
 import org.eclipse.hawkbit.ddi.json.model.DdiConfigData;
 import org.eclipse.hawkbit.ddi.json.model.DdiControllerBase;
+import org.eclipse.hawkbit.ddi.json.model.DdiDeployment;
 import org.eclipse.hawkbit.ddi.json.model.DdiDeployment.HandlingType;
 import org.eclipse.hawkbit.ddi.json.model.DdiDeploymentBase;
 import org.eclipse.hawkbit.ddi.json.model.DdiResult;
@@ -91,42 +94,52 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
     @Override
     public void poll() {
         if (!removed) {
-            ResponseEntity<DdiControllerBase> poll = null;
-            try {
-                poll = controllerResource.getControllerBase(getTenant(), getId());
-            } catch (final RuntimeException ex) {
-                LOGGER.error("Failed base poll", ex);
-                return;
-            }
-
-            if (HttpStatus.OK != poll.getStatusCode()) {
-                return;
-            }
-
-            final Optional<Link> deploymentBaseLink = poll.getBody().getLink("deploymentBase");
-
-            if(!deploymentBaseLink.isPresent()) {
-                //no update available
-                return;
-            }
-
-            final String href = deploymentBaseLink.get().getHref();
-            final long actionId = Long.parseLong(href.substring(href.lastIndexOf('/') + 1, href.indexOf('?')));
-            if (currentActionId == null || currentActionId == actionId) {
-                final ResponseEntity<DdiDeploymentBase> action = controllerResource
-                        .getControllerBasedeploymentAction(getTenant(), getId(), actionId, -1, null);
-
-                if (HttpStatus.OK != action.getStatusCode()) {
-                    return;
-                }
-
-                final HandlingType updateType = action.getBody().getDeployment().getUpdate();
-                final List<DdiChunk> modules = action.getBody().getDeployment().getChunks();
+            getDeploymentBaseLink().flatMap(this::getActionWithDeployment).ifPresent(actionWithDeployment -> {
+                final Long actionId = actionWithDeployment.getKey();
+                final DdiDeployment deployment = actionWithDeployment.getValue().getDeployment();
+                final HandlingType updateType = deployment.getUpdate();
+                final List<DdiChunk> modules = deployment.getChunks();
 
                 currentActionId = actionId;
                 startDdiUpdate(actionId, updateType, modules);
+            });
+        }
+    }
+
+    private Optional<Link> getDeploymentBaseLink() {
+        ResponseEntity<DdiControllerBase> poll = null;
+        try {
+            poll = controllerResource.getControllerBase(getTenant(), getId());
+        } catch (final RuntimeException ex) {
+            LOGGER.error("Failed base poll", ex);
+            return Optional.empty();
+        }
+
+        if (HttpStatus.OK != poll.getStatusCode()) {
+            return Optional.empty();
+        }
+
+        final DdiControllerBase pollBody = poll.getBody();
+        return pollBody != null ? pollBody.getLink("deploymentBase") : Optional.empty();
+    }
+
+    private Optional<Entry<Long, DdiDeploymentBase>> getActionWithDeployment(final Link deploymentBaseLink) {
+        final String href = deploymentBaseLink.getHref();
+        final long actionId = Long.parseLong(href.substring(href.lastIndexOf('/') + 1, href.indexOf('?')));
+        if (currentActionId == null || currentActionId == actionId) {
+            final ResponseEntity<DdiDeploymentBase> action = controllerResource
+                    .getControllerBasedeploymentAction(getTenant(), getId(), actionId, -1, null);
+
+            if (HttpStatus.OK != action.getStatusCode()) {
+                return Optional.empty();
+            }
+
+            if (action.getBody() != null) {
+                return Optional.of(new AbstractMap.SimpleEntry<>(actionId, action.getBody()));
             }
         }
+
+        return Optional.empty();
     }
 
     @Override
@@ -146,8 +159,7 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
             break;
         }
 
-        final DdiConfigData configData = new DdiConfigData(Collections.singletonMap(key, value),
-                updateMode);
+        final DdiConfigData configData = new DdiConfigData(Collections.singletonMap(key, value), updateMode);
 
         controllerResource.putConfigData(configData, super.getTenant(), super.getId());
     }
