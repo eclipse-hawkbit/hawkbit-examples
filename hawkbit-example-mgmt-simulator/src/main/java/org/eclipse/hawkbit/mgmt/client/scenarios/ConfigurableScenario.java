@@ -10,6 +10,7 @@ package org.eclipse.hawkbit.mgmt.client.scenarios;
 
 import java.math.BigDecimal;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -45,8 +46,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.CollectionUtils;
-
-import com.google.common.collect.Lists;
 
 /**
  * 
@@ -287,8 +286,7 @@ public class ConfigurableScenario {
     }
 
     private static List<MgmtRolloutGroup> createRolloutGroups(final Scenario scenario) {
-        final List<MgmtRolloutGroup> result = Lists
-                .newArrayListWithExpectedSize((scenario.getDeviceGroups().size() * 3) + 1);
+        final List<MgmtRolloutGroup> result = new ArrayList<>((scenario.getDeviceGroups().size() * 3) + 1);
 
         scenario.getDeviceGroups().forEach(groupname -> {
             result.add(createGroup(1, groupname, 10F));
