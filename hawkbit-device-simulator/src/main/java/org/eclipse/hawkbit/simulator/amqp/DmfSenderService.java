@@ -105,6 +105,8 @@ public class DmfSenderService extends MessageService {
      * @param message
      *            the amqp message which will be send if its not null
      */
+    // Exception squid:S4449 - Cannot modify RabbitTemplate method definitions.
+    @SuppressWarnings({ "squid:S4449" })
     public void sendMessage(final String address, final Message message) {
         if (message == null) {
             return;

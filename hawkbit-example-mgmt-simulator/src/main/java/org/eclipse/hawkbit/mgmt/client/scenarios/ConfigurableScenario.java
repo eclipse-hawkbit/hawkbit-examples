@@ -10,13 +10,13 @@ package org.eclipse.hawkbit.mgmt.client.scenarios;
 
 import java.math.BigDecimal;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import com.google.common.collect.Lists;
 
 import org.eclipse.hawkbit.mgmt.client.ClientConfigurationProperties;
 import org.eclipse.hawkbit.mgmt.client.ClientConfigurationProperties.Scenario;
@@ -45,6 +45,7 @@ import org.eclipse.hawkbit.mgmt.json.model.target.MgmtTarget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.CollectionUtils;
 
 /**
  * 
@@ -58,6 +59,11 @@ public class ConfigurableScenario {
     private static final int PAGE_SIZE = 500;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurableScenario.class);
+
+    private static final String ANY_NAME_FILTER_QUERY = "name==*";
+    private static final String LOG_INTERRUPTED = "Interrupted!";
+
+    private static final Random random = new Random();
 
     private final MgmtDistributionSetClientResource distributionSetResource;
 
@@ -154,7 +160,8 @@ public class ConfigurableScenario {
 
         PagedList<MgmtRolloutResponseBody> rollouts;
 
-        while ((rollouts = rolloutResource.getRollouts(0, PAGE_SIZE, null, null).getBody()).getTotal() > 0) {
+        while ((rollouts = rolloutResource.getRollouts(0, PAGE_SIZE, null, null).getBody()) != null
+                && rollouts.getTotal() > 0) {
             rollouts.getContent().parallelStream().forEach(rollout -> {
                 rolloutResource.delete(rollout.getRolloutId());
                 waitUntilRolloutNoLongerExists(rollout.getRolloutId());
@@ -167,6 +174,9 @@ public class ConfigurableScenario {
         PagedList<MgmtSoftwareModule> modules;
         do {
             modules = softwareModuleResource.getSoftwareModules(0, PAGE_SIZE, null, null).getBody();
+            if (modules == null) {
+                return;
+            }
             modules.getContent().parallelStream()
                     .forEach(module -> softwareModuleResource.deleteSoftwareModule(module.getModuleId()));
         } while (modules.getTotal() > PAGE_SIZE);
@@ -178,6 +188,9 @@ public class ConfigurableScenario {
         PagedList<MgmtDistributionSet> distributionSets;
         do {
             distributionSets = distributionSetResource.getDistributionSets(0, PAGE_SIZE, null, null).getBody();
+            if (distributionSets == null) {
+                return;
+            }
             distributionSets.getContent().parallelStream()
                     .forEach(set -> distributionSetResource.deleteDistributionSet(set.getDsId()));
         } while (distributionSets.getTotal() > PAGE_SIZE);
@@ -189,6 +202,9 @@ public class ConfigurableScenario {
         PagedList<MgmtTag> dsTags;
         do {
             dsTags = distributionSetTagResource.getDistributionSetTags(0, PAGE_SIZE, null, null).getBody();
+            if (dsTags == null) {
+                return;
+            }
             dsTags.getContent().parallelStream()
                     .forEach(ds -> distributionSetTagResource.deleteDistributionSetTag(ds.getTagId()));
         } while (dsTags.getTotal() > PAGE_SIZE);
@@ -200,6 +216,9 @@ public class ConfigurableScenario {
         PagedList<MgmtTarget> targets;
         do {
             targets = targetResource.getTargets(0, PAGE_SIZE, null, null).getBody();
+            if (targets == null) {
+                return;
+            }
             targets.getContent().parallelStream()
                     .forEach(target -> targetResource.deleteTarget(target.getControllerId()));
         } while (targets.getTotal() > PAGE_SIZE);
@@ -211,6 +230,9 @@ public class ConfigurableScenario {
         PagedList<MgmtTag> targetTags;
         do {
             targetTags = targetTagResource.getTargetTags(0, PAGE_SIZE, null, null).getBody();
+            if (targetTags == null) {
+                return;
+            }
             targetTags.getContent().parallelStream()
                     .forEach(target -> targetTagResource.deleteTargetTag(target.getTagId()));
         } while (targetTags.getTotal() > PAGE_SIZE);
@@ -221,8 +243,11 @@ public class ConfigurableScenario {
             return;
         }
 
-        distributionSetResource.getDistributionSets(0, scenario.getDistributionSets(), null, null).getBody()
-                .getContent().forEach(set -> runRollout(set, scenario));
+        final PagedList<MgmtDistributionSet> dsList = distributionSetResource
+                .getDistributionSets(0, scenario.getDistributionSets(), null, null).getBody();
+        if (dsList != null) {
+            dsList.getContent().forEach(set -> runRollout(set, scenario));
+        }
     }
 
     private void runSemiAutomaticRollouts(final Scenario scenario) {
@@ -230,8 +255,11 @@ public class ConfigurableScenario {
             return;
         }
 
-        distributionSetResource.getDistributionSets(0, scenario.getDistributionSets(), null, null).getBody()
-                .getContent().forEach(set -> runSemiAutomaticRollout(set, scenario));
+        final PagedList<MgmtDistributionSet> dsList = distributionSetResource
+                .getDistributionSets(0, scenario.getDistributionSets(), null, null).getBody();
+        if (dsList != null) {
+            dsList.getContent().forEach(set -> runSemiAutomaticRollout(set, scenario));
+        }
     }
 
     private void runSemiAutomaticRollout(final MgmtDistributionSet set, final Scenario scenario) {
@@ -239,10 +267,14 @@ public class ConfigurableScenario {
         // create a Rollout
         final MgmtRolloutResponseBody rolloutResponseBody = rolloutResource.create(new RolloutBuilder()
                 .name("SemiAutomaticRollout" + set.getName() + set.getVersion())
-                .semiAutomaticGroups(createRolloutGroups(scenario)).targetFilterQuery("name==*")
+                .semiAutomaticGroups(createRolloutGroups(scenario)).targetFilterQuery(ANY_NAME_FILTER_QUERY)
                 .distributionSetId(set.getDsId())
                 .successThreshold(String.valueOf(scenario.getRolloutSuccessThreshold())).errorThreshold("5").build())
                 .getBody();
+        if (rolloutResponseBody == null) {
+            LOGGER.error("Rollout could not be created!");
+            return;
+        }
 
         waitUntilRolloutIsReady(rolloutResponseBody.getRolloutId());
 
@@ -254,8 +286,7 @@ public class ConfigurableScenario {
     }
 
     private static List<MgmtRolloutGroup> createRolloutGroups(final Scenario scenario) {
-        final List<MgmtRolloutGroup> result = Lists
-                .newArrayListWithExpectedSize((scenario.getDeviceGroups().size() * 3) + 1);
+        final List<MgmtRolloutGroup> result = new ArrayList<>((scenario.getDeviceGroups().size() * 3) + 1);
 
         scenario.getDeviceGroups().forEach(groupname -> {
             result.add(createGroup(1, groupname, 10F));
@@ -280,7 +311,7 @@ public class ConfigurableScenario {
         final MgmtRolloutGroup one = new MgmtRolloutGroup();
         one.setName("final");
         one.setDescription("Group of non tagged devices");
-        one.setTargetFilterQuery("name==*");
+        one.setTargetFilterQuery(ANY_NAME_FILTER_QUERY);
         one.setTargetPercentage(100F);
         return one;
     }
@@ -290,9 +321,13 @@ public class ConfigurableScenario {
         // create a Rollout
         final MgmtRolloutResponseBody rolloutResponseBody = rolloutResource.create(new RolloutBuilder()
                 .name("Rollout" + set.getName() + set.getVersion()).groupSize(scenario.getRolloutDeploymentGroups())
-                .targetFilterQuery("name==*").distributionSetId(set.getDsId())
+                .targetFilterQuery(ANY_NAME_FILTER_QUERY).distributionSetId(set.getDsId())
                 .successThreshold(String.valueOf(scenario.getRolloutSuccessThreshold())).errorThreshold("5").build())
                 .getBody();
+        if (rolloutResponseBody == null) {
+            LOGGER.error("Rollout could not be created!");
+            return;
+        }
 
         waitUntilRolloutIsReady(rolloutResponseBody.getRolloutId());
 
@@ -311,32 +346,36 @@ public class ConfigurableScenario {
             try {
                 TimeUnit.SECONDS.sleep(5);
             } catch (final InterruptedException e) {
-                LOGGER.warn("Interrupted!");
+                LOGGER.warn(LOG_INTERRUPTED);
                 Thread.currentThread().interrupt();
             }
         } while (rolloutResource.getRollout(id).getStatusCode() != HttpStatus.NOT_FOUND);
     }
 
     private void waitUntilRolloutIsComplete(final Long id) {
+        MgmtRolloutResponseBody rollout;
         do {
             try {
                 TimeUnit.SECONDS.sleep(5);
             } catch (final InterruptedException e) {
-                LOGGER.warn("Interrupted!");
+                LOGGER.warn(LOG_INTERRUPTED);
                 Thread.currentThread().interrupt();
             }
-        } while (!"FINISHED".equalsIgnoreCase(rolloutResource.getRollout(id).getBody().getStatus()));
+        } while ((rollout = rolloutResource.getRollout(id).getBody()) != null
+                && !"FINISHED".equalsIgnoreCase(rollout.getStatus()));
     }
 
     private void waitUntilRolloutIsReady(final Long id) {
+        MgmtRolloutResponseBody rollout;
         do {
             try {
                 TimeUnit.SECONDS.sleep(5);
             } catch (final InterruptedException e) {
-                LOGGER.warn("Interrupted!");
+                LOGGER.warn(LOG_INTERRUPTED);
                 Thread.currentThread().interrupt();
             }
-        } while (!"READY".equalsIgnoreCase(rolloutResource.getRollout(id).getBody().getStatus()));
+        } while ((rollout = rolloutResource.getRollout(id).getBody()) != null
+                && !"READY".equalsIgnoreCase(rollout.getStatus()));
     }
 
     private void createDistributionSets(final Scenario scenario) {
@@ -361,6 +400,10 @@ public class ConfigurableScenario {
                                         ? (scenario.getDistributionSets() - calculateOffset(page))
                                         : PAGE_SIZE))
                 .getBody();
+        if (CollectionUtils.isEmpty(sets)) {
+            LOGGER.error("Could not create Distribution Sets");
+            return;
+        }
 
         assignSoftwareModulesTo(scenario, sets);
 
@@ -369,12 +412,16 @@ public class ConfigurableScenario {
     }
 
     private void tagDistributionSets(final int page, final List<MgmtDistributionSet> sets) {
-        final MgmtTag tag = distributionSetTagResource
+        final List<MgmtTag> tags = distributionSetTagResource
                 .createDistributionSetTags(
                         new TagBuilder().name("Page " + page).description("DS tag for DS page" + page).build())
-                .getBody().get(0);
+                .getBody();
+        if (CollectionUtils.isEmpty(tags)) {
+            LOGGER.error("Tag could not be created");
+            return;
+        }
 
-        distributionSetTagResource.assignDistributionSets(tag.getTagId(), sets.stream().map(set -> {
+        distributionSetTagResource.assignDistributionSets(tags.get(0).getTagId(), sets.stream().map(set -> {
             final MgmtAssignedDistributionSetRequestBody body = new MgmtAssignedDistributionSetRequestBody();
             body.setDistributionSetId(set.getDsId());
             return body;
@@ -398,6 +445,11 @@ public class ConfigurableScenario {
                 .createSoftwareModules(new SoftwareModuleBuilder().name(scenario.getSmFwName() + "-os")
                         .version(dsSet.getVersion()).type("os").build())
                 .getBody();
+        if (CollectionUtils.isEmpty(modules)) {
+            LOGGER.error("Software Module could not be created");
+            return Collections.emptyList();
+        }
+
         modules.addAll(softwareModuleResource.createSoftwareModules(
                 new SoftwareModuleBuilder().name(scenario.getSmSwName() + "-app").version(dsSet.getVersion() + ".")
                         .type("application").buildAsList(scenario.getAppModulesPerDistributionSet()))
@@ -446,11 +498,16 @@ public class ConfigurableScenario {
     private void tagTargets(final Scenario scenario, final int page, final List<MgmtTarget> targets,
             final List<Long> deviceGroupTags) {
         if (scenario.getTargetTags() > 0) {
-            targetTagResource
+            final List<MgmtTag> tags = targetTagResource
                     .createTargetTags(new TagBuilder().name("Page " + page)
                             .description("Target tag for target page " + page).buildAsList(scenario.getTargetTags()))
-                    .getBody()
-                    .forEach(tag -> targetTagResource.assignTargets(tag.getTagId(), targets.stream().map(
+                    .getBody();
+            if (CollectionUtils.isEmpty(tags)) {
+                LOGGER.error("Tag could not be created");
+                return;
+            }
+            tags.forEach(tag -> targetTagResource.assignTargets(tag.getTagId(),
+                    targets.stream().map(
                             target -> new MgmtAssignedTargetRequestBody().setControllerId(target.getControllerId()))
                             .collect(Collectors.toList())));
         }
@@ -481,11 +538,6 @@ public class ConfigurableScenario {
     }
 
     private static byte[] generateArtifact(final Scenario scenario) {
-
-        // Exception squid:S2245 - not used for cryptographic function
-        @SuppressWarnings("squid:S2245")
-        final Random random = new Random();
-
         // create byte array
         final byte[] nbyte = new byte[parseSize(scenario.getArtifactSize())];
 
