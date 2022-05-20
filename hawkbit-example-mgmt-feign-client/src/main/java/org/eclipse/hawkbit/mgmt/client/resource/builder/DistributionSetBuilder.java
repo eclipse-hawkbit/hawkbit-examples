@@ -78,7 +78,7 @@ public class DistributionSetBuilder {
 
     /**
      * @param requiredMigrationStep
-     *            the boolean for require migration step
+     *            the boolean for required migration step
      * @return the builder itself
      */
     public DistributionSetBuilder requiredMigrationStep(final Boolean requiredMigrationStep) {
