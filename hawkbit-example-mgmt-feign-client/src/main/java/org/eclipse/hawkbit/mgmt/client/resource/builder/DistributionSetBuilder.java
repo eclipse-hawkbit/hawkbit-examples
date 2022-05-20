@@ -26,6 +26,7 @@ public class DistributionSetBuilder {
     private String version;
     private String type;
     private String description;
+    private Boolean requiredMigrationStep;
     private final List<MgmtSoftwareModuleAssigment> modules = new ArrayList<>();
 
     /**
@@ -72,6 +73,16 @@ public class DistributionSetBuilder {
      */
     public DistributionSetBuilder description(final String description) {
         this.description = description;
+        return this;
+    }
+
+    /**
+     * @param requiredMigrationStep
+     *            the boolean for require migration step
+     * @return the builder itself
+     */
+    public DistributionSetBuilder requiredMigrationStep(final Boolean requiredMigrationStep) {
+        this.requiredMigrationStep = requiredMigrationStep;
         return this;
     }
 
@@ -128,7 +139,7 @@ public class DistributionSetBuilder {
         body.setType(type);
         body.setDescription(description);
         body.setModules(modules);
+        body.setRequiredMigrationStep(requiredMigrationStep);
         return body;
     }
-
 }
