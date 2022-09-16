@@ -51,7 +51,7 @@ import org.springframework.util.CollectionUtils;
  * 
  * A configurable scenario which runs the configured scenarios.
  * 
- * @see {@link ClientConfigurationProperties#getScenarios()}
+ * see {@link ClientConfigurationProperties#getScenarios()}
  *
  */
 public class ConfigurableScenario {
