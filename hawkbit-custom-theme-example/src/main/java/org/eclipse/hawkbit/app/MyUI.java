@@ -8,10 +8,11 @@ package org.eclipse.hawkbit.app;
  * http://www.eclipse.org/legal/epl-v10.html
  */
 
+import com.vaadin.server.ErrorHandler;
 import org.eclipse.hawkbit.ui.AbstractHawkbitUI;
-import org.eclipse.hawkbit.ui.ErrorView;
 import org.eclipse.hawkbit.ui.UiProperties;
 import org.eclipse.hawkbit.ui.components.NotificationUnreadButton;
+import org.eclipse.hawkbit.ui.error.ErrorView;
 import org.eclipse.hawkbit.ui.menu.DashboardMenu;
 import org.eclipse.hawkbit.ui.push.EventPushStrategy;
 import org.eclipse.hawkbit.ui.push.UIEventProvider;
@@ -49,8 +50,8 @@ public class MyUI extends AbstractHawkbitUI {
     MyUI(final EventPushStrategy pushStrategy, final UIEventBus eventBus, final UIEventProvider eventProvider, final SpringViewProvider viewProvider,
             final ApplicationContext context, final DashboardMenu dashboardMenu, final ErrorView errorview,
             final NotificationUnreadButton notificationUnreadButton, final UiProperties uiProperties,
-            final VaadinMessageSource i18n) {
+            final VaadinMessageSource i18n, final ErrorHandler errorHandler) {
         super(pushStrategy, eventBus, eventProvider, viewProvider, context, dashboardMenu, errorview, notificationUnreadButton,
-                uiProperties, i18n);
+                uiProperties, i18n, errorHandler);
     }
 }
