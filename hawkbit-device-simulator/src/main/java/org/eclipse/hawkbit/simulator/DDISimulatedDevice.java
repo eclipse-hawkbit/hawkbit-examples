@@ -197,34 +197,34 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
 
     private UpdaterCallback sendFeedback(final long actionId) {
         return device -> {
-            final DdiActionFeedback feedback = calculateFeedback(actionId, device);
+            final DdiActionFeedback feedback = calculateFeedback(device);
             controllerResource.postBasedeploymentActionFeedback(feedback, getTenant(), getId(), actionId);
             currentActionId = null;
         };
     }
 
-    private DdiActionFeedback calculateFeedback(final long actionId, final AbstractSimulatedDevice device) {
+    private DdiActionFeedback calculateFeedback(final AbstractSimulatedDevice device) {
         DdiActionFeedback feedback;
 
         switch (device.getUpdateStatus().getResponseStatus()) {
         case SUCCESSFUL:
-            feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.CLOSED,
+            feedback = new DdiActionFeedback( null, new DdiStatus(ExecutionStatus.CLOSED,
                     new DdiResult(FinalResult.SUCCESS, null), device.getUpdateStatus().getStatusMessages()));
             break;
         case ERROR:
-            feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.CLOSED,
+            feedback = new DdiActionFeedback( null, new DdiStatus(ExecutionStatus.CLOSED,
                     new DdiResult(FinalResult.FAILURE, null), device.getUpdateStatus().getStatusMessages()));
             break;
         case DOWNLOADING:
-            feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.DOWNLOAD,
+            feedback = new DdiActionFeedback( null, new DdiStatus(ExecutionStatus.DOWNLOAD,
                     new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
             break;
         case DOWNLOADED:
-            feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.DOWNLOADED,
+            feedback = new DdiActionFeedback( null, new DdiStatus(ExecutionStatus.DOWNLOADED,
                     new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
             break;
         case RUNNING:
-            feedback = new DdiActionFeedback(actionId, null, new DdiStatus(ExecutionStatus.PROCEEDING,
+            feedback = new DdiActionFeedback( null, new DdiStatus(ExecutionStatus.PROCEEDING,
                     new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
             break;
         default:
