@@ -209,23 +209,23 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
         switch (device.getUpdateStatus().getResponseStatus()) {
         case SUCCESSFUL:
             feedback = new DdiActionFeedback(null, new DdiStatus(ExecutionStatus.CLOSED,
-                    new DdiResult(FinalResult.SUCCESS, null), device.getUpdateStatus().getStatusMessages()));
+                    new DdiResult(FinalResult.SUCCESS, null), 200, device.getUpdateStatus().getStatusMessages()));
             break;
         case ERROR:
             feedback = new DdiActionFeedback(null, new DdiStatus(ExecutionStatus.CLOSED,
-                    new DdiResult(FinalResult.FAILURE, null), device.getUpdateStatus().getStatusMessages()));
+                    new DdiResult(FinalResult.FAILURE, null), null, device.getUpdateStatus().getStatusMessages()));
             break;
         case DOWNLOADING:
             feedback = new DdiActionFeedback(null, new DdiStatus(ExecutionStatus.DOWNLOAD,
-                    new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
+                    new DdiResult(FinalResult.NONE, null), null, device.getUpdateStatus().getStatusMessages()));
             break;
         case DOWNLOADED:
             feedback = new DdiActionFeedback(null, new DdiStatus(ExecutionStatus.DOWNLOADED,
-                    new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
+                    new DdiResult(FinalResult.NONE, null), null, device.getUpdateStatus().getStatusMessages()));
             break;
         case RUNNING:
             feedback = new DdiActionFeedback(null, new DdiStatus(ExecutionStatus.PROCEEDING,
-                    new DdiResult(FinalResult.NONE, null), device.getUpdateStatus().getStatusMessages()));
+                    new DdiResult(FinalResult.NONE, null), null, device.getUpdateStatus().getStatusMessages()));
             break;
         default:
             throw new IllegalStateException("simulated device has an unknown response status + "
