@@ -38,6 +38,8 @@ public class DmfSenderService extends MessageService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DmfSenderService.class);
 
+    private static final byte[] EMPTY_BODY = new byte[0];
+
     private final String spExchange;
 
     private final SimulationProperties simulationProperties;
@@ -66,7 +68,7 @@ public class DmfSenderService extends MessageService {
         messageProperties.setReplyTo(amqpProperties.getSenderForSpExchange());
         messageProperties.setContentType(MessageProperties.CONTENT_TYPE_TEXT_PLAIN);
 
-        sendMessage(spExchange, new Message(null, messageProperties));
+        sendMessage(spExchange, new Message(EMPTY_BODY, messageProperties));
     }
 
     /**
@@ -252,7 +254,7 @@ public class DmfSenderService extends MessageService {
         messagePropertiesForSP.setHeader(MessageHeaderKey.SENDER, "simulator");
         messagePropertiesForSP.setContentType(MessageProperties.CONTENT_TYPE_JSON);
         messagePropertiesForSP.setReplyTo(amqpProperties.getSenderForSpExchange());
-        return new Message(null, messagePropertiesForSP);
+        return new Message(EMPTY_BODY, messagePropertiesForSP);
     }
 
     private MessageProperties createAttributeUpdateMessage(final String tenant, final String targetId) {
