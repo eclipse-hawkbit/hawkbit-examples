@@ -12,7 +12,7 @@
 
 # Run SonarQube only for master branch
 if [ $CIRCLE_BRANCH = master ] ; then
-  mvn verify license:check sonar:sonar -Dsonar.login=$SONAR_ACCESS_TOKEN --batch-mode
+  mvn verify license:check org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.branch.name=eclipse-master -Dsonar.login=$SONAR_ACCESS_TOKEN --batch-mode
 else
   mvn verify license:check --batch-mode
 fi
