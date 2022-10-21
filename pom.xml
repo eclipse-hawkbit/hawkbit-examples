@@ -46,7 +46,6 @@
    </modules>
 
    <properties>
-
       <hawkbit.version>0.3.0-SNAPSHOT</hawkbit.version>
       <feign.extension.version>10.1.0</feign.extension.version>
       
@@ -57,7 +56,6 @@
       <!-- Release - END -->
 
       <!-- Sonar - START -->
-      <sonar.github.repository>eclipse/hawkbit-examples</sonar.github.repository>
       <sonar.links.ci>https://circleci.com/gh/eclipse/hawkbit-examples</sonar.links.ci>
       <!-- Sonar - END -->
    </properties>
