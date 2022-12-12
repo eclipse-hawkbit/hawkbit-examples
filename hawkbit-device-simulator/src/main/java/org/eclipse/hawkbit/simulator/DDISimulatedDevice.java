@@ -9,6 +9,7 @@
 package org.eclipse.hawkbit.simulator;
 
 import java.util.AbstractMap;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +22,7 @@ import org.eclipse.hawkbit.ddi.json.model.DdiActionFeedback;
 import org.eclipse.hawkbit.ddi.json.model.DdiArtifact;
 import org.eclipse.hawkbit.ddi.json.model.DdiChunk;
 import org.eclipse.hawkbit.ddi.json.model.DdiConfigData;
+import org.eclipse.hawkbit.ddi.json.model.DdiConfirmationFeedback;
 import org.eclipse.hawkbit.ddi.json.model.DdiControllerBase;
 import org.eclipse.hawkbit.ddi.json.model.DdiDeployment;
 import org.eclipse.hawkbit.ddi.json.model.DdiDeployment.HandlingType;
@@ -55,6 +57,10 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
     private final DeviceSimulatorUpdater deviceUpdater;
 
     private final String gatewayToken;
+
+    private final String DEPLOYMENT_BASE_LINK = "deploymentBase";
+
+    private final String CONFIRMATION_BASE_LINK = "confirmationBase";
 
     private volatile boolean removed;
     private volatile Long currentActionId;
@@ -94,19 +100,24 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
     @Override
     public void poll() {
         if (!removed) {
-            getDeploymentBaseLink().flatMap(this::getActionWithDeployment).ifPresent(actionWithDeployment -> {
-                final Long actionId = actionWithDeployment.getKey();
-                final DdiDeployment deployment = actionWithDeployment.getValue().getDeployment();
-                final HandlingType updateType = deployment.getUpdate();
-                final List<DdiChunk> modules = deployment.getChunks();
+            final Optional<Link> confirmationBaseLink = getRequiredLink(CONFIRMATION_BASE_LINK);
+            if (confirmationBaseLink.isPresent()) {
+                sendConfirmationFeedback(getActionId(confirmationBaseLink.get()));
+            } else {
+                getRequiredLink(DEPLOYMENT_BASE_LINK).flatMap(this::getActionWithDeployment).ifPresent(actionWithDeployment -> {
+                    final Long actionId = actionWithDeployment.getKey();
+                    final DdiDeployment deployment = actionWithDeployment.getValue().getDeployment();
+                    final HandlingType updateType = deployment.getUpdate();
+                    final List<DdiChunk> modules = deployment.getChunks();
 
-                currentActionId = actionId;
-                startDdiUpdate(actionId, updateType, modules);
-            });
+                    currentActionId = actionId;
+                    startDdiUpdate(actionId, updateType, modules);
+                });
+            }
         }
     }
 
-    private Optional<Link> getDeploymentBaseLink() {
+    private Optional<Link> getRequiredLink(final String nameOfTheLink) {
         ResponseEntity<DdiControllerBase> poll = null;
         try {
             poll = controllerResource.getControllerBase(getTenant(), getId());
@@ -120,12 +131,11 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
         }
 
         final DdiControllerBase pollBody = poll.getBody();
-        return pollBody != null ? pollBody.getLink("deploymentBase") : Optional.empty();
+        return pollBody != null ? pollBody.getLink(nameOfTheLink) : Optional.empty();
     }
 
     private Optional<Entry<Long, DdiDeploymentBase>> getActionWithDeployment(final Link deploymentBaseLink) {
-        final String href = deploymentBaseLink.getHref();
-        final long actionId = Long.parseLong(href.substring(href.lastIndexOf('/') + 1, href.indexOf('?')));
+        final long actionId = getActionId(deploymentBaseLink);
         if (currentActionId == null || currentActionId == actionId) {
             final ResponseEntity<DdiDeploymentBase> action = controllerResource
                     .getControllerBasedeploymentAction(getTenant(), getId(), actionId, -1, null);
@@ -203,6 +213,13 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
         };
     }
 
+    private void sendConfirmationFeedback(final long actionId) {
+        DdiConfirmationFeedback ddiConfirmationFeedback = new DdiConfirmationFeedback(
+                DdiConfirmationFeedback.Confirmation.CONFIRMED, 0, Arrays.asList(
+                "the confirmation status for the device is" + DdiConfirmationFeedback.Confirmation.CONFIRMED));
+        controllerResource.postConfirmationActionFeedback(ddiConfirmationFeedback, getTenant(), getId(), actionId);
+    }
+
     private DdiActionFeedback calculateFeedback(final AbstractSimulatedDevice device) {
         DdiActionFeedback feedback;
 
@@ -232,5 +249,10 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
                     + device.getUpdateStatus().getResponseStatus());
         }
         return feedback;
+    }
+
+    private long getActionId(final Link link) {
+        final String href = link.getHref();
+        return Long.parseLong(href.substring(href.lastIndexOf('/') + 1, href.indexOf('?')));
     }
 }
