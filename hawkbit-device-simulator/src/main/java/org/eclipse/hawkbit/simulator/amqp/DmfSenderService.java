@@ -94,7 +94,7 @@ public class DmfSenderService extends MessageService {
      *            list of messages for error
      */
     public void finishUpdateProcessWithError(final SimulatedUpdate update, final List<String> updateResultMessages) {
-        sendErrorgMessage(update, updateResultMessages);
+        sendErrorMessage(update, updateResultMessages);
         LOGGER.debug("Update process finished with error \"{}\" reported by thing {}", updateResultMessages,
                 update.getThingId());
     }
@@ -291,27 +291,40 @@ public class DmfSenderService extends MessageService {
     /**
      * Send error message to SP.
      *
-     * @param context
-     *            the current context
+     * @param update
+     *            the simulated update
      * @param updateResultMessages
      *            a list of descriptions according the update process
      */
-    private void sendErrorgMessage(final SimulatedUpdate update, final List<String> updateResultMessages) {
+    private void sendErrorMessage(final SimulatedUpdate update, final List<String> updateResultMessages) {
         final Message message = createActionStatusMessage(update, updateResultMessages, DmfActionStatus.ERROR);
+        sendMessage(spExchange, message);
+    }
+
+    /**
+     * Send confirmation message to SP.
+     *
+     * @param update
+     *            the simulated update
+     * @param updateResultMessages
+     *            a list of descriptions according the update process
+     */
+    public void sendConfirmationMessage(final SimulatedUpdate update, final List<String> updateResultMessages) {
+        final Message message = createActionStatusMessage(update, updateResultMessages, DmfActionStatus.CONFIRMED);
         sendMessage(spExchange, message);
     }
 
     /**
      * Create a action status message.
      *
+     * @param tenant
+     *            the tenant
      * @param actionStatus
      *            the ActionStatus
-     * @param actionMessage
-     *            the message description
+     * @param updateResultMessages
+     *            the list of update result messages
      * @param actionId
      *            the action id
-     * @param cacheValue
-     *            the cacheValue value
      */
     private Message createActionStatusMessage(final String tenant, final DmfActionStatus actionStatus,
             final List<String> updateResultMessages, final Long actionId) {
@@ -345,5 +358,4 @@ public class DmfSenderService extends MessageService {
             final DmfActionStatus status) {
         return createActionStatusMessage(update.getTenant(), status, updateResultMessages, update.getActionId());
     }
-
 }
