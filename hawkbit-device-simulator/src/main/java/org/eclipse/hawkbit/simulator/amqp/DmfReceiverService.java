@@ -54,6 +54,8 @@ public class DmfReceiverService extends MessageService {
 
     private final Set<Long> openActions = Collections.synchronizedSet(new HashSet<>());
 
+    private final String REGEX_EXTRACT_ACTIONID = "[^0-9]";
+
     /**
      * Constructor.
      * 
@@ -207,9 +209,9 @@ public class DmfReceiverService extends MessageService {
 
     private long extractActionIdFrom(final Message message) {
         final String messageAsString = message.toString();
-        String result1 = message.toString().substring(messageAsString.indexOf("{") + 1, messageAsString.indexOf("}"));
-        String[] myStrings = result1.split(",");
-        return Long.parseLong(myStrings[0].replaceAll("[^0-9]", ""));
+        final String requiredMessageContent = messageAsString.substring(messageAsString.indexOf("{") + 1, messageAsString.indexOf("}"));
+        final String[] splitMessageContent = requiredMessageContent.split(",");
+        return Long.parseLong(splitMessageContent[0].replaceAll(REGEX_EXTRACT_ACTIONID, ""));
     }
 
     private void handleMultiActionRequest(final Message message, final String thingId) {
