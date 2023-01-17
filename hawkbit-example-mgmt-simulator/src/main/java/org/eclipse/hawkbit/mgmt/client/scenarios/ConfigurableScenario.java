@@ -160,7 +160,7 @@ public class ConfigurableScenario {
 
         PagedList<MgmtRolloutResponseBody> rollouts;
 
-        while ((rollouts = rolloutResource.getRollouts(0, PAGE_SIZE, null, null).getBody()) != null
+        while ((rollouts = rolloutResource.getRollouts(0, PAGE_SIZE, null, null, "compact").getBody()) != null
                 && rollouts.getTotal() > 0) {
             rollouts.getContent().parallelStream().forEach(rollout -> {
                 rolloutResource.delete(rollout.getRolloutId());
