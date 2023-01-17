@@ -180,6 +180,7 @@ public class DmfReceiverService extends MessageService {
         switch (eventTopic) {
         case CONFIRM:
             handleConfirmation(message, thingId);
+            break;
         case DOWNLOAD_AND_INSTALL:
         case DOWNLOAD:
             handleUpdateProcess(message, thingId, eventTopic);
@@ -200,7 +201,7 @@ public class DmfReceiverService extends MessageService {
     }
 
     private void handleConfirmation(final Message message, final String thingId) {
-        AbstractSimulatedDevice device = repository.get(getTenant(message), thingId);
+        final AbstractSimulatedDevice device = repository.get(getTenant(message), thingId);
         device.setUpdateStatus(new UpdateStatus(UpdateStatus.ResponseStatus.CONFIRMED, "Simulator : Action is confirmed"));
         final Long actionId = extractActionIdFrom(message);
         LOGGER.info("Action with id {} is confirmed be the device for installation", actionId);

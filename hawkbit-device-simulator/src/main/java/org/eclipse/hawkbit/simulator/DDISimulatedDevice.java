@@ -58,9 +58,9 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
 
     private final String gatewayToken;
 
-    private final String DEPLOYMENT_BASE_LINK = "deploymentBase";
+    private static final String DEPLOYMENT_BASE_LINK = "deploymentBase";
 
-    private final String CONFIRMATION_BASE_LINK = "confirmationBase";
+    private static final String CONFIRMATION_BASE_LINK = "confirmationBase";
 
     private volatile boolean removed;
     private volatile Long currentActionId;
@@ -214,8 +214,8 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
     }
 
     private void sendConfirmationFeedback(final long actionId) {
-        DdiConfirmationFeedback ddiConfirmationFeedback = new DdiConfirmationFeedback(
-                DdiConfirmationFeedback.Confirmation.CONFIRMED, 0, Arrays.asList(
+        final DdiConfirmationFeedback ddiConfirmationFeedback = new DdiConfirmationFeedback(
+                DdiConfirmationFeedback.Confirmation.CONFIRMED, 0, Collections.singletonList(
                 "the confirmation status for the device is" + DdiConfirmationFeedback.Confirmation.CONFIRMED));
         controllerResource.postConfirmationActionFeedback(ddiConfirmationFeedback, getTenant(), getId(), actionId);
     }
