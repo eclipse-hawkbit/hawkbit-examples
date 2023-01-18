@@ -54,7 +54,7 @@ public class DmfReceiverService extends MessageService {
 
     private final Set<Long> openActions = Collections.synchronizedSet(new HashSet<>());
 
-    private final String REGEX_EXTRACT_ACTIONID = "[^0-9]";
+    private static final String REGEX_EXTRACT_ACTIONID = "[^0-9]";
 
     /**
      * Constructor.
@@ -210,7 +210,8 @@ public class DmfReceiverService extends MessageService {
 
     private long extractActionIdFrom(final Message message) {
         final String messageAsString = message.toString();
-        final String requiredMessageContent = messageAsString.substring(messageAsString.indexOf("{") + 1, messageAsString.indexOf("}"));
+        final String requiredMessageContent = messageAsString
+                .substring(messageAsString.indexOf('{') + 1, messageAsString.indexOf('}'));
         final String[] splitMessageContent = requiredMessageContent.split(",");
         return Long.parseLong(splitMessageContent[0].replaceAll(REGEX_EXTRACT_ACTIONID, ""));
     }
