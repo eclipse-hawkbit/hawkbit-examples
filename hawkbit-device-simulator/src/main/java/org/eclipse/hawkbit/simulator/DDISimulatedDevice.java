@@ -106,7 +106,7 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
             } else {
                 getRequiredLink(DEPLOYMENT_BASE_LINK).flatMap(this::getActionWithDeployment).ifPresent(actionWithDeployment -> {
                     final Long actionId = actionWithDeployment.getKey();
-                    final  DdiDeployment deployment = actionWithDeployment.getValue().getDeployment();
+                    final DdiDeployment deployment = actionWithDeployment.getValue().getDeployment();
                     final HandlingType updateType = deployment.getUpdate();
                     final List<DdiChunk> modules = deployment.getChunks();
 
