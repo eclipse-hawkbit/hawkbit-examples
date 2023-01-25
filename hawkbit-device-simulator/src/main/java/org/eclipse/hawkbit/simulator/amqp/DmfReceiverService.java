@@ -25,6 +25,7 @@ import org.eclipse.hawkbit.dmf.json.model.DmfMultiActionRequest;
 import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorRepository;
 import org.eclipse.hawkbit.simulator.DeviceSimulatorUpdater;
+import org.eclipse.hawkbit.simulator.UpdateStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
@@ -52,6 +53,8 @@ public class DmfReceiverService extends MessageService {
     private final Set<String> openPings = Collections.synchronizedSet(new HashSet<>());
 
     private final Set<Long> openActions = Collections.synchronizedSet(new HashSet<>());
+
+    private static final String REGEX_EXTRACT_ACTIONID = "[^0-9]";
 
     /**
      * Constructor.
@@ -175,6 +178,9 @@ public class DmfReceiverService extends MessageService {
         @SuppressWarnings({ "squid:S2259" })
         final EventTopic eventTopic = EventTopic.valueOf(eventHeader.toString());
         switch (eventTopic) {
+        case CONFIRM:
+            handleConfirmation(message, thingId);
+            break;
         case DOWNLOAD_AND_INSTALL:
         case DOWNLOAD:
             handleUpdateProcess(message, thingId, eventTopic);
@@ -192,6 +198,22 @@ public class DmfReceiverService extends MessageService {
             LOGGER.info("No valid event property: {}", eventTopic);
             break;
         }
+    }
+
+    private void handleConfirmation(final Message message, final String thingId) {
+        final AbstractSimulatedDevice device = repository.get(getTenant(message), thingId);
+        device.setUpdateStatus(new UpdateStatus(UpdateStatus.ResponseStatus.CONFIRMED, "Simulator : Action is confirmed"));
+        final Long actionId = extractActionIdFrom(message);
+        LOGGER.info("Action with id {} is confirmed be the device for installation", actionId);
+        sendFeedback(actionId, device);
+    }
+
+    private long extractActionIdFrom(final Message message) {
+        final String messageAsString = message.toString();
+        final String requiredMessageContent = messageAsString
+                .substring(messageAsString.indexOf('{') + 1, messageAsString.indexOf('}'));
+        final String[] splitMessageContent = requiredMessageContent.split(",");
+        return Long.parseLong(splitMessageContent[0].replaceAll(REGEX_EXTRACT_ACTIONID, ""));
     }
 
     private void handleMultiActionRequest(final Message message, final String thingId) {
@@ -246,7 +268,7 @@ public class DmfReceiverService extends MessageService {
 
     private void handleCancelDownloadAction(final Message message, final String thingId) {
         final String tenant = getTenant(message);
-        final Long actionId = convertMessage(message, Long.class);
+        final Long actionId = extractActionIdFrom(message);
 
         processCancelDownloadAction(thingId, tenant, actionId);
     }
@@ -301,6 +323,10 @@ public class DmfReceiverService extends MessageService {
             break;
         case RUNNING:
             spSenderService.sendActionStatusMessage(device.getTenant(), DmfActionStatus.RUNNING,
+                    device.getUpdateStatus().getStatusMessages(), actionId);
+            break;
+        case CONFIRMED:
+            spSenderService.sendActionStatusMessage(device.getTenant(), DmfActionStatus.CONFIRMED,
                     device.getUpdateStatus().getStatusMessages(), actionId);
             break;
         default:

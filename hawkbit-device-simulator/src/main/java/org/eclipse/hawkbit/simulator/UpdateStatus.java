@@ -100,7 +100,12 @@ public class UpdateStatus {
         /**
          * Device is finished with downloading.
          */
-        DOWNLOADED;
+        DOWNLOADED,
+
+        /**
+         * Device has been approved for the installation.
+         */
+        CONFIRMED;
     }
 
 }
