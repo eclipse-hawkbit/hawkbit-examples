@@ -37,6 +37,7 @@ import org.eclipse.hawkbit.simulator.UpdateStatus.ResponseStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -58,6 +59,7 @@ public class DeviceSimulatorUpdater {
     private ScheduledExecutorService threadPool;
 
     @Autowired
+    @Lazy
     private SimulatedDeviceFactory deviceFactory;
 
     @Autowired
@@ -232,9 +234,9 @@ public class DeviceSimulatorUpdater {
             final CloseableHttpClient httpclient = createHttpClientThatAcceptsAllServerCerts();
             final HttpGet request = new HttpGet(url);
 
-            if (!StringUtils.isEmpty(targetToken)) {
+            if (!StringUtils.hasLength(targetToken)) {
                 request.addHeader(HttpHeaders.AUTHORIZATION, "TargetToken " + targetToken);
-            } else if (!StringUtils.isEmpty(gatewayToken)) {
+            } else if (!StringUtils.hasLength(gatewayToken)) {
                 request.addHeader(HttpHeaders.AUTHORIZATION, "GatewayToken " + gatewayToken);
             }
 
