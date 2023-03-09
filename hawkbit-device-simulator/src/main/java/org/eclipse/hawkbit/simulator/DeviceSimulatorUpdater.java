@@ -234,9 +234,9 @@ public class DeviceSimulatorUpdater {
             final CloseableHttpClient httpclient = createHttpClientThatAcceptsAllServerCerts();
             final HttpGet request = new HttpGet(url);
 
-            if (!StringUtils.hasLength(targetToken)) {
+            if (StringUtils.hasLength(targetToken)) {
                 request.addHeader(HttpHeaders.AUTHORIZATION, "TargetToken " + targetToken);
-            } else if (!StringUtils.hasLength(gatewayToken)) {
+            } else if (StringUtils.hasLength(gatewayToken)) {
                 request.addHeader(HttpHeaders.AUTHORIZATION, "GatewayToken " + gatewayToken);
             }
 
