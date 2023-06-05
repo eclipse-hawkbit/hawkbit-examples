@@ -36,6 +36,14 @@
       </snapshotRepository>
    </distributionManagement>
 
+   <repositories>
+      <repository>
+         <id>eclipsesnap</id>
+         <name>hawkBit Repository - Snapshots</name>
+         <url>https://repo.eclipse.org/content/repositories/hawkbit-snapshots</url>
+      </repository>
+   </repositories>
+
    <modules>
       <module>hawkbit-custom-theme-example</module>
       <module>hawkbit-device-simulator</module>
