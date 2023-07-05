@@ -50,6 +50,7 @@ import org.springframework.http.ResponseEntity;
 public class DDISimulatedDevice extends AbstractSimulatedDevice {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DDISimulatedDevice.class);
+    private static final String LOG_PREFIX = "[{}:{}] ";
 
     private final DdiRootControllerRestApi controllerResource;
 
@@ -117,20 +118,26 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
     }
 
     private Optional<Link> getRequiredLink(final String nameOfTheLink) {
+        LOGGER.trace(LOG_PREFIX + "Polling ...", getTenant(), getId());
         ResponseEntity<DdiControllerBase> poll = null;
         try {
             poll = controllerResource.getControllerBase(getTenant(), getId());
         } catch (final RuntimeException ex) {
-            LOGGER.error("Failed base poll", ex);
+            LOGGER.error(LOG_PREFIX + "Failed base poll", getTenant(), getId(), ex);
             return Optional.empty();
         }
 
         if (HttpStatus.OK != poll.getStatusCode()) {
+            LOGGER.error(LOG_PREFIX + "Failed base poll {}", getTenant(), getId(), poll.getStatusCode());
             return Optional.empty();
         }
 
         final DdiControllerBase pollBody = poll.getBody();
-        return pollBody != null ? pollBody.getLink(nameOfTheLink) : Optional.empty();
+        final Optional<Link> link = pollBody != null ? pollBody.getLink(nameOfTheLink) : Optional.empty();
+        link.ifPresentOrElse(
+            l -> LOGGER.debug(LOG_PREFIX + "Polling finished. Has link: {}", getTenant(), getId(), l),
+            () -> LOGGER.trace(LOG_PREFIX + "Polling finished. No link", getTenant(), getId()));
+        return link;
     }
 
     private Optional<Entry<Long, DdiDeploymentBase>> getActionWithDeployment(final Link deploymentBaseLink) {
