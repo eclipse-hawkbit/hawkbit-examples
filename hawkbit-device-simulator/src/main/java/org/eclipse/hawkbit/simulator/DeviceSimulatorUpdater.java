@@ -54,6 +54,7 @@ import com.google.common.io.ByteStreams;
 public class DeviceSimulatorUpdater {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeviceSimulatorUpdater.class);
+    private static final String LOG_PREFIX = "[{}:{}] ";
 
     @Autowired
     private ScheduledExecutorService threadPool;
@@ -166,7 +167,7 @@ public class DeviceSimulatorUpdater {
 
             final List<UpdateStatus> status = new ArrayList<>();
 
-            LOGGER.info("Simulate downloads for {}", device.getId());
+            LOGGER.info(LOG_PREFIX + "Simulate downloads", device.getTenant(), device.getId());
 
             modules.forEach(module -> module.getArtifacts().forEach(artifact -> {
                 if (downloadAuthenticationEnabled) {
@@ -185,7 +186,7 @@ public class DeviceSimulatorUpdater {
                 }
             });
 
-            LOGGER.info("Download simulations complete for {}", device.getId());
+            LOGGER.info(LOG_PREFIX + "Download simulations complete", device.getTenant(), device.getId());
 
             return result;
         }
@@ -198,7 +199,7 @@ public class DeviceSimulatorUpdater {
             return ResponseStatus.ERROR == status.getResponseStatus();
         }
 
-        private static void handleArtifact(final String targetToken, final String gatewayToken,
+        private void handleArtifact(final String targetToken, final String gatewayToken,
                 final List<UpdateStatus> status, final DmfArtifact artifact) {
 
             if (artifact.getUrls().containsKey("HTTPS")) {
@@ -210,24 +211,24 @@ public class DeviceSimulatorUpdater {
             }
         }
 
-        private static UpdateStatus downloadUrl(final String url, final String gatewayToken, final String targetToken,
+        private UpdateStatus downloadUrl(final String url, final String gatewayToken, final String targetToken,
                 final String sha1Hash, final long size) {
 
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Downloading {} with token {}, expected sha1 hash {} and size {}", url,
+                LOGGER.debug(LOG_PREFIX + "Downloading {} with token {}, expected sha1 hash {} and size {}", device.getTenant(), device.getId(), url,
                         hideTokenDetails(targetToken), sha1Hash, size);
             }
 
             try {
                 return readAndCheckDownloadUrl(url, gatewayToken, targetToken, sha1Hash, size);
             } catch (IOException | KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
-                LOGGER.error("Failed to download " + url, e);
+                LOGGER.error(LOG_PREFIX + "Failed to download {}", device.getTenant(), device.getId(), url, e);
                 return new UpdateStatus(ResponseStatus.ERROR, "Failed to download " + url + ": " + e.getMessage());
             }
 
         }
 
-        private static UpdateStatus readAndCheckDownloadUrl(final String url, final String gatewayToken,
+        private UpdateStatus readAndCheckDownloadUrl(final String url, final String gatewayToken,
                 final String targetToken, final String sha1Hash, final long size)
                 throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException, IOException {
             long overallread;
@@ -311,33 +312,33 @@ public class DeviceSimulatorUpdater {
                     + targetToken.substring(targetToken.length() - 2, targetToken.length());
         }
 
-        private static String wrongHash(final String url, final String sha1Hash, final long overallread,
+        private String wrongHash(final String url, final String sha1Hash, final long overallread,
                 final String sha1HashResult) {
-            final String message = DOWNLOAD_LOG_MESSAGE + url + " failed with SHA1 hash missmatch (Expected: "
+            final String message = LOG_PREFIX + DOWNLOAD_LOG_MESSAGE + url + " failed with SHA1 hash missmatch (Expected: "
                     + sha1Hash + BUT_GOT_LOG_MESSAGE + sha1HashResult + ") (" + overallread + " bytes)";
-            LOGGER.error(message);
+            LOGGER.error(message, device.getTenant(), device.getId());
             return message;
         }
 
-        private static String incompleteRead(final String url, final long size, final long overallread) {
-            final String message = DOWNLOAD_LOG_MESSAGE + url + " is incomplete (Expected: " + size
+        private String incompleteRead(final String url, final long size, final long overallread) {
+            final String message = LOG_PREFIX + DOWNLOAD_LOG_MESSAGE + url + " is incomplete (Expected: " + size
                     + BUT_GOT_LOG_MESSAGE + overallread + ")";
-            LOGGER.error(message);
+            LOGGER.error(message, device.getTenant(), device.getId());
             return message;
         }
 
-        private static String wrongContentLength(final String url, final long size,
+        private String wrongContentLength(final String url, final long size,
                 final CloseableHttpResponse response) {
-            final String message = DOWNLOAD_LOG_MESSAGE + url + " has wrong content length (Expected: " + size
+            final String message = LOG_PREFIX + DOWNLOAD_LOG_MESSAGE + url + " has wrong content length (Expected: " + size
                     + BUT_GOT_LOG_MESSAGE + response.getEntity().getContentLength() + ")";
-            LOGGER.error(message);
+            LOGGER.error(message, device.getTenant(), device.getId());
             return message;
         }
 
-        private static String wrongStatusCode(final String url, final CloseableHttpResponse response) {
-            final String message = DOWNLOAD_LOG_MESSAGE + url + " failed (" + response.getStatusLine().getStatusCode()
+        private String wrongStatusCode(final String url, final CloseableHttpResponse response) {
+            final String message = LOG_PREFIX + DOWNLOAD_LOG_MESSAGE + url + " failed (" + response.getStatusLine().getStatusCode()
                     + ")";
-            LOGGER.error(message);
+            LOGGER.error(message, device.getTenant(), device.getId());
             return message;
         }
 
