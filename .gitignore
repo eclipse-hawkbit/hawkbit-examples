@@ -51,6 +51,7 @@ classpath-data.json
 
 # Maven
 maven.properties
+.flattened-pom.xml
 
 # Test Files
 *.tmp
