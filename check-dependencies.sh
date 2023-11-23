@@ -1,34 +1,23 @@
 #!/bin/bash
 #
-# Copyright (c) 2023 Bosch.IO GmbH and others.
+# Copyright (c) 2023 Bosch.IO GmbH and others
 #
-# All rights reserved. This program and the accompanying materials
-# are made available under the terms of the Eclipse Public License v1.0
-# which accompanies this distribution, and is available at
-# http://www.eclipse.org/legal/epl-v10.html
+# This program and the accompanying materials are made
+# available under the terms of the Eclipse Public License 2.0
+# which is available at https://www.eclipse.org/legal/epl-2.0/
+#
+# SPDX-License-Identifier: EPL-2.0
 #
 
-DASH_LICENSE_JAR=$1
-shift
+DASH_SUMMARY=".3rd-party/DEPENDENCIES"
+DASH_REVIEW_SUMMARY=".3rd-party/DEPENDENCIES_REVIEW"
 
-if [ ! -f "$DASH_LICENSE_JAR" ]; then
-  echo "This script can be used to update the DEPENDENCIES"
-  echo "file with the result of checking the hawkbit-examples"
-  echo "maven dependencies using the Dash License Tool."
-  echo ""
-  echo "Usage: $0 <org.eclipse.dash.licenses jar path> [<other dash-tool parameters>..]"
-  exit 1
+if [ -z "$1" ]
+then
+      DASH_IP_LAB=
+else
+      DASH_IP_LAB="-Ddash.review.summary=${DASH_REVIEW_SUMMARY} -Ddash.iplab.token=$1"
 fi
 
-HAWKBIT_MAVEN_DEPS=".3rd-party/hawkbit-examples-maven.deps"
-DEPENDENCIES=".3rd-party/DEPENDENCIES"
-
-mvn dependency:list \
-  -DexcludeGroupIds=org.eclipse,org.junit | \
-  grep -Poh "\S+:(runtime|compile|provided)" | \
-  sed -e 's/^\(.*\)\:.*$/\1/' | \
-  sort | \
-  uniq > $HAWKBIT_MAVEN_DEPS
-
-java -Dorg.eclipse.dash.timeout=60 -jar "${DASH_LICENSE_JAR}" -batch 90 -summary ${DEPENDENCIES} ${HAWKBIT_MAVEN_DEPS} "$@"
-sort -o ${DEPENDENCIES} ${DEPENDENCIES}
+mvn clean install -DskipTests -Ddash.skip=false \
+  -Ddash.summary=${DASH_SUMMARY} ${DASH_IP_LAB}
