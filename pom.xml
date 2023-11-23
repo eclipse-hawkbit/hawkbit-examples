@@ -45,6 +45,13 @@
       </snapshotRepository>
    </distributionManagement>
 
+   <pluginRepositories>
+      <pluginRepository>
+         <id>dash-licenses</id>
+         <url>https://repo.eclipse.org/content/repositories/dash-licenses</url>
+      </pluginRepository>
+   </pluginRepositories>
+
    <modules>
       <module>hawkbit-custom-theme-example</module>
       <module>hawkbit-device-simulator</module>
@@ -230,6 +237,19 @@
                   <id>attach-sources</id>
                   <goals>
                      <goal>jar</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>org.eclipse.dash</groupId>
+            <artifactId>license-tool-plugin</artifactId>
+            <version>1.0.2</version>
+            <executions>
+               <execution>
+                  <id>license-check</id>
+                  <goals>
+                     <goal>license-check</goal>
                   </goals>
                </execution>
             </executions>
