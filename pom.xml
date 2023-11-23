@@ -1,11 +1,12 @@
 <!--
 
-    Copyright (c) 2015 Bosch Software Innovations GmbH and others.
+    Copyright (c) 2015 Bosch Software Innovations GmbH and others
 
-    All rights reserved. This program and the accompanying materials
-    are made available under the terms of the Eclipse Public License v1.0
-    which accompanies this distribution, and is available at
-    http://www.eclipse.org/legal/epl-v10.html
+    This program and the accompanying materials are made
+    available under the terms of the Eclipse Public License 2.0
+    which is available at https://www.eclipse.org/legal/epl-2.0/
+
+    SPDX-License-Identifier: EPL-2.0
 
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -20,8 +21,16 @@
 
    <artifactId>hawkbit-examples-parent</artifactId>
    <version>${revision}</version>
-   <name>hawkBit :: Examples</name>
    <packaging>pom</packaging>
+   <name>hawkBit :: Examples</name>
+
+   <licenses>
+      <license>
+         <name>EPL-2.0</name>
+         <url>https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.txt</url>
+         <comments>Eclipse Public License - Version 2.0</comments>
+      </license>
+   </licenses>
 
    <distributionManagement>
       <repository>
@@ -81,8 +90,10 @@
             <groupId>com.mycila</groupId>
             <artifactId>license-maven-plugin</artifactId>
             <configuration>
-               <header>licenses/LICENSE_HEADER_TEMPLATE_BOSCH_20.txt</header>
+               <header>licenses/LICENSE_HEADER_TEMPLATE.txt</header>
                <validHeaders>
+                  <validHeader>licenses/LICENSE_HEADER_TEMPLATE_BOSCH_23.txt</validHeader>
+                  <validHeader>licenses/LICENSE_HEADER_TEMPLATE_BOSCH_20.txt</validHeader>
                   <validHeader>licenses/LICENSE_HEADER_TEMPLATE_SIEMENS.txt</validHeader>
                   <validHeader>licenses/LICENSE_HEADER_TEMPLATE_SIEMENS_18.txt</validHeader>
                   <validHeader>licenses/LICENSE_HEADER_TEMPLATE_BOSCH.txt</validHeader>
@@ -90,6 +101,34 @@
                   <validHeader>licenses/LICENSE_HEADER_TEMPLATE_BOSCH_19.txt</validHeader>
                   <validHeader>licenses/LICENSE_HEADER_TEMPLATE_MICROSOFT_18.txt</validHeader>
                </validHeaders>
+               <excludes>
+                  <exclude>.azure-pipelines/*</exclude>
+                  <exclude>.devcontainer/*</exclude>
+                  <exclude>**/banner.txt</exclude>
+                  <exclude>**/helm/**</exclude>
+                  <exclude>**/README</exclude>
+                  <exclude>.3rd-party/**</exclude>
+                  <exclude>.github/**</exclude>
+                  <exclude>**/.git*</exclude>
+                  <exclude>.git*</exclude>
+                  <exclude>**/*.sql</exclude>
+                  <exclude>eclipse_codeformatter.xml</exclude>
+                  <exclude>**/addons.scss</exclude>
+                  <exclude>**/VAADIN/widgetsets/**</exclude>
+                  <exclude>**/resources/VAADIN/themes/exampletheme/**</exclude>
+                  <exclude>.sonar</exclude>
+                  <exclude>**/docker/**</exclude>
+                  <exclude>**/.sonar/**</exclude>
+                  <exclude>docs/content/**</exclude>
+                  <exclude>docs/layouts/**</exclude>
+                  <exclude>docs/static/**</exclude>
+                  <exclude>docs/*.toml</exclude>
+                  <exclude>**/spring.factories</exclude>
+                  <exclude>**/LICENSE*</exclude>
+               </excludes>
+               <mapping>
+                  <scss>JAVADOC_STYLE</scss>
+               </mapping>
             </configuration>
          </plugin>
          <plugin>
