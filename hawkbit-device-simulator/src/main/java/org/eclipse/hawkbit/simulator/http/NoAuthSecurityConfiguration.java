@@ -33,7 +33,7 @@ public class NoAuthSecurityConfiguration {
     @Bean
     protected SecurityFilterChain filterChainNoAuth(final HttpSecurity httpSec) throws Exception {
         return httpSec
-                .authorizeRequests(amrmRegistry -> amrmRegistry.antMatchers("/**").permitAll())
+                .authorizeRequests(amrmRegistry -> amrmRegistry.requestMatchers("/**").permitAll())
                 .csrf(AbstractHttpConfigurer::disable)
                 .build();
     }

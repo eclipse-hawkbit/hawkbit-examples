@@ -50,7 +50,7 @@ public class BasicAuthSecurityConfiguration {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(amrmRegistry -> amrmRegistry
-                        .antMatchers("/").permitAll()
+                        .requestMatchers("/").permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
                 .exceptionHandling(configurer -> configurer.authenticationEntryPoint((request, response, e) -> {

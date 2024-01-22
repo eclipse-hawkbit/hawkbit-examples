@@ -16,7 +16,7 @@
    <parent>
       <groupId>org.eclipse.hawkbit</groupId>
       <artifactId>hawkbit-parent</artifactId>
-      <version>0.4.1</version>
+      <version>0-SNAPSHOT</version>
    </parent>
 
    <artifactId>hawkbit-examples-parent</artifactId>
@@ -53,7 +53,6 @@
    </pluginRepositories>
 
    <modules>
-      <module>hawkbit-custom-theme-example</module>
       <module>hawkbit-device-simulator</module>
       <module>hawkbit-example-core-feign-client</module>
       <module>hawkbit-example-ddi-feign-client</module>
@@ -62,8 +61,8 @@
    </modules>
 
    <properties>
-      <revision>0.4.0-SNAPSHOT</revision>
-      <hawkbit.version>0.4.1</hawkbit.version>
+      <revision>0-SNAPSHOT</revision>
+      <hawkbit.version>0-SNAPSHOT</hawkbit.version>
       
       <!-- Release - START -->
       <release.scm.connection>scm:git:git@github.com:eclipse/hawkbit-examples.git</release.scm.connection>
@@ -120,9 +119,6 @@
                   <exclude>.git*</exclude>
                   <exclude>**/*.sql</exclude>
                   <exclude>eclipse_codeformatter.xml</exclude>
-                  <exclude>**/addons.scss</exclude>
-                  <exclude>**/VAADIN/widgetsets/**</exclude>
-                  <exclude>**/resources/VAADIN/themes/exampletheme/**</exclude>
                   <exclude>.sonar</exclude>
                   <exclude>**/docker/**</exclude>
                   <exclude>**/.sonar/**</exclude>
