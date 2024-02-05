@@ -61,9 +61,5 @@
          <groupId>io.github.openfeign</groupId>
          <artifactId>feign-jackson</artifactId>
       </dependency>
-      <dependency>
-         <groupId>com.google.guava</groupId>
-         <artifactId>guava</artifactId>
-      </dependency>
    </dependencies>
 </project>

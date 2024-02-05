@@ -10,6 +10,7 @@
 package org.eclipse.hawkbit.simulator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -21,8 +22,6 @@ import org.eclipse.hawkbit.simulator.AbstractSimulatedDevice.Protocol;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Splitter;
-
 /**
  * General simulator service properties.
  *
@@ -32,7 +31,7 @@ import com.google.common.base.Splitter;
 // Exception for squid:S2245 : not security relevant random number generation
 @SuppressWarnings("squid:S2245")
 public class SimulationProperties {
-    private static final Splitter SPLITTER = Splitter.on(',').omitEmptyStrings().trimResults();
+
     private static final Random RANDOM = new Random();
 
     private String defaultTenant = "DEFAULT";
@@ -110,7 +109,9 @@ public class SimulationProperties {
         }
 
         private String getRandomElement() {
-            final List<String> options = SPLITTER.splitToList(random);
+            final List<String> options = Arrays.stream(random.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty()).toList();
             return options.get(RANDOM.nextInt(options.size()));
         }
     }

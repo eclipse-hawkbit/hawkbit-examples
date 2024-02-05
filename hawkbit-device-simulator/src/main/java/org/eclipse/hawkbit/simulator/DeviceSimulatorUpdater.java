@@ -19,11 +19,13 @@ import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
@@ -44,9 +46,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-
-import com.google.common.io.BaseEncoding;
-import com.google.common.io.ByteStreams;
 
 /**
  * Update simulation handler.
@@ -267,7 +266,7 @@ public class DeviceSimulatorUpdater {
                     return new UpdateStatus(ResponseStatus.ERROR, message);
                 }
 
-                sha1HashResult = BaseEncoding.base16().lowerCase().encode(md.digest());
+                sha1HashResult = HexFormat.of().withLowerCase().formatHex(md.digest());
             }
 
             if (!sha1Hash.equalsIgnoreCase(sha1HashResult)) {
@@ -282,17 +281,13 @@ public class DeviceSimulatorUpdater {
 
         private static long getOverallRead(final CloseableHttpResponse response, final MessageDigest md)
                 throws IOException {
-
-            long overallread;
-
-            try (final OutputStream os = ByteStreams.nullOutputStream();
-                    final BufferedOutputStream bos = new BufferedOutputStream(new DigestOutputStream(os, md))) {
-
-                try (BufferedInputStream bis = new BufferedInputStream(response.getEntity().getContent())) {
-                    overallread = ByteStreams.copy(bis, bos);
+            long overallread = 0;
+            try (final BufferedInputStream bis = new BufferedInputStream(response.getEntity().getContent())) {
+                final byte[] buff = new byte[4 *1024];
+                for (int read; (read = bis.read(buff)) != -1; overallread += read) {
+                    md.update(buff, 0, read);
                 }
             }
-
             return overallread;
         }
 
