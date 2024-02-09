@@ -145,7 +145,7 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
         final long actionId = getActionId(deploymentBaseLink);
         if (currentActionId == null || currentActionId == actionId) {
             final ResponseEntity<DdiDeploymentBase> action = controllerResource
-                    .getControllerBasedeploymentAction(getTenant(), getId(), actionId, -1, null);
+                    .getControllerDeploymentBaseAction(getTenant(), getId(), actionId, -1, null);
 
             if (HttpStatus.OK != action.getStatusCode()) {
                 return Optional.empty();
@@ -215,7 +215,7 @@ public class DDISimulatedDevice extends AbstractSimulatedDevice {
     private UpdaterCallback sendFeedback(final long actionId) {
         return device -> {
             final DdiActionFeedback feedback = calculateFeedback(device);
-            controllerResource.postBasedeploymentActionFeedback(feedback, getTenant(), getId(), actionId);
+            controllerResource.postDeploymentBaseActionFeedback(feedback, getTenant(), getId(), actionId);
             currentActionId = null;
         };
     }
