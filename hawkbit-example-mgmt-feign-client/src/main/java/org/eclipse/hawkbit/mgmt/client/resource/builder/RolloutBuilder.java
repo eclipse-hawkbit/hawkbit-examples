@@ -13,12 +13,12 @@ import java.util.List;
 
 import org.eclipse.hawkbit.mgmt.json.model.rollout.MgmtRolloutCondition;
 import org.eclipse.hawkbit.mgmt.json.model.rollout.MgmtRolloutCondition.Condition;
-import org.eclipse.hawkbit.mgmt.json.model.rollout.MgmtRolloutRestRequestBody;
+import org.eclipse.hawkbit.mgmt.json.model.rollout.MgmtRolloutRestRequestBodyPost;
 import org.eclipse.hawkbit.mgmt.json.model.rolloutgroup.MgmtRolloutGroup;
 
 /**
  * 
- * Builder pattern for building {@link MgmtRolloutRestRequestBody}.
+ * Builder pattern for building {@link MgmtRolloutRestRequestBodyPost}.
  *
  */
 // Exception squid:S1701 - builder pattern
@@ -123,12 +123,12 @@ public class RolloutBuilder {
      * 
      * @return the rest request body for creating a rollout
      */
-    public MgmtRolloutRestRequestBody build() {
+    public MgmtRolloutRestRequestBodyPost build() {
         return doBuild();
     }
 
-    private MgmtRolloutRestRequestBody doBuild() {
-        final MgmtRolloutRestRequestBody body = new MgmtRolloutRestRequestBody();
+    private MgmtRolloutRestRequestBodyPost doBuild() {
+        final MgmtRolloutRestRequestBodyPost body = new MgmtRolloutRestRequestBodyPost();
         body.setName(name);
         body.setAmountGroups(groupSize);
         body.setTargetFilterQuery(targetFilterQuery);
